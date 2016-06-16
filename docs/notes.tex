@@ -1,0 +1,163 @@
+\documentclass[12pt]{amsart}
+\usepackage{amsmath,amssymb}
+\usepackage{geometry} % see geometry.pdf on how to lay out the page. There's lots.
+\geometry{a4paper} % or letter or a5paper or ... etc
+% \geometry{landscape} % rotated page geometry
+
+%  POSSIBLY USEFULE PACKAGES
+%\usepackage{graphicx}
+%\usepackage{tensor}
+%\usepackage{todonotes}
+
+%  NEW COMMANDS
+\newcommand{\pder}[2]{\ensuremath{\frac{ \partial #1}{\partial #2}}}
+\newcommand{\ppder}[3]{\ensuremath{\frac{\partial^2 #1}{\partial
+      #2 \partial #3} } }
+
+%  NEW THEOREM ENVIRONMENTS
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{defn}[thm]{Definition}
+
+
+%  MATH OPERATORS
+\DeclareMathOperator{\Diff}{Diff}
+\DeclareMathOperator{\GL}{GL}
+\DeclareMathOperator{\SO}{SO}
+\DeclareMathOperator{\ad}{ad}
+\DeclareMathOperator{\Ad}{Ad}
+
+%  TITLE, AUTHOR, DATE
+\title{Intent estimation}
+\author{Henry O. Jacobs}
+\date{June 2016}
+
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+    Some notes on predicting pedestrians.
+\end{abstract}
+
+\section{Summary of Karasev et. al.}
+
+The algorithm of Karasev et al. is split into a few components.
+
+\begin{enumerate}
+	\item Convert goals into trajectories.
+        \item Determine the probability of a goal given observables, $p(g_t \mid y^t)$.
+        \item Compute an occupation map.
+\end{enumerate}
+The first item is addressed by posing the navigation problem as an MDP and using a standard reinforcement learning approach.
+This implicitly gives one a map $g_t \to x_{t+k}, g_{t+k}$.
+The second item, solving for $p(g_t \mid y^t)$ is done in Algorithm 1 using a particle filter known as a Rao-Blackwell filter.
+This filter assumes we've alreader solved item (1), and know how to compute $x_{t+k}$ and $g_{t+k}$ as a function of $g_t$.
+As we know how to convert goals into trajectories, the pdf of goals $p(g_t \mid y^t)$ can be converted into a pdf over future positions, $p( x_{t+k} \mid y^t)$.  This is done in the paper by sampling (see Alg 2). 
+The occupation map is then computable from $p(x_{t+k} \mid y^t)$.
+
+\section{Ram's critique}
+There are multiple components here which we could improve upon.
+Firstly, the computation of $p(x^{t+k} \mid y^t)$ might be more efficiently computed with the spectral techniques we've developed.
+Secondly, the conversion from goals, $g$'s, to trajectories is done by posing the problem as a MDP, which means discretizing the space of goals to a finite set.
+They extent their control law globally by linear interpolation later, but this seems hacky.
+Discretizing space necessary discards problem structure.
+In particular, that nearby goals of yield nearby trajectories.
+We could consider something continuous in space to avoid discarding this structure.
+
+\section{An idea}
+We will take the same basic components as Karasev.
+Namely, we will assume that the pedestrians are goal driven, and determine there trajectories as solutions of optimal control problems with unkown goals.
+However, we can not pose an MDP as is done in Karasev, because computational techniques to obtain solutions require discretization (as far as I know).
+We will pose a continous (in space and time) optimal control problem rather than a discrete problem.
+In particular we will assume that pedestrian trajectories seek to minimize
+\begin{align*}
+    J[x(\cdot) ] = \int_0^1 L(x,\dot{x}) dt
+\end{align*}
+subject to the constraint $x(0) = x_0$ and $x(1) = g$, where $g$ is an unkown.
+We may choose $L$ to be of the form
+\begin{align*}
+    L(x,\dot{x}) = \frac{1}{2} \| \dot{x} \|^2 - V(x)
+\end{align*}
+where $V(x)$ is a potential function which discourages stupid stuff like walking around in the street and going through buildings.
+The optimal trajectories then satisfy
+\begin{align*}
+    \ddot{x} + \nabla V(x) = 0
+\end{align*}
+
+Given a pdf, $p(x(0) , \dot{x}(0) )$, and the above dynamics we can obtain a pdf $p(x(1), \dot{x}(1))$ by solving a 4 dimensional Fokker-Plank equation using the spectral techniques we've worked on.
+We then can compute the marginal $p(x(1) ) = \int p(x(1) , \dot{x}(1) ) d \dot{x}(1)$.
+
+To do this effectively, we must assume that $V$ is simple, perhaps a sum of fewer than 20 Fourier modes.
+If this is okay then we have the following todo-list:
+
+\begin{itemize}
+    \item Learn $V(x ; \theta )$ where $\theta$ is a set of parameters including dependence on traffic lights.
+        It might be difficult with KITTI, as there is not that much pedestrian data on the street.
+        Perhaps there are other data-sets for this (preferably not mounted to a car).
+    \item Find a way to estimate $x(0)$ and $\dot{x}(0)$.  (need a person who has experience tracking).
+\end{itemize}
+
+\subsection{Adding stochasticity to the model}
+The most brainless thing one can do to add stochasticity to the model would be to add a Brownian force.
+This might dissipated motion on average.
+However, I feel that this is less realistic than adding a random magnetic force.
+The difference is that a magnetic force will only change the direction of velocity, not the magnitude.
+I feel that when people turn to avoid another human or a piece of shit on the ground, they only turn a little just to dodge the obstacle, and they keep constant speed.  They do not walk right up to the piece of poo, and slow down.
+Moreover, incorporating a magnetic force also allows us to maintain our extremization principle.
+In particular.  We are extremizing the action with respect to the Lagrangian
+\begin{align*}
+L(x,\dot{x} ) = \frac{1}{2} \| \dot{x} \|^2 + \langle A_\omega(x) , \dot{x} \rangle - V(x)
+\end{align*}
+
+Where we view $x$ as a point in the plane, embedded in $\mathbb{R}^3$, and $A_\omega$ is an (unknown) one-form such that $dA_\omega \propto dx\wedge dy$.
+We view $A_\omega$ as random (but fixed), and we could placing a prior over $\omega$.
+This will have the effect of making a Guassian evolve into something more banana shaped.
+
+\section{Learning the potential function}
+\label{sec:learning}
+Assume the potential function takes the form
+\begin{align*}
+    V_\theta (x) = \sum_{k} \theta_k E_k (x).
+\end{align*}
+where $E_k(x)$ are a fixed set of basis functions, and $\theta_k$ are parameters which we are going to learn.
+
+Given discrete time trajectories $\{x_0(t),x_1(t),\dots,x_N(t)\}_{t\in \mathbb{Z}}$ we want to minimize
+\begin{align*}
+    \epsilon(\theta) = \sum_{k=1}^N \| \delta  S_\theta[x_k] \|^2
+\end{align*}
+
+where
+\begin{align*}
+    S_\theta[x] = \sum_{t} L_\theta(x(t),x(t+1))
+\end{align*}
+and $L_\theta(x(t),x(t+1)) = \frac{1}{2} \| x(t+1) - x(t) \|^2 + V_\theta \left( \frac{ x(t+1) - x(t) }{2} \right)$.
+
+This tells us that
+\begin{align*}
+    \delta S[x_k]_t = ( - x_{k,t-1} + x_{k,t} - x_{k,t+1} ) + \frac{1}{2} \left[ \nabla V_\theta \left( \frac{x_{k,t+1} + x_{k,t} }{2} \right) + \nabla V_\theta \left( \frac{ x_{k,t} + x_{k,t-1}}{2} \right) \right]
+\end{align*}
+
+This is quadratic in $\theta$ and so minimization of $\epsilon(\theta)$ boils down to a standard least-squares problem.
+
+\subsection{Choice of basis functions}
+We will break the environment down into components: sidewalk, street, inpenetrable object.  Each pixel in the aeriel image will belong to one of these classes.  Then for each class, $c$, there is now a set $S_c$,
+and we define the functions on the domain
+\begin{align*}
+    E_{c,k}(x) = \exp(- d( x , S_c)^k )
+\end{align*}
+where $k \in \mathbb{N}$.
+These will be our basis functions.
+I suspect we will want $k$ to be quite small, like $k \in \{1,2,3\}$.
+
+\subsection{Inter-pedestrian interactions}
+We could also add a potential function which penalizes pedestrians crashing into each-other.
+\begin{align}
+    V_{ij}(x) = \frac{\theta_{inter} }{ \|x_i - x_j \|^2 }.
+\end{align}
+The parameter, $\theta_{inter}$ will be learned.
+
+\end{document}
