@@ -77,87 +77,94 @@ In particular we will assume that pedestrian trajectories seek to minimize
 \begin{align*}
     J[x(\cdot) ] = \int_0^1 L(x,\dot{x}) dt
 \end{align*}
-subject to the constraint $x(0) = x_0$ and $x(1) = g$, where $g$ is an unkown.
-We may choose $L$ to be of the form
+subject to the constraint $x(0) = x_0$ and $x(1) = g$, where $g$ is an unknown.
+The optimal trajectories then satisfy a differential algebraic equation
 \begin{align*}
-    L(x,\dot{x}) = \frac{1}{2} \| \dot{x} \|^2 - V(x)
+    \frac{d}{dt} \left( \pder{L}{\dot{q}} \right) - \pder{L}{q} = 0.
 \end{align*}
-where $V(x)$ is a potential function which discourages stupid stuff like walking around in the street and going through buildings.
-The optimal trajectories then satisfy
+We can define the Euler-Lagrange operator $\mathcal{EL}: T^{(2)}Q \to T^*Q$ so that the Euler-Lagrange equations may be written as $\mathcal{EL}(q,\dot{q},\ddot{q}) = 0$.
+
+Alternatively, if the Legendre-transform $\pder{L}{\dot{q}} : TQ \to T^*Q$ is invertible we may consider the Hamiltonian $H(q,p) = \langle p , \dot{q} \rangle - L(q,\dot{q})$ where $\dot{q}$ is a velocity such that $\pder{L}{\dot{q}}(q,\dot{q}) = (q,p)$.
+The dynamics then take the form of an ordinary differential equation
 \begin{align*}
-    \ddot{x} + \nabla V(x) = 0
+	\dot{q} = \pder{H}{p} \quad,\quad \dot{p} = - \pder{H}{q}
 \end{align*}
-
-Given a pdf, $p(x(0) , \dot{x}(0) )$, and the above dynamics we can obtain a pdf $p(x(1), \dot{x}(1))$ by solving a 4 dimensional Fokker-Plank equation using the spectral techniques we've worked on.
-We then can compute the marginal $p(x(1) ) = \int p(x(1) , \dot{x}(1) ) d \dot{x}(1)$.
-
-To do this effectively, we must assume that $V$ is simple, perhaps a sum of fewer than 20 Fourier modes.
-If this is okay then we have the following todo-list:
-
-\begin{itemize}
-    \item Learn $V(x ; \theta )$ where $\theta$ is a set of parameters including dependence on traffic lights.
-        It might be difficult with KITTI, as there is not that much pedestrian data on the street.
-        Perhaps there are other data-sets for this (preferably not mounted to a car).
-    \item Find a way to estimate $x(0)$ and $\dot{x}(0)$.  (need a person who has experience tracking).
-\end{itemize}
-
-\subsection{Adding stochasticity to the model}
-The most brainless thing one can do to add stochasticity to the model would be to add a Brownian force.
-This might dissipated motion on average.
-However, I feel that this is less realistic than adding a random magnetic force.
-The difference is that a magnetic force will only change the direction of velocity, not the magnitude.
-I feel that when people turn to avoid another human or a piece of shit on the ground, they only turn a little just to dodge the obstacle, and they keep constant speed.  They do not walk right up to the piece of poo, and slow down.
-Moreover, incorporating a magnetic force also allows us to maintain our extremization principle.
-In particular.  We are extremizing the action with respect to the Lagrangian
+and Hamilton's principle entails extremizing
 \begin{align*}
-L(x,\dot{x} ) = \frac{1}{2} \| \dot{x} \|^2 + \langle A_\omega(x) , \dot{x} \rangle - V(x)
+	J[ (q,p)(\cdot) ] = \int_0^1 \langle p , \dot{q} \rangle - H(q,p) dt
 \end{align*}
+with respect to the constraint $q(0) = q_0$ and $q(1) = q_1$.
 
-Where we view $x$ as a point in the plane, embedded in $\mathbb{R}^3$, and $A_\omega$ is an (unknown) one-form such that $dA_\omega \propto dx\wedge dy$.
-We view $A_\omega$ as random (but fixed), and we could placing a prior over $\omega$.
-This will have the effect of making a Guassian evolve into something more banana shaped.
+%Our goal will be to learn $H$ (so that we get an ODE rather than a DAE).
 
-\section{Learning the potential function}
-\label{sec:learning}
-Assume the potential function takes the form
+\subsection{Learning $L$ from the Stanford pedestrian Data set}
+Here is the most naive algorithm.  We will assume $L$ takes the form
 \begin{align*}
-    V_\theta (x) = \sum_{k} \theta_k E_k (x).
+	L(x,y,\dot{x},\dot{y} ; \theta) = \sum_k \theta_k e^{2\pi \iota (k_1 x + k_2 y) } H_{k_3}(\dot{x}) H_{k_{4}}(\dot{y})
 \end{align*}
-where $E_k(x)$ are a fixed set of basis functions, and $\theta_k$ are parameters which we are going to learn.
+where $H_k$ denotes the $k$th Hermite polynomial.
+The coefficients, $\theta_k$, are parameters which we will learn from the data.
 
-Given discrete time trajectories $\{x_0(t),x_1(t),\dots,x_N(t)\}_{t\in \mathbb{Z}}$ we want to minimize
+In this case, the Euler-Lagrange operator takes the form
 \begin{align*}
-    \epsilon(\theta) = \sum_{k=1}^N \| \delta  S_\theta[x_k] \|^2
+	&\mathcal{EL}_\theta (q,\dot{q},\ddot{q})^x = \sum_k \theta_k ( 2\pi \iota k_1 e^{2\pi \iota (k_1 x + k_2 y)} H_{k_3}'(\dot{x}) H_{k_4}(\dot{y}) \dot{x} \\
+	&\quad + e^{2\pi \iota (k_1 x + k_2 y)}H_{k_3}''(\dot{x}) H_{k_4}(\dot{y}) \ddot{x} - 2\pi \iota k_1 e^{2\pi \iota (k_1 x + k_2 y)} H_{k_3}'(\dot{x}) H_{k_4}(\dot{y}) )  \\
+	&\mathcal{EL}_\theta (q,\dot{q},\ddot{q})^y = \sum_k \theta_k ( 2\pi \iota k_2 e^{2\pi \iota (k_1 x + k_2 y)} H_{k_3}(\dot{x}) H_{k_4}'(\dot{y}) \dot{y} \\
+	&\quad + e^{2\pi \iota (k_1 x + k_2 y)}H_{k_3}(\dot{x}) H_{k_4}''(\dot{y}) \ddot{y} - 2\pi \iota k_2 e^{2\pi \iota (k_1 x + k_2 y)} H_{k_3}'(\dot{x}) H_{k_4}(\dot{y}) ) \\
 \end{align*}
+Note that this operator is linear in $\theta$.
 
-where
+Given estimates of $q_i, \dot{q}_i$ and $\ddot{q}_i$ for $i=1,\dots, N$ we can choose the coefficients to satisfy the left hand side.
+However, $\mathcal{EL}$ has a kernel with respect to $\theta$ becuase
+it does not distinguish between $L$ and $\alpha L + \beta$ for $\alpha,\beta \in \mathbb{R}$.
+To handle this, we can constrain $c_0 = 0$, and include a linear constraint like $\sum_k c_k = 1$.
+If we use the quadratic cost function
 \begin{align*}
-    S_\theta[x] = \sum_{t} L_\theta(x(t),x(t+1))
+	C( \theta ) = \sum_{i=1}^{N} \| \mathcal{EL}_\theta( q_i ,\dot{q}_i ,\ddot{q}_i  ) \|^2
 \end{align*}
-and $L_\theta(x(t),x(t+1)) = \frac{1}{2} \| x(t+1) - x(t) \|^2 + V_\theta \left( \frac{ x(t+1) - x(t) }{2} \right)$.
+we can pose our problem as a quadratic program of the form ``$\sup x^T Q x$ subject to $Ex = d$''.
+The solution to this form of QP is found by using Lagrange multipliers and solving the linear system
 
-This tells us that
 \begin{align*}
-    \delta S[x_k]_t = ( - x_{k,t-1} + x_{k,t} - x_{k,t+1} ) + \frac{1}{2} \left[ \nabla V_\theta \left( \frac{x_{k,t+1} + x_{k,t} }{2} \right) + \nabla V_\theta \left( \frac{ x_{k,t} + x_{k,t-1}}{2} \right) \right]
+	\begin{bmatrix}
+		Q & E^T \\
+		E & 0 
+	\end{bmatrix}
+	\begin{bmatrix}
+		x \\
+		\lambda
+	\end{bmatrix}
+	=
+	\begin{bmatrix}
+		0 \\
+		d
+	\end{bmatrix}
 \end{align*}
+In our case $d=1$, $E = [1,\dots,1]$ and $Q$ is the quadratic form associated to $C$ with $\theta = x$.
 
-This is quadratic in $\theta$ and so minimization of $\epsilon(\theta)$ boils down to a standard least-squares problem.
-
-\subsection{Choice of basis functions}
-We will break the environment down into components: sidewalk, street, inpenetrable object.  Each pixel in the aeriel image will belong to one of these classes.  Then for each class, $c$, there is now a set $S_c$,
-and we define the functions on the domain
+\section{Spectral Discretization}
+\label{sec:spectral}
+Let us assume $V$ is of the form
 \begin{align*}
-    E_{c,k}(x) = \exp(- d( x , S_c)^k )
+	V(x,y) = \sum_k c_k \exp \left( 2\pi i ( k_1 x + k_2 y) \right)
 \end{align*}
-where $k \in \mathbb{N}$.
-These will be our basis functions.
-I suspect we will want $k$ to be quite small, like $k \in \{1,2,3\}$.
+The dynamics are given by
+\begin{align*}
+	\dot{x} &= u \\
+	\dot{y} &= v \\
+	\dot{u} &= - \partial_x V(x,y) = -2\pi i \sum_k k_1 c_k \exp \left( 2\pi i ( k_1 x + k_2 y) \right)  \\
+	\dot{v} &= - \partial_y V(x,y) = -2\pi i \sum_k k_2 c_k \exp \left( 2\pi i ( k_1 x + k_2 y) \right)
+\end{align*}
+We desire to integrate the PDE
+\begin{align*}
+	\partial_t \psi + \frac{1}{2} \left(  X^i \cdot \partial_i \psi + \partial_i (X_i \cdot \psi) \right) = 0
+\end{align*}
+on the space $\mathbb{T}^2 \times \mathbb{R}^2$.
+We will do so spectrally using basis functions of the form
+\begin{align*}
+	e_{k}(x,y,u,v) = e^{ 2\pi i( k_1 x+k_2 y) } h_{k_3}(u) h_{k_4}(v)
+\end{align*}
 
-\subsection{Inter-pedestrian interactions}
-We could also add a potential function which penalizes pedestrians crashing into each-other.
-\begin{align}
-    V_{ij}(x) = \frac{\theta_{inter} }{ \|x_i - x_j \|^2 }.
-\end{align}
-The parameter, $\theta_{inter}$ will be learned.
+
 
 \end{document}
