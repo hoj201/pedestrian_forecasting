@@ -98,21 +98,26 @@ with respect to the constraint $q(0) = q_0$ and $q(1) = q_1$.
 %Our goal will be to learn $H$ (so that we get an ODE rather than a DAE).
 
 \subsection{Learning $L$ from the Stanford pedestrian Data set}
-Here is the most naive algorithm.  We will assume $L$ takes the form
+Here is the most naive algorithm.  Let $e_k$ and $E_k$ denotes $L^2$ basis.
+For any multi-index $\kappa = (k_1,k_2,k_3,k_4)$ let $e_\kappa = e_{k_1} \otimes E_{k_2} \otimes e_{k_3} \otimes E_{k_4}$.
+We will assume $L$ takes the form
 \begin{align*}
-	L(x,y,\dot{x},\dot{y} ; \theta) = \sum_k \theta_k e^{2\pi \iota (k_1 x + k_2 y) } H_{k_3}(\dot{x}) H_{k_{4}}(\dot{y})
+	L(x,\dot{x},y,\dot{y} ; \theta) = \sum_\kappa \theta_\kappa e_\kappa(x,\dot{x},y,\dot{y})
 \end{align*}
-where $H_k$ denotes the $k$th Hermite polynomial.
 The coefficients, $\theta_k$, are parameters which we will learn from the data.
 
 In this case, the Euler-Lagrange operator takes the form
 \begin{align*}
-	&\mathcal{EL}_\theta (q,\dot{q},\ddot{q})^x = \sum_k \theta_k ( 2\pi \iota k_1 e^{2\pi \iota (k_1 x + k_2 y)} H_{k_3}'(\dot{x}) H_{k_4}(\dot{y}) \dot{x} \\
-	&\quad + e^{2\pi \iota (k_1 x + k_2 y)}H_{k_3}''(\dot{x}) H_{k_4}(\dot{y}) \ddot{x} - 2\pi \iota k_1 e^{2\pi \iota (k_1 x + k_2 y)} H_{k_3}'(\dot{x}) H_{k_4}(\dot{y}) )  \\
-	&\mathcal{EL}_\theta (q,\dot{q},\ddot{q})^y = \sum_k \theta_k ( 2\pi \iota k_2 e^{2\pi \iota (k_1 x + k_2 y)} H_{k_3}(\dot{x}) H_{k_4}'(\dot{y}) \dot{y} \\
-	&\quad + e^{2\pi \iota (k_1 x + k_2 y)}H_{k_3}(\dot{x}) H_{k_4}''(\dot{y}) \ddot{y} - 2\pi \iota k_2 e^{2\pi \iota (k_1 x + k_2 y)} H_{k_3}'(\dot{x}) H_{k_4}(\dot{y}) ) \\
+	&\mathcal{EL}_\theta (q,\dot{q},\ddot{q})^x = \sum_k \theta_k \big( \dot{x} e_{k_1}'(x) E_{k_2}'(\dot{x}) e_{k_3}(y) e_{k_4}(\dot{y}) \\
+	&\quad + \ddot{x} e_{k_1}(x) E_{k_2}''(\dot{x}) e_{k_3}(y) E_{k_4}(\dot{y}) - e_{k_1}'(x) E_{k_2}(\dot{x}) e_{k_3}(y) E_{k_4}(\dot{y}) \big)  \\
 \end{align*}
-Note that this operator is linear in $\theta$.
+and a similar form applies to $\mathcal{EL}_\theta^y$.
+Note that this expression is linear in $\theta$.
+If we use the identities
+\begin{align*}
+	H_n'(\dot{x}) &= 2n H_{n-1}(\dot{x}) \\
+	H_n'(\dot{x}) \dot{x} &= n H_n(\dot{x}) - 2n^2 H_{n-1}(\dot{x})
+\end{align*}
 
 Given estimates of $q_i, \dot{q}_i$ and $\ddot{q}_i$ for $i=1,\dots, N$ we can choose the coefficients to satisfy the left hand side.
 However, $\mathcal{EL}$ has a kernel with respect to $\theta$ becuase
@@ -141,6 +146,25 @@ The solution to this form of QP is found by using Lagrange multipliers and solvi
 	\end{bmatrix}
 \end{align*}
 In our case $d=1$, $E = [1,\dots,1]$ and $Q$ is the quadratic form associated to $C$ with $\theta = x$.
+
+\subsection{Coding the Euler-Lagrange operator as a linear functional}
+For a given $a=(q,\dot{q},\ddot{q})$ we observe that $\mathcal{EL}_\theta(a)^x$ is a linear functional of $\theta$, which we can call $\ell^x(a)$.
+We could then express the desired quadratic form as
+\begin{align*}
+Q^x = \sum_{a \in \mathcal{O}} \ell^x(a) \otimes \ell^x(a)^T
+\end{align*}
+where $\mathcal{O}$ is some set of observations.
+
+Numpy and MATLAB both have efficient kronecker product routines which we should take advantage of.
+Explicitly, $\ell^x(a) = (M^x(a) \otimes I) \cdot e(a)$ with
+\begin{align*}
+	M^x(a) = D_x \otimes ( \dot{x} D_{\dot{x}}) + I \otimes \ddot{x} D_{\dot{x}}^2 - D_x \otimes I \\
+	e_k(a) = e_{k_1}(x) \otimes e_{k_2}(\dot{x}) \otimes e_{k_3}(y) \otimes e_{k_4}(\dot{y}) 
+\end{align*}
+
+Similarly, we may consider the quadratic form $Q^y$ defined such that $\| \mathcal{EL}_\theta(a)^y \|^2 = \theta^T \cdot Q^y(a) \cdot \theta$.
+In this case $Q^y = \sum_{a \in \mathcal{O}} \ell^y(a) \otimes \ell^y(a)^T$ with $\ell^y(a) = (I \otimes M^y(a) ) \cdot e(a)$ with $M^y(a)$ defined in a way similar to $M^x(a)$.
+Our desired quadratic form is then $Q = Q^x + Q^y$.
 
 \section{Spectral Discretization}
 \label{sec:spectral}
