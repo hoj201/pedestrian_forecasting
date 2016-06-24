@@ -116,4 +116,5 @@ if __name__ == '__main__':
     Q = np.einsum('ki,kj->ij', functionals_npy , functionals_npy )
     total_time = time() - t0
     print "Computing Q from ells tooks %f seconds" % total_time
+    np.save( "Q_matrix")
 
