@@ -10,19 +10,13 @@ def get_trajectories( fname ):
     y=[]
     pedestrian_indices = set( data[ data['label']=='Pedestrian' ]['index'])
     import numpy as np
-
-    #For the deathCircle videos the resolution is 1630 x 1948
-    Nx = 1630
-    Ny = 1948
-    normalize = lambda x,N: 2*x / float(N) - 1.0
-
     for pid in pedestrian_indices:
         x1 = np.array(data[data['index']==pid]['x1'])
         x2 = np.array(data[data['index']==pid]['x2'])
-        x.append( normalize( 0.5*(x1+x2) , Nx ) )
+        x.append(  0.5*(x1+x2)  )
         y1 = np.array(data[data['index']==pid]['y1'])
         y2 = np.array(data[data['index']==pid]['y2'])
-        y.append( -normalize( 0.5*(y1+y2) , Ny ) )
+        y.append( -0.5*(y1+y2)  )
     return [x,y]
 
 
@@ -120,6 +114,10 @@ if __name__ == '__main__':
     reference_points = pd.read_csv('../annotations/deathCircle/video0/reference_points.csv').as_matrix()
     origin = reference_points[0,:]
     reference_points -= origin
+    #For the deathCircle videos the resolution is 1630 x 1948
+    #we normalist to the square [-1 1 -1 1]
+    reference_points[:,0] = 2*reference_points[:,0]/float(1630) - 1
+    reference_points[:,1] = 2*reference_points[:,0]/float(1948) - 1
     base_directory = '../annotations/deathCircle/'
     for folder in ['video0/','video1/','video2/','video3/','video4/']:
         fname = base_director + folder + 'annotations.txt'
@@ -139,7 +137,6 @@ if __name__ == '__main__':
             for arg in zip( *traj_tuple):
                 functionals += EL_functional_2d(*arg)
         functionals_npy = np.stack( functionals )
-        
         from time import time
         t0 = time()
         Q = np.einsum('ki,kj->ij', functionals_npy , functionals_npy )
