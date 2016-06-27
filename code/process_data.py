@@ -97,24 +97,53 @@ def display_trajectories(x_list,y_list,scene):
     plt.show()
     return 0
 
+def get_transformation_to_reference( reference_points, target_points )
+    #returns parameters to an transformation
+    M = np.zeros( (6,6) )
+    M[0,0:2] = target_points[0,:]
+    M[1,0:2] = target_points[1,:]
+    M[2,0:2] = target_points[2,:]
+    M[3,2:4] = target_points[0,:]
+    M[4,2:4] = target_points[1,:]
+    M[5,2:4] = target_points[2,:]
+    M[0,4] = 1.
+    M[1,4] = 1.
+    M[2,4] = 1.
+    M[3,5] = 1.
+    M[4,5] = 1.
+    M[5,5] = 1.
+    from scipy.linalg import solve
+    return list( solve( M , reference_points.flatten() ) )
+
 if __name__ == '__main__':
     print "Let us test this baby"
-    directory_name = "../annotations/deathCircle/video0/"
-    file_name = "annotations.txt"
-    fname = directory_name + file_name
-    x_raw,y_raw = get_trajectories( fname )
-    x_list,vx_list,ax_list,y_list,vy_list,ay_list = smooth_trajectories(x_raw, y_raw)
-    display_trajectories( x_list,y_list , "deathCircle" )
-    functionals = []
-    for traj_tuple in zip(x_list,vx_list,ax_list,y_list,vy_list,ay_list):
-        for arg in zip( *traj_tuple):
-            functionals += EL_functional_2d(*arg)
-    functionals_npy = np.stack( functionals )
-    
-    from time import time
-    t0 = time()
-    Q = np.einsum('ki,kj->ij', functionals_npy , functionals_npy )
-    total_time = time() - t0
-    print "Computing Q from ells tooks %f seconds" % total_time
+    reference_points = pd.read_csv('../annotations/deathCircle/video0/reference_points.csv').as_matrix()
+    origin = reference_points[0,:]
+    reference_points -= origin
+    base_directory = '../annotations/deathCircle/'
+    for folder in ['video0/','video1/','video2/','video3/','video4/']:
+        fname = base_director + folder + 'annotations.txt'
+        x_raw,y_raw = get_trajectories( fname )
+        #NOW YOU TRANFORM THEM TO REF COORDINATES HERE
+        target_points = pd.read_csv( base_directory+folder+'reference_points.csv').as_matrix()
+        x_list,vx_list,ax_list,y_list,vy_list,ay_list = smooth_trajectories(x_raw, y_raw)
+        a,b,c,d,e,f = get_transformation_to_reference( target_points )
+        x_arr = map( lambda x,y: a*x+b*y+e , x_list, y_list)
+        y_arr = map( lambda x,y: c*x+d*y+f , x_list, y_list)
+        vx_arr = map( lambda x,y: a*x+b*y , vx_list, vy_list )
+        vy_arr = map( lambda x,y: c*x+d*y , vx_list, vy_list )
+        ax_arr = map( lambda x,y: a*x+b*y , ax_list, ay_list )
+        ay_arr = map( lambda x,y: c*x+d*y , ax_list, ay_list )
+        functionals = []
+        for traj_tuple in zip(x_arr,vx_arr,ax_arr,y_arr,vy_arr,ay_arr):
+            for arg in zip( *traj_tuple):
+                functionals += EL_functional_2d(*arg)
+        functionals_npy = np.stack( functionals )
+        
+        from time import time
+        t0 = time()
+        Q = np.einsum('ki,kj->ij', functionals_npy , functionals_npy )
+        total_time = time() - t0
+        print "Computing Q from ells tooks %f seconds" % total_time
     np.save( "Q_matrix")
 
