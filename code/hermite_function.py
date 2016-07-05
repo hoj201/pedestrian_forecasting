@@ -154,7 +154,7 @@ def eval_nd_poly( a , x ):
         n = a.shape[0]
         b = eval_nd_poly( a[n-1,:] , x[1:len(x)] )
         for k in range( n-2, -1, -1 ):
-            b = eval_ndpoly( a[k,:] , x[1:len(x)] ) + x[0].dot(b)
+            b = eval_nd_poly( a[k,:] , x[1:len(x)] ) + x[0].dot(b)
         return b
     return horners( a , x[0] )
 
