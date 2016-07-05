@@ -1,11 +1,11 @@
 import numpy as np
 
-def hermite_function(x,max_degree=20):
-    # computes h_n(x) for n = 0,...,max_degree
-    out = np.zeros( (max_degree + 2 , x.size) )
+def hermite_function(x, deg=20):
+    # computes h_n(x) for n = 0,...,deg
+    out = np.zeros( (deg + 2 , x.size) )
     out[0,:] = np.pi**-0.25 * np.exp( - x**2 / 2.0)
     out[1,:] = np.sqrt(2)*x*out[0,:]
-    for n in range(2,max_degree+1):
+    for n in range(2,deg+1):
         out[n,:] = np.sqrt(2.0/n) * x * out[n-1,:] - np.sqrt( (n-1)/float(n)) * out[n-2,:]
     return out
 
@@ -68,9 +68,9 @@ class hermite_function_series:
         M=self.M
         alpha = np.sqrt( 2*self.deg )/M
         from numpy import linspace
-        h = hermite_function( linspace(-M,M,res)*alpha )
+        h = hermite_function( linspace(-M,M,res)*alpha , deg=self.deg )
         #In 2D this call looks like
-        #np.einsum(a,[m1,m2 ,i1,i2],h,[m1,i1], h, [m2,i2] , [i1,i2] )
+        #np.einsum(a,[m1,m2],h,[m1,i1], h, [m2,i2] , [i1,i2] )
         m_list = []
         i_list = []
         h_list = []
