@@ -28,7 +28,7 @@ class hermite_function_series:
         if(coeffs is None):
             self.coeffs = np.array( [deg+2]*dim )
         else:
-            assert len( coeffs.shape )==dim, "coeffs is of shape " + str( coeffs.shape ) + ", but dim=%d"%dim
+            self.dim = len( coeffs.shape )
             self.coeffs = coeffs 
 
     def interpolate_function(self, f):
@@ -89,13 +89,29 @@ class hermite_function_series:
     def get_uniform_grid( self, res=20):
         from numpy import meshgrid,linspace
         return meshgrid( *[linspace( -self.M , self.M , res )]*self.dim )
-        
+    
+    def __add__( self , other):
+        assert( type(other) == type(self) )
+        assert( self.M == other.M )
+        assert( self.deg == other.deg )
+        assert( self.dim == other.dim )
+        return hermite_function_series( coeffs = self.coeffs + other.coeffs , M = self.M , deg = self.deg, dim =self.dim )
+
+    def __mul__( self , x ):
+        #scalar multiplication
+        return hermite_function_series( coeffs = x*self.coeffs , M = self.M , deg = self.deg , dim = self.dim )
+
+    def __lmul__(self , x ):
+        return hermite_function_series( coeffs = x*self.coeffs , M = self.M , deg = self.deg , dim = self.dim )
+
+    def __rmul__(self , x ):
+        return hermite_function_series( coeffs = x*self.coeffs , M = self.M , deg = self.deg , dim = self.dim )
 
 class Lie_derivative:
     #Produces a Lie derivative operator for a polynomial vector field
     def __init__(self, polynomials=None , M=1, dim=1, deg=20):
         self.dim = dim
-        self.deg = 20
+        self.deg = deg
         self.M = M
         from scipy import sparse
         if( polynomials is None ):
@@ -121,8 +137,6 @@ class Lie_derivative:
                         mult_by_kth = store_m.copy()
                         diff_by_kth = store_d.copy()
                     else:
-                        #mult_by_kth = sparse.kron( mult_by_kth, store_m  )
-                        #diff_by_kth = sparse.kron( diff_by_kth, store_d  )
                         mult_by_kth = sparse.kron( store_m, mult_by_kth )
                         diff_by_kth = sparse.kron( store_d, diff_by_kth )
                 multiplication_operators.append( mult_by_kth )
@@ -131,6 +145,12 @@ class Lie_derivative:
             for k in range(dim):
                 mult_by_poly = eval_nd_poly( polynomials[k] , multiplication_operators )
                 self.op += 0.5*derivative_op[k].dot( mult_by_poly ) + 0.5*mult_by_poly.dot( derivative_op[k] )
+    def __add__(self, other ):
+        assert( type(self) == type(other) )
+        assert( self.M == other.M and self.dim == other.dim and self.deg==other.deg)
+        out = Lie_derivative( M=self.M, dim=self.dim, deg=self.deg )
+        out.op = self.op + other.op
+        return out
 
     def dot( self, h_series ):
         #applies the Lie derivative Operatot to a hermite series
@@ -140,13 +160,27 @@ class Lie_derivative:
         coeffs = self.op.dot( h_series.coeffs.flatten() ).reshape( [self.deg+2]*self.dim )
         return hermite_function_series( coeffs = coeffs, M = self.M , dim=self.dim, deg=self.deg )
 
+    def advect( self, h_series, t , rtol = 0.01 , atol = 0.01):
+        #evolves h_series by time t according to the Schrodinger equation
+        assert( self.M == h_series.M )
+        assert( self.deg == h_series.deg )
+        assert( self.dim == h_series.dim )
+        x0 = h_series.coeffs.flatten()
+        from scipy.integrate import odeint
+        x_arr = odeint( lambda x,t: self.op.dot(x) , x0 , np.array([0,t]) , rtol = rtol, atol = atol )
+        return hermite_function_series( coeffs=x_arr[1].reshape( [self.deg+2]*self.dim ) , dim=self.dim  ,M=self.M,deg=self.deg)
+
 def horners( a , x ):
     n = len(a)
     from scipy import sparse
     Id = sparse.eye( x.shape[0] )
     b = a[n-1]*Id
+    tol = 0.01
     for k in range( n-2,-1,-1):
-        b = a[k]*Id + b.dot( x )
+        if( np.abs(a[k]) < tol ):
+            b = b.dot(x)
+        else:
+            b = a[k]*Id + b.dot( x )
     return b
 
 def eval_nd_poly( a , x ):
