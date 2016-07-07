@@ -160,14 +160,14 @@ class Lie_derivative:
         coeffs = self.op.dot( h_series.coeffs.flatten() ).reshape( [self.deg+2]*self.dim )
         return hermite_function_series( coeffs = coeffs, M = self.M , dim=self.dim, deg=self.deg )
 
-    def advect( self, h_series, t , rtol = 0.01 , atol = 0.01):
+    def advect( self, h_series, t , rtol = None ):
         #evolves h_series by time t according to the Schrodinger equation
         assert( self.M == h_series.M )
         assert( self.deg == h_series.deg )
         assert( self.dim == h_series.dim )
         x0 = h_series.coeffs.flatten()
         from scipy.integrate import odeint
-        x_arr = odeint( lambda x,t: self.op.dot(x) , x0 , np.array([0,t]) , rtol = rtol, atol = atol )
+        x_arr = odeint( lambda x,t: self.op.dot(x) , x0 , np.array([0,t]) )
         return hermite_function_series( coeffs=x_arr[1].reshape( [self.deg+2]*self.dim ) , dim=self.dim  ,M=self.M,deg=self.deg)
 
 def horners( a , x ):
