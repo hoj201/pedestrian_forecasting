@@ -27,9 +27,21 @@ class hermite_function_series:
         self.deg = deg
         if(coeffs is None):
             self.coeffs = np.array( [deg+2]*dim )
-        else:
-            self.dim = len( coeffs.shape )
-            self.coeffs = coeffs 
+            return 0
+        self.dim = len( coeffs.shape )
+        self.coeffs = coeffs 
+        return 0
+
+    def set_coeffs(self , x ):
+        if( len(x.shape)==1):
+            #x is a flat array.  Reshape it appropriately
+            assert( x.size == self.coeffs.size )
+            self.coeffs = x.reshape( [self.deg+2]*self.dim )
+            return 0
+        assert( x.shape == self.coeffs.shape )
+        self.coeffs = x
+        return 0
+
 
     def interpolate_function(self, f):
         #computes the hermite series which interpolates f on [-M,M]^d.
@@ -169,6 +181,13 @@ class Lie_derivative:
         from scipy.integrate import odeint
         x_arr = odeint( lambda x,t: self.op.dot(x) , x0 , np.array([0,t]) )
         return hermite_function_series( coeffs=x_arr[1].reshape( [self.deg+2]*self.dim ) , dim=self.dim  ,M=self.M,deg=self.deg)
+
+    def cayley_step(self, h_series dt ):
+        #evolves h_series by cayley(A dt) = ( I-dt*A)^{-1} (I+A*dt).
+        #where A = self.op
+        assert( [self.dim,self.M,self.deg] == [h_series.dim,h_series.M,h_series.deg] )
+        return hermite_function_series( ... #TODO:  FINISH THIS
+
 
 def horners( a , x ):
     n = len(a)
