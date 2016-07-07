@@ -21,16 +21,20 @@ def hermite_polynomial(x,deg):
     return H
 
 class hermite_function_series:
-    def __init__(self, coeffs = None , dim=1 , M=1, deg=20):
-        self.dim = dim
+    def __init__(self, coeffs = None , dim=None , M=1, deg=20):
         self.M = M
         self.deg = deg
         if(coeffs is None):
+            assert( dim > 0 )
+            self.dim = dim
             self.coeffs = np.array( [deg+2]*dim )
-            return 0
-        self.dim = len( coeffs.shape )
-        self.coeffs = coeffs 
-        return 0
+        else:
+            if( dim is None):
+                self.dim = len( coeffs.shape )
+            else:
+                self.dim = dim
+            assert( (deg+2)**self.dim == coeffs.size )
+            self.coeffs = coeffs.reshape( [deg+2]*dim )
 
     def set_coeffs(self , x ):
         if( len(x.shape)==1):
@@ -182,11 +186,19 @@ class Lie_derivative:
         x_arr = odeint( lambda x,t: self.op.dot(x) , x0 , np.array([0,t]) )
         return hermite_function_series( coeffs=x_arr[1].reshape( [self.deg+2]*self.dim ) , dim=self.dim  ,M=self.M,deg=self.deg)
 
-    def cayley_step(self, h_series dt ):
+    def cayley_step(self, h_series , dt ):
         #evolves h_series by cayley(A dt) = ( I-dt*A)^{-1} (I+A*dt).
         #where A = self.op
         assert( [self.dim,self.M,self.deg] == [h_series.dim,h_series.M,h_series.deg] )
-        return hermite_function_series( ... #TODO:  FINISH THIS
+        from scipy import sparse
+        I = sparse.eye( (self.deg+2)**self.dim )
+        x = h_series.coeffs.flatten()
+        x += 0.5*dt*self.op.dot( x )
+        from scipy.sparse.linalg import spsolve
+        y = spsolve( I - 0.5*dt*self.op , x )
+        return hermite_function_series( coeffs = y , M=self.M,deg=self.deg,dim=self.dim)
+
+
 
 
 def horners( a , x ):
