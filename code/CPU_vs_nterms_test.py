@@ -1,11 +1,11 @@
 import numpy as np
 import hermite_function
 
-
+max_degree = 10
 p_x = np.zeros( (1,1,2,1) )
 p_y = np.zeros( (1,1,1,2) )
-p_u = np.zeros( (4,5,1,1) )
-p_v = np.zeros( (5,4,1,1) )
+p_u = np.zeros( (max_degree-1,max_degree,1,1) )
+p_v = np.zeros( (max_degree,max_degree-1,1,1) )
 
 p_x[0,0,1,0]= 1.
 p_y[0,0,0,1]= 1.
@@ -23,7 +23,6 @@ f = lambda x,y,u,v: G(x,mu_x,sigma)*G(y,mu_y,sigma)*G(u,mu_u,sigma)*G(v,mu_v,sig
 h_series = hermite_function.hermite_function_series(M=M,deg=deg, dim=4)
 h_series.interpolate_function(f)
 
-max_degree = 10
 t_arr = np.zeros( [ max_degree ,max_degree] )
 
 for xp in range(0,max_degree):
