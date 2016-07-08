@@ -44,3 +44,6 @@ for xp in range(0,max_degree):
         t0 = time()
         dh_series = L_f.dot( h_series )
         t_arr[xp,yp] = time() - t0
+        print 'Computed term  x^%d  y^%d' %(xp,yp)
+
+np.save('CPU_vs_n_terms_data', t_arr )
