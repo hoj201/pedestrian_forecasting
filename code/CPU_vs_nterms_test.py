@@ -11,7 +11,7 @@ p_x[0,0,1,0]= 1.
 p_y[0,0,0,1]= 1.
 M=3
 
-deg=10
+deg=20
 
 sigma = 1.0
 mu_x = 0.0
@@ -23,7 +23,7 @@ f = lambda x,y,u,v: G(x,mu_x,sigma)*G(y,mu_y,sigma)*G(u,mu_u,sigma)*G(v,mu_v,sig
 h_series = hermite_function.hermite_function_series(M=M,deg=deg, dim=4)
 h_series.interpolate_function(f)
 
-max_degree = 5
+max_degree = 10
 t_arr = np.zeros( [ max_degree ,max_degree] )
 
 for xp in range(0,max_degree):
@@ -45,5 +45,10 @@ for xp in range(0,max_degree):
         dh_series = L_f.dot( h_series )
         t_arr[xp,yp] = time() - t0
         print 'Computed term  x^%d  y^%d' %(xp,yp)
+        #Now return polys to original state
+        if(xp > 0):
+            p_u[xp-1,yp,0,0] = 0.
+        if( yp> 0):
+            p_v[xp,yp-1,0,0] = 0.
 
 np.save('CPU_vs_n_terms_data', t_arr )
