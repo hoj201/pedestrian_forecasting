@@ -21,31 +21,19 @@ def hermite_polynomial(x,deg):
     return H
 
 class hermite_function_series:
-    def __init__(self, coeffs = None , dim=None , M=1, deg=20):
+    def __init__(self, coeffs = None , M=(1,), deg=(20,)):
         self.M = M
         self.deg = deg
+        self.dim = len(M)
+        shape_tuple = map( lambda x: x+2 , deg )
         if(coeffs is None):
-            assert( dim > 0 )
-            self.dim = dim
-            self.coeffs = np.array( [deg+2]*dim )
+            self.coeffs = np.array( shape_tuple )
         else:
-            if( dim is None):
-                self.dim = len( coeffs.shape )
-            else:
-                self.dim = dim
-            assert( (deg+2)**self.dim == coeffs.size )
-            self.coeffs = coeffs.reshape( [deg+2]*dim )
+            self.coeffs = coeffs.reshape( shape_tuple )
 
     def set_coeffs(self , x ):
-        if( len(x.shape)==1):
-            #x is a flat array.  Reshape it appropriately
-            assert( x.size == self.coeffs.size )
-            self.coeffs = x.reshape( [self.deg+2]*self.dim )
-            return 0
-        assert( x.shape == self.coeffs.shape )
-        self.coeffs = x
+        self.coeffs = x.reshape( self.coeffs.shape )
         return 0
-
 
     def interpolate_function(self, f):
         #computes the hermite series which interpolates f on [-M,M]^d.
@@ -53,64 +41,70 @@ class hermite_function_series:
         #where alpha = sqrt(2*deg)/M
         from numpy import meshgrid,sqrt
         from numpy.polynomial.hermite import hermgauss
-        gamma,w = hermgauss( self.deg )
-        h = hermite_function( gamma , self.deg )
-        C = ( h**2).sum(axis=0)
-        alpha = sqrt( 2*self.deg) / self.M
-        f_at_gamma = f( *meshgrid( *[gamma/alpha ]*self.dim ) )
+        gamma_w = []
+        for d in self.deg:
+            gamma_w.append( hermgauss( d ) )
+        gamma,w = zip(*gamma_w)
+
+        h = []
+        C = []
+        alpha = []
+        for k,d in enumerate( self.deg ):
+            h.append( hermite_function( gamma[k] , d ) )
+            C.append( ( h[k]**2).sum(axis=0) )
+            alpha.append( sqrt( 2*d) / self.M[k] )
+        f_at_gamma = f( *meshgrid( * map( lambda x:x[0]/x[1], zip(gamma,alpha) ) ) )
         h_list = []
         C_inverse_list = []
         f_index = []
         output_index = []
-        n=0
-        i=self.dim
-        for _ in range(self.dim):
-            h_list.append( h )
+        for n in range( len(self.deg)):
+            i = n + len(self.deg)
+            h_list.append( h[n] )
             h_list.append( [n,i] )
-            C_inverse_list.append( C**-1 )
+            C_inverse_list.append( C[n]**-1 )
             C_inverse_list.append( [i] )
             f_index.append( i )
             output_index.append(n)
-            i += 1
-            n += 1
         arg = h_list + C_inverse_list + [f_at_gamma, f_index, output_index]
         self.coeffs = np.einsum( *arg )
         return 0
 
-    def evaluate_on_uniform_grid( self , res=20 ):
+    def evaluate_on_uniform_grid( self , res=20 , return_grid=False ):
         #given a hermite series a[m,n] we evaluate it on a grid
         #Output: array f[i] = \sum_m a[m] h_m( x_i * alpha )
         #where alpha = sqrt(2*res)/M
         M=self.M
-        alpha = np.sqrt( 2*self.deg )/M
+        alpha = map( lambda x: np.sqrt(2*x[0])/x[1] , zip( self.deg,self.M) ) 
         from numpy import linspace
-        h = hermite_function( linspace(-M,M,res)*alpha , deg=self.deg )
+        #h = hermite_function( linspace(-M,M,res)*alpha , deg=self.deg )
         #In 2D this call looks like
         #np.einsum(a,[m1,m2],h,[m1,i1], h, [m2,i2] , [i1,i2] )
         m_list = []
         i_list = []
         h_list = []
-        m = 0
-        i = self.dim
-        for _ in range(self.dim):
+        for m in range( len(self.deg) ):
+            i = len(self.deg)+m
             m_list.append(m)
             i_list.append(i)
-            h_list += [ h , [m,i] ]
-            i += 1
-            m += 1
+            h_list += [ hermite_function( linspace(-M[m],M[m],res)*alpha[m] ) , [m,i] ]
         arg = [ self.coeffs , m_list ] + h_list + [i_list]
         from numpy import einsum
-        return einsum( *arg )
+        f_grid = einsum( *arg )
+        if return_grid:
+            from numpy import meshgrid,linspace
+            x_grid,y_grid = meshgrid( * map( lambda m: linspace(-m,m,res) , self.M ) )
+            return x_grid, y_grid, f_grid
+        return f_grid
 
     def get_uniform_grid( self, res=20):
         from numpy import meshgrid,linspace
-        return meshgrid( *[linspace( -self.M , self.M , res )]*self.dim )
-    
+        return meshgrid( * map( lambda m: linspace(-m,m,res) , self.M ) )
+
     def __add__( self , other):
         assert( type(other) == type(self) )
         assert( self.M == other.M )
         assert( self.deg == other.deg )
-        assert( self.dim == other.dim )
         return hermite_function_series( coeffs = self.coeffs + other.coeffs , M = self.M , deg = self.deg, dim =self.dim )
 
     def __mul__( self , x ):
@@ -124,31 +118,31 @@ class hermite_function_series:
         return hermite_function_series( coeffs = x*self.coeffs , M = self.M , deg = self.deg , dim = self.dim )
 
 class Lie_derivative:
-    #Produces a Lie derivative operator for a polynomial vector field
-    def __init__(self, polynomials=None , M=1, dim=1, deg=20):
-        self.dim = dim
+    #Produces a Fokker-Planck operator for densities with respect to polynomial vector fields and Gaussian noise
+    def __init__(self, polynomials=None , M=(1,), deg=(20,) , sigma = None ):
+        assert( len(deg) == len(M) )
         self.deg = deg
         self.M = M
         from scipy import sparse
-        if( polynomials is None ):
-            self.op = sparse.dia_matrix( ( (deg+2)**dim , (deg+2)**dim ) )
-        else:
-            dim = len(polynomials)
-            self.dim = dim
-            d = np.sqrt( np.arange(1,deg+2) )
-            alpha = np.sqrt(2*deg)/M
-            diff_by_x = alpha*sparse.diags( [-d,d] , offsets=[1,-1] , shape=(deg+2,deg+2) )
-            mult_by_x = (alpha**-1)*sparse.diags( [d,d] , offsets=[1,-1] , shape=(deg+2,deg+2) )
+        n_modes = reduce( lambda x,y: x*(y+2) , deg , 1 )
+        print n_modes
+        self.op = sparse.dia_matrix( ( n_modes , n_modes ) )
+        if( polynomials != None ):
+            assert( len( polynomials) == len(self.deg) )
+            alpha = np.sqrt(2*np.array(deg))/np.array(M)
             multiplication_operators = []
             derivative_op = []
-            for k in range(dim):
-                for i in range(dim):
+            for k in range(len(self.deg) ):
+                d = np.sqrt( np.arange(1,deg[k]+2) )
+                diff_1d = alpha[k]*sparse.diags( [-d,d] , offsets=[1,-1] , shape=(deg[k]+2,deg[k]+2) )
+                mult_1d = (alpha[k]**-1)*sparse.diags( [d,d] , offsets=[1,-1] , shape=(deg[k]+2,deg[k]+2) )
+                for i in range(len(self.deg)):
                     if(i==k):
-                        store_m = mult_by_x
-                        store_d = diff_by_x
+                        store_m = diff_1d
+                        store_d = mult_1d
                     else:
-                        store_m = sparse.eye( deg + 2 )
-                        store_d = sparse.eye( deg + 2 )
+                        store_m = sparse.eye( deg[i] + 2 )
+                        store_d = sparse.eye( deg[i] + 2 )
                     if( i == 0):
                         mult_by_kth = store_m.copy()
                         diff_by_kth = store_d.copy()
@@ -157,14 +151,18 @@ class Lie_derivative:
                         diff_by_kth = sparse.kron( store_d, diff_by_kth )
                 multiplication_operators.append( mult_by_kth )
                 derivative_op.append( diff_by_kth )
-            self.op = sparse.dia_matrix( ( (deg+2)**dim , (deg+2)**dim ) )
-            for k in range(dim):
+            for k in range( len(self.deg)):
                 mult_by_poly = eval_nd_poly( polynomials[k] , multiplication_operators )
-                self.op += 0.5*derivative_op[k].dot( mult_by_poly ) + 0.5*mult_by_poly.dot( derivative_op[k] )
+                self.op += derivative_op[k].dot( mult_by_poly )
+            if sigma != None:
+                assert( len(sigma) == len(M) )
+                for k in range( len(self.deg) ):
+                    self.op += (sigma[k]**2) * derivative_op[k].dot( derivative_op[k] )
+ 
     def __add__(self, other ):
         assert( type(self) == type(other) )
-        assert( self.M == other.M and self.dim == other.dim and self.deg==other.deg)
-        out = Lie_derivative( M=self.M, dim=self.dim, deg=self.deg )
+        assert( self.M == other.M and self.deg==other.deg)
+        out = Lie_derivative( M=self.M, deg=self.deg )
         out.op = self.op + other.op
         return out
 
@@ -172,9 +170,9 @@ class Lie_derivative:
         #applies the Lie derivative Operatot to a hermite series
         assert( self.M == h_series.M )
         assert( self.deg == h_series.deg )
-        assert( self.dim == h_series.dim )
-        coeffs = self.op.dot( h_series.coeffs.flatten() ).reshape( [self.deg+2]*self.dim )
-        return hermite_function_series( coeffs = coeffs, M = self.M , dim=self.dim, deg=self.deg )
+        shape_tuple = h_series.coeffs.shape
+        coeffs = self.op.dot( h_series.coeffs.flatten() ).reshape( shape_tuple )
+        return hermite_function_series( coeffs = coeffs, M = self.M , deg=self.deg )
 
     def advect( self, h_series, t , rtol = None ):
         #evolves h_series by time t according to the Schrodinger equation
@@ -184,7 +182,7 @@ class Lie_derivative:
         x0 = h_series.coeffs.flatten()
         from scipy.integrate import odeint
         x_arr = odeint( lambda x,t: self.op.dot(x) , x0 , np.array([0,t]) )
-        return hermite_function_series( coeffs=x_arr[1].reshape( [self.deg+2]*self.dim ) , dim=self.dim  ,M=self.M,deg=self.deg)
+        return hermite_function_series( coeffs=x_arr[1].reshape( h_series.coeffs.shape ) , dim=self.dim  ,M=self.M,deg=self.deg)
 
     def cayley_step(self, h_series , dt ):
         #evolves h_series by cayley(A dt) = ( I-dt*A)^{-1} (I+A*dt).
