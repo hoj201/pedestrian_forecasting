@@ -105,7 +105,7 @@ class hermite_function_series:
     def __rmul__(self , x ):
         return hermite_function_series( coeffs = x*self.coeffs, M = self.M, deg = self.deg )
 
-class Lie_derivative:
+class FP_operator:
     #Produces a Fokker-Planck operator for densities with respect to polynomial vector fields and Gaussian noise
     def __init__(self, polynomials=None , M=(1,), deg=(20,) , sigma = None ):
         assert( len(deg) == len(M) )
@@ -141,11 +141,11 @@ class Lie_derivative:
                 derivative_op.append( diff_by_kth )
             for k in range( len(self.deg)):
                 mult_by_poly = eval_nd_poly( polynomials[k] , multiplication_operators )
-                self.op += derivative_op[k].dot( mult_by_poly )
+                self.op -= derivative_op[k].dot( mult_by_poly )
             if sigma != None:
                 assert( len(sigma) == len(M) )
                 for k in range( len(self.deg) ):
-                    self.op += (sigma[k]**2) * derivative_op[k].dot( derivative_op[k] )
+                    self.op += sigma[k] * derivative_op[k].dot( derivative_op[k] )
  
     def __add__(self, other ):
         assert( type(self) == type(other) )
@@ -166,7 +166,6 @@ class Lie_derivative:
         #evolves h_series by time t according to the Schrodinger equation
         assert( self.M == h_series.M )
         assert( self.deg == h_series.deg )
-        assert( self.dim == h_series.dim )
         x0 = h_series.coeffs.flatten()
         from scipy.integrate import odeint
         x_arr = odeint( lambda x,t: self.op.dot(x) , x0 , np.array([0,t]) )
@@ -175,9 +174,10 @@ class Lie_derivative:
     def cayley_step(self, h_series , dt ):
         #evolves h_series by cayley(A dt) = ( I-dt*A)^{-1} (I+A*dt).
         #where A = self.op
-        assert( [self.dim,self.M,self.deg] == [h_series.dim,h_series.M,h_series.deg] )
+        assert( self.M == h_series.M )
+        assert( self.deg == h_series.deg )
         from scipy import sparse
-        I = sparse.eye( (self.deg+2)**self.dim )
+        I = sparse.eye( 1) #TODO: Fix this if your advection routine failes
         x = h_series.coeffs.flatten()
         x += 0.5*dt*self.op.dot( x )
         from scipy.sparse.linalg import spsolve
