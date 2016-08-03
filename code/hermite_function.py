@@ -101,17 +101,17 @@ class hermite_function_series:
         assert( type(other) == type(self) )
         assert( self.M == other.M )
         assert( self.deg == other.deg )
-        return hermite_function_series( coeffs = self.coeffs + other.coeffs , M = self.M , deg = self.deg, dim =self.dim )
+        return hermite_function_series( coeffs = self.coeffs + other.coeffs, M = self.M, deg = self.deg)
 
     def __mul__( self , x ):
         #scalar multiplication
-        return hermite_function_series( coeffs = x*self.coeffs , M = self.M , deg = self.deg , dim = self.dim )
+        return hermite_function_series( coeffs = x*self.coeffs, M = self.M, deg = self.deg )
 
     def __lmul__(self , x ):
-        return hermite_function_series( coeffs = x*self.coeffs , M = self.M , deg = self.deg , dim = self.dim )
+        return hermite_function_series( coeffs = x*self.coeffs, M = self.M, deg = self.deg )
 
     def __rmul__(self , x ):
-        return hermite_function_series( coeffs = x*self.coeffs , M = self.M , deg = self.deg , dim = self.dim )
+        return hermite_function_series( coeffs = x*self.coeffs, M = self.M, deg = self.deg )
 
 class Lie_derivative:
     #Produces a Fokker-Planck operator for densities with respect to polynomial vector fields and Gaussian noise
