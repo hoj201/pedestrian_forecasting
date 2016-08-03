@@ -74,23 +74,15 @@ class hermite_function_series:
         #given a hermite series a[m,n] we evaluate it on a grid
         #Output: array f[i] = \sum_m a[m] h_m( x_i * alpha )
         #where alpha = sqrt(2*res)/M
-        print "entering function"
         out = self.coeffs
-        print "initialized output"
-        print out.shape
         alpha = np.sqrt( 2*self.deg[0] )/ self.M[0]
         h_nx = hermite_function( grid_list[0].flatten()*alpha , self.deg[0] )
         out = np.einsum('n...,ni->...i', out , h_nx)
-        print out.shape
-        print "dealt with dimension 0"
         for k in range(1,len(grid_list)):
             x = grid_list[k].flatten()
             alpha = np.sqrt( 2*self.deg[k] )/ self.M[k] 
             h_nx = hermite_function( x.flatten()*alpha , self.deg[k] ) #first index is hermite index, later indices are spatial
-            out = np.einsum( 'n...i,ni->...i', out, h_nx ) #TODO:  There is a bug here.  The size of the sets is ridiculous
-            print out.shape
-            print "delta with dimension %d" % k
-        print out.shape
+            out = np.einsum( 'n...i,ni->...i', out, h_nx ) 
         return out.reshape( grid_list[0].shape )
 
     def get_uniform_grid( self, res=20):
