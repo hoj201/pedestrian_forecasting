@@ -27,7 +27,7 @@ class hermite_function_series:
         self.dim = len(M)
         shape_tuple = map( lambda x: x+2 , deg )
         if(coeffs is None):
-            self.coeffs = np.array( shape_tuple )
+            self.coeffs = np.zeros( shape_tuple )
         else:
             self.coeffs = coeffs.reshape( shape_tuple )
 
@@ -70,32 +70,28 @@ class hermite_function_series:
         self.coeffs = np.einsum( *arg )
         return 0
 
-    def evaluate_on_uniform_grid( self , res=20 , return_grid=False ):
+    def evaluate_on_grid( self, grid_list ):
         #given a hermite series a[m,n] we evaluate it on a grid
         #Output: array f[i] = \sum_m a[m] h_m( x_i * alpha )
         #where alpha = sqrt(2*res)/M
-        M=self.M
-        alpha = map( lambda x: np.sqrt(2*x[0])/x[1] , zip( self.deg,self.M) ) 
-        from numpy import linspace
-        #h = hermite_function( linspace(-M,M,res)*alpha , deg=self.deg )
-        #In 2D this call looks like
-        #np.einsum(a,[m1,m2],h,[m1,i1], h, [m2,i2] , [i1,i2] )
-        m_list = []
-        i_list = []
-        h_list = []
-        for m in range( len(self.deg) ):
-            i = len(self.deg)+m
-            m_list.append(m)
-            i_list.append(i)
-            h_list += [ hermite_function( linspace(-M[m],M[m],res)*alpha[m] ) , [m,i] ]
-        arg = [ self.coeffs , m_list ] + h_list + [i_list]
-        from numpy import einsum
-        f_grid = einsum( *arg )
-        if return_grid:
-            from numpy import meshgrid,linspace
-            x_grid,y_grid = meshgrid( * map( lambda m: linspace(-m,m,res) , self.M ) )
-            return x_grid, y_grid, f_grid
-        return f_grid
+        print "entering function"
+        out = self.coeffs
+        print "initialized output"
+        print out.shape
+        alpha = np.sqrt( 2*self.deg[0] )/ self.M[0]
+        h_nx = hermite_function( grid_list[0].flatten()*alpha , self.deg[0] )
+        out = np.einsum('n...,ni->...i', out , h_nx)
+        print out.shape
+        print "dealt with dimension 0"
+        for k in range(1,len(grid_list)):
+            x = grid_list[k].flatten()
+            alpha = np.sqrt( 2*self.deg[k] )/ self.M[k] 
+            h_nx = hermite_function( x.flatten()*alpha , self.deg[k] ) #first index is hermite index, later indices are spatial
+            out = np.einsum( 'n...i,ni->...i', out, h_nx ) #TODO:  There is a bug here.  The size of the sets is ridiculous
+            print out.shape
+            print "delta with dimension %d" % k
+        print out.shape
+        return out.reshape( grid_list[0].shape )
 
     def get_uniform_grid( self, res=20):
         from numpy import meshgrid,linspace
