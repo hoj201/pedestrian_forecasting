@@ -22,6 +22,10 @@ def hermite_polynomial(x,deg):
 
 class hermite_function_series:
     def __init__(self, coeffs = None , M=(1,), deg=(20,)):
+        if isinstance(M , (int, long, float)):
+            M = (M,)
+        if isinstance(deg,int):
+            deg = (deg,)
         self.M = M
         self.deg = deg
         self.dim = len(M)
@@ -89,15 +93,31 @@ class hermite_function_series:
         from numpy import meshgrid,linspace
         return meshgrid( * map( lambda m: linspace(-m,m,res) , self.M ) )
 
+    def kron( self, other ):
+        #returns the Kronecker product of two series (i.e. f(x,y) = c_i h_i(x) d_j h_j(y) )
+        assert( type(other) == type(self) )
+        M = self.M + other.M
+        deg = self.deg + other.deg
+        return hermite_function_series( coeffs = np.kron( self.coeffs , other.coeffs ), M=M, deg=deg)
+
     def __add__( self , other):
         assert( type(other) == type(self) )
         assert( self.M == other.M )
         assert( self.deg == other.deg )
         return hermite_function_series( coeffs = self.coeffs + other.coeffs, M = self.M, deg = self.deg)
 
+    def __sub__( self , other):
+        assert( type(other) == type(self) )
+        assert( self.M == other.M )
+        assert( self.deg == other.deg )
+        return hermite_function_series( coeffs = self.coeffs - other.coeffs, M = self.M, deg = self.deg)
+
     def __mul__( self , x ):
         #scalar multiplication
-        return hermite_function_series( coeffs = x*self.coeffs, M = self.M, deg = self.deg )
+        from numbers import Number
+        if isinstance(x , Number):
+            # if x is a scalar, then just scale the coefficients
+            return hermite_function_series( coeffs = x*self.coeffs, M = self.M, deg = self.deg )
 
     def __lmul__(self , x ):
         return hermite_function_series( coeffs = x*self.coeffs, M = self.M, deg = self.deg )
@@ -113,7 +133,7 @@ class FP_operator:
         self.M = M
         from scipy import sparse
         n_modes = reduce( lambda x,y: x*(y+2) , deg , 1 )
-        print n_modes
+        self.__number_of_states__ = n_modes
         self.op = sparse.dia_matrix( ( n_modes , n_modes ) )
         if( polynomials != None ):
             assert( len( polynomials) == len(self.deg) )
@@ -168,24 +188,11 @@ class FP_operator:
         assert( self.deg == h_series.deg )
         x0 = h_series.coeffs.flatten()
         from scipy.integrate import odeint
-        x_arr = odeint( lambda x,t: self.op.dot(x) , x0 , np.array([0,t]) )
-        return hermite_function_series( coeffs=x_arr[1].reshape( h_series.coeffs.shape ) , dim=self.dim  ,M=self.M,deg=self.deg)
-
-    def cayley_step(self, h_series , dt ):
-        #evolves h_series by cayley(A dt) = ( I-dt*A)^{-1} (I+A*dt).
-        #where A = self.op
-        assert( self.M == h_series.M )
-        assert( self.deg == h_series.deg )
-        from scipy import sparse
-        I = sparse.eye( 1) #TODO: Fix this if your advection routine failes
-        x = h_series.coeffs.flatten()
-        x += 0.5*dt*self.op.dot( x )
-        from scipy.sparse.linalg import spsolve
-        y = spsolve( I - 0.5*dt*self.op , x )
-        return hermite_function_series( coeffs = y , M=self.M,deg=self.deg,dim=self.dim)
-
-
-
+        if rtol==None:
+            x_arr = odeint(lambda x,t: self.op.dot(x), x0 ,np.array([0,t]) )
+        else:
+            x_arr = odeint(lambda x,t: self.op.dot(x), x0, np.array([0,t]), rtol=rtol )
+        return hermite_function_series( coeffs=x_arr[1].reshape( h_series.coeffs.shape ), M=self.M, deg=self.deg)
 
 def horners( a , x ):
     n = len(a)
