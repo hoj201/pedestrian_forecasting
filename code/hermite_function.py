@@ -39,7 +39,7 @@ class hermite_function_series:
         self.coeffs = x.reshape( self.coeffs.shape )
         return 0
 
-    def interpolate_function(self, f):
+    def interpolate(self, f):
         #computes the hermite series which interpolates f on [-M,M]^d.
         #Output: coefficient array a[n] where f(x) = a[n] h_n(x*alpha)
         #where alpha = sqrt(2*deg)/M
@@ -88,6 +88,19 @@ class hermite_function_series:
             h_nx = hermite_function( x.flatten()*alpha , self.deg[k] ) #first index is hermite index, later indices are spatial
             out = np.einsum( 'n...i,ni->...i', out, h_nx ) 
         return out.reshape( grid_list[0].shape )
+
+    def marginalize(self, axis):
+        #integrate over a single axis
+        dim = len(self.M)
+        integrals = compute_integrals_of_hermite_function( self.deg[axis] )
+        indices = list(range(0,dim))
+        output_indices = indices + [] #deep copy of indices
+        output_indices.remove(axis)
+        alpha = np.sqrt( 2*self.deg[axis] )/ self.M[axis]
+        new_coeffs = np.einsum(coeffs, indices,  integrals, [axis,], output_indices) / alpha
+        new_M = [self.M[i] for i in output_indices]
+        new_deg = [self.deg[i] for i in output_indices]
+        return hermite_function_series( coeffs=new_coeffs, M=new_M, deg=new_deg )
 
     def get_uniform_grid( self, res=20):
         from numpy import meshgrid,linspace
@@ -216,3 +229,27 @@ def eval_nd_poly( a , x ):
         return b
     return horners( a , x[0] )
 
+def compute_hermite_coeffs(n_max):
+    #computes the coefficients a[n][k] where h_n(x) = \exp(-x^2 / 2) \sum_{k=0}^{n} a_{n,k} x^{k}
+    #for n=0,...,n_max
+    assert( n_max >= 0)
+    a_list = [ np.array( [np.pi**-0.25] ) , np.array([0.0, np.sqrt(2)*np.pi**(-0.25)]), ]
+    for n in range(1,n_max+1):
+        #shift = np.diag( np.ones(n+1)  , k=-1)
+        a_n = a_list[-1]
+        a_n_minus_1 = np.hstack( [a_list[-2], np.zeros(2)] )
+        a_n_plus_1 = np.sqrt(2/float(n+1)) * np.hstack( [ np.zeros(1) ,a_n] ) - np.sqrt(n/float(n+1)) * a_n_minus_1
+        a_list.append( a_n_plus_1 )
+    return a_list
+
+def compute_integrals_of_hermite_functions( n_max):
+    #computes the integrals \int h_n(x) for n=0,...,n_max
+    a_list = get_hermite_coeffs(n_max)
+    out = np.zeros(n_max+1)
+    b_0 = np.sqrt(np.pi*2)
+    for n in range(0,n_max+1,2):
+        g = a_list[n][n]
+        for k in range(2,n+1,2):
+            g = (n-k+1)*g+a_list[n][n-k]
+        out[n] = g*b_0
+    return out
