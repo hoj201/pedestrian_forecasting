@@ -1,9 +1,12 @@
 import numpy as np
+from horners import eval_nd_poly
 
 def hermite_function(x, deg=20):
     # computes h_n(x) for n = 0,...,deg
-    out = np.zeros( (deg + 2 , x.size) )
+    out = np.zeros( (deg + 1 , x.size) )
     out[0,:] = np.pi**-0.25 * np.exp( - x**2 / 2.0)
+    if deg==0:
+        return out
     out[1,:] = np.sqrt(2)*x*out[0,:]
     for n in range(2,deg+1):
         out[n,:] = np.sqrt(2.0/n) * x * out[n-1,:] - np.sqrt( (n-1)/float(n)) * out[n-2,:]
@@ -23,13 +26,13 @@ def hermite_polynomial(x,deg):
 class hermite_function_series:
     def __init__(self, coeffs = None , M=(1,), deg=(20,)):
         if isinstance(M , (int, long, float)):
-            M = (M,)
+            M = [M,]
         if isinstance(deg,int):
-            deg = (deg,)
+            deg = [deg,]
         self.M = M
         self.deg = deg
         self.dim = len(M)
-        shape_tuple = map( lambda x: x+2 , deg )
+        shape_tuple = map( lambda x: x+1 , deg )
         if(coeffs is None):
             self.coeffs = np.zeros( shape_tuple )
         else:
@@ -91,13 +94,14 @@ class hermite_function_series:
 
     def marginalize(self, axis):
         #integrate over a single axis
+        global compute_integrals_of_hermite_function
         dim = len(self.M)
         integrals = compute_integrals_of_hermite_function( self.deg[axis] )
         indices = list(range(0,dim))
         output_indices = indices + [] #deep copy of indices
         output_indices.remove(axis)
         alpha = np.sqrt( 2*self.deg[axis] )/ self.M[axis]
-        new_coeffs = np.einsum(coeffs, indices,  integrals, [axis,], output_indices) / alpha
+        new_coeffs = np.einsum(self.coeffs, indices,  integrals, [axis,], output_indices) / alpha
         new_M = [self.M[i] for i in output_indices]
         new_deg = [self.deg[i] for i in output_indices]
         return hermite_function_series( coeffs=new_coeffs, M=new_M, deg=new_deg )
@@ -141,44 +145,43 @@ class hermite_function_series:
 class FP_operator:
     #Produces a Fokker-Planck operator for densities with respect to polynomial vector fields and Gaussian noise
     def __init__(self, polynomials=None , M=(1,), deg=(20,) , sigma = None ):
+        from numbers import Number
+        if isinstance(M,Number):
+            M = [M,]
+        if isinstance(deg,int):
+            deg = [deg,]
         assert( len(deg) == len(M) )
-        self.deg = deg
-        self.M = M
+        self.deg = list(deg)
+        self.M = list(M)
+        dim = len(deg)
         from scipy import sparse
-        n_modes = reduce( lambda x,y: x*(y+2) , deg , 1 )
+        n_modes = reduce( lambda x,y: x*(y+1) , deg , 1 )
         self.__number_of_states__ = n_modes
         self.op = sparse.dia_matrix( ( n_modes , n_modes ) )
         if( polynomials != None ):
             assert( len( polynomials) == len(self.deg) )
             alpha = np.sqrt(2*np.array(deg))/np.array(M)
+            identity_operators = [ sparse.eye( deg[k]+1 ) for k in range( dim ) ]
             multiplication_operators = []
-            derivative_op = []
-            for k in range(len(self.deg) ):
-                d = np.sqrt( np.arange(1,deg[k]+2) )
-                diff_1d = alpha[k]*sparse.diags( [-d,d] , offsets=[1,-1] , shape=(deg[k]+2,deg[k]+2) )
-                mult_1d = (alpha[k]**-1)*sparse.diags( [d,d] , offsets=[1,-1] , shape=(deg[k]+2,deg[k]+2) )
-                for i in range(len(self.deg)):
-                    if(i==k):
-                        store_m = diff_1d
-                        store_d = mult_1d
-                    else:
-                        store_m = sparse.eye( deg[i] + 2 )
-                        store_d = sparse.eye( deg[i] + 2 )
-                    if( i == 0):
-                        mult_by_kth = store_m.copy()
-                        diff_by_kth = store_d.copy()
-                    else:
-                        mult_by_kth = sparse.kron( store_m, mult_by_kth )
-                        diff_by_kth = sparse.kron( store_d, diff_by_kth )
-                multiplication_operators.append( mult_by_kth )
-                derivative_op.append( diff_by_kth )
-            for k in range( len(self.deg)):
-                mult_by_poly = eval_nd_poly( polynomials[k] , multiplication_operators )
-                self.op -= derivative_op[k].dot( mult_by_poly )
-            if sigma != None:
-                assert( len(sigma) == len(M) )
-                for k in range( len(self.deg) ):
-                    self.op += sigma[k] * derivative_op[k].dot( derivative_op[k] )
+            for k in range( dim ):
+                x = one_dimensional_mult_op( deg[k], alpha[k] )
+                multiplication_operators += [ reduce( sparse.kron,
+                    map( lambda arg: x if arg[0]==k else arg[1],
+                        zip(range(dim), identity_operators)
+                        )
+                    )
+                ]
+
+            for k in range( dim ):
+                mult_by_poly = eval_nd_poly( polynomials[k] , multiplication_operators , mul = lambda a,b: a.dot(b) )
+                ddx = one_dimensional_diff_op( deg[k] , alpha[k] ) 
+                derivative_op = reduce( sparse.kron ,
+                        map( lambda arg: ddx if arg[0]==k else arg[1],
+                            zip(range(dim),identity_operators)
+                            )
+                        )
+                self.op -= derivative_op.dot( mult_by_poly )
+                self.op += 0.5*sigma[k]**2 * derivative_op.dot( derivative_op )
  
     def __add__(self, other ):
         assert( type(self) == type(other) )
@@ -207,28 +210,6 @@ class FP_operator:
             x_arr = odeint(lambda x,t: self.op.dot(x), x0, np.array([0,t]), rtol=rtol )
         return hermite_function_series( coeffs=x_arr[1].reshape( h_series.coeffs.shape ), M=self.M, deg=self.deg)
 
-def horners( a , x ):
-    n = len(a)
-    from scipy import sparse
-    Id = sparse.eye( x.shape[0] )
-    b = a[n-1]*Id
-    tol = 0.01
-    for k in range( n-2,-1,-1):
-        if( np.abs(a[k]) < tol ):
-            b = b.dot(x)
-        else:
-            b = a[k]*Id + b.dot( x )
-    return b
-
-def eval_nd_poly( a , x ):
-    if( len(a.shape) > 1 ):
-        n = a.shape[0]
-        b = eval_nd_poly( a[n-1,:] , x[1:len(x)] )
-        for k in range( n-2, -1, -1 ):
-            b = eval_nd_poly( a[k,:] , x[1:len(x)] ) + x[0].dot(b)
-        return b
-    return horners( a , x[0] )
-
 def compute_hermite_coeffs(n_max):
     #computes the coefficients a[n][k] where h_n(x) = \exp(-x^2 / 2) \sum_{k=0}^{n} a_{n,k} x^{k}
     #for n=0,...,n_max
@@ -242,9 +223,9 @@ def compute_hermite_coeffs(n_max):
         a_list.append( a_n_plus_1 )
     return a_list
 
-def compute_integrals_of_hermite_functions( n_max):
+def compute_integrals_of_hermite_function( n_max):
     #computes the integrals \int h_n(x) for n=0,...,n_max
-    a_list = get_hermite_coeffs(n_max)
+    a_list = compute_hermite_coeffs(n_max)
     out = np.zeros(n_max+1)
     b_0 = np.sqrt(np.pi*2)
     for n in range(0,n_max+1,2):
@@ -253,3 +234,39 @@ def compute_integrals_of_hermite_functions( n_max):
             g = (n-k+1)*g+a_list[n][n-k]
         out[n] = g*b_0
     return out
+
+def one_dimensional_diff_op( degree, alpha ):
+    #produces the one dimensional differential operator in the basis h_n( alpha* x) for n=0,...,degree
+    from scipy.sparse import diags
+    down_shift = diags( np.ones( degree ) , offsets = 1 , shape=(degree+1,degree+1) )
+    up_shift = diags( np.ones( degree ) , offsets = -1 , shape=(degree+1,degree+1) )
+    D_matrix = diags( np.sqrt( np.arange(0,degree+1)/2.0) , offsets=0, shape=(degree+1,degree+1) )
+    return alpha*( down_shift.dot(D_matrix) - D_matrix.dot(up_shift) )
+
+def one_dimensional_mult_op( degree, alpha ):
+    #produces the one dimensional multiplication operator in the basis h_n( alpha* x) for n=0,...,degree
+    from scipy.sparse import diags
+    down_shift = diags( np.ones( degree ) , offsets = 1 , shape=(degree+1,degree+1) )
+    up_shift = diags( np.ones( degree ) , offsets = -1 , shape=(degree+1,degree+1) )
+    D_matrix = diags( np.sqrt( np.arange(0,degree+1)/2.0) , offsets=0, shape=(degree+1,degree+1) )
+    return (down_shift.dot(D_matrix) + D_matrix.dot(up_shift) )/float(alpha)
+
+if __name__ == '__main__':
+    from matplotlib import pyplot as plt
+    alpha = 1.0
+    h_test = hermite_function_series(M=[1,],deg=[20,])
+    mu_x = 0.2
+    sigma_x = 0.2
+    h_test.interpolate( lambda x : np.exp( -(x-mu_x)**2 / (2.0*sigma_x**2) ) )
+    x_span = np.linspace(-1,1,100)
+    plt.plot( x_span , h_test.evaluate_on_grid([x_span]) ,'b-')
+    plt.plot( x_span , np.exp( - (x_span-mu_x)**2 / (2.0*sigma_x**2) ), 'r-')
+    plt.grid(True)
+    plt.show()
+    FP_op_1d = FP_operator(deg=[20,], M=[1,], sigma=[0,], polynomials=[np.array([1,]),])
+    dh_test = FP_op_1d.dot( h_test)
+    x_span = np.linspace(-1,1,100)
+    plt.plot( x_span , dh_test.evaluate_on_grid([x_span]) ,'b-')
+    plt.plot( x_span , ( (x_span-mu_x) / (sigma_x**2)) * np.exp( - (x_span-mu_x)**2 / (2.0*sigma_x**2) ), 'r-')
+    plt.grid(True)
+    plt.show()
