@@ -5,9 +5,10 @@
 % \geometry{landscape} % rotated page geometry
 
 %  POSSIBLY USEFULE PACKAGES
-%\usepackage{graphicx}
+\usepackage{graphicx}
 %\usepackage{tensor}
 %\usepackage{todonotes}
+\usepackage{verbatim}
 
 %  NEW COMMANDS
 \newcommand{\pder}[2]{\ensuremath{\frac{ \partial #1}{\partial #2}}}
@@ -189,6 +190,63 @@ We will do so spectrally using basis functions of the form
 	e_{k}(x,y,u,v) = e^{ 2\pi i( k_1 x+k_2 y) } h_{k_3}(u) h_{k_4}(v)
 \end{align*}
 
+\section{Scales}
+Figure \ref{fig:coupa} depicts the reference image from {\verb Coupa/video_0/}.  The distance between the planters is about 12ft.  This was gleaned from the Google maps scale bar.
 
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=3in]{coupa_0.jpg} 
+   \caption{Reference image for Coupa, video 0. The distance between the planters is about 12ft.}
+   \label{fig:coupa}
+\end{figure}
+
+\appendix
+\section{Reference frame mapping}
+We want to map $(x_1,y_1),(x_2,y_2),(x_3,y_3) \in \mathbb{R}^2$ to the points $(X_1,Y_1),(X_2,Y_2),(X_3,Y_3)$ using an affine transformation.
+That is, we want to find scalars $a,b,c,d,e,$ and $f$ such that
+\begin{align*}
+	\begin{bmatrix}
+		a & b \\
+		c & d
+	\end{bmatrix}
+	\begin{bmatrix}
+		x_i \\
+		y_i
+	\end{bmatrix}
+	+ 
+	\begin{bmatrix}
+	e\\
+	f
+	\end{bmatrix} = 
+	\begin{bmatrix}
+	X_i \\
+	Y_i
+	\end{bmatrix}
+\end{align*} 
+for $i=1,2,3$.
+
+This comes down to solving the linear problem
+\begin{align*}
+	\begin{bmatrix}
+	x_1 & y_1 & 0 & 0 & 1 & 0 \\
+	x_2 & y_2 & 0 & 0 & 1 & 0 \\
+	x_3 & y_3 & 0 & 0 & 1 & 0 \\
+	0 & 0 & x_1 & y_1 & 0 & 1 \\
+	0 & 0 & x_2 & y_2 & 0 & 1 \\
+	0 & 0 & x_3 & y_3 & 0 & 1
+	\end{bmatrix}
+	\begin{bmatrix}
+		a \\ b \\ c \\ d \\ e \\ f 
+	\end{bmatrix}
+	=
+	\begin{bmatrix}
+		X_1 \\
+		Y_1 \\
+		X_2 \\
+		Y_2 \\
+		X_3 \\
+		Y_3
+	\end{bmatrix}
+\end{align*}
 
 \end{document}
