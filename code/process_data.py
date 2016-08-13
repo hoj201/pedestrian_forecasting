@@ -3,22 +3,27 @@ def get_trajectories( fname , label='Pedestrian' ):
     # LOAD DATA
     import pandas as pd
 
-    data = pd.read_csv( fname, sep=" ", usecols=[0,1,2,3,4,9])
-    data.columns = ['index','x1','y1','x2','y2','label']
+    data = pd.read_csv( fname, sep=" ")
+    data.columns = ['id',
+            'x1','y1','x2','y2',
+            'frame',
+            'lost','occluded','generated',
+            'label']
     # GET POSITIONS
+    data = data[ data.lost != 1]
+
     x=[]
     y=[]
-    pedestrian_indices = set( data[ data['label']==label ]['index'])
+    relevant_indices = set( data[ data['label']==label ]['id'])
     import numpy as np
-    for pid in pedestrian_indices:
-        x1 = np.array(data[data['index']==pid]['x1'])
-        x2 = np.array(data[data['index']==pid]['x2'])
+    for pid in relevant_indices:
+        x1 = np.array(data[data['id']==pid]['x1'])
+        x2 = np.array(data[data['id']==pid]['x2'])
         x.append(  0.5*(x1+x2)  )
-        y1 = np.array(data[data['index']==pid]['y1'])
-        y2 = np.array(data[data['index']==pid]['y2'])
-        y.append( -0.5*(y1+y2)  )
+        y1 = np.array(data[data['id']==pid]['y1'])
+        y2 = np.array(data[data['id']==pid]['y2'])
+        y.append( 0.5*(y1+y2)  )
     return [x,y]
-
 
 def smooth_trajectories( x_raw , y_raw ):
     #Smooths and extracts positions, velocities, and accelerations
@@ -42,41 +47,6 @@ def smooth_trajectories( x_raw , y_raw ):
     return x_list, vx_list, y_list, vy_list
 
 import numpy as np
-def eval_Hermites(x,deg):
-    #computes the Hermite polynomials 0,...,deg at an array of points x.
-    #returns a matrix of size (len(x),deg)
-    H = np.zeros(deg+2)
-    H[0] = 1.0
-    H[1] = 2*x
-    for n in range(2,deg+2):
-        H[n] = 2*x*H[n-1]-2*(n-1)*H[n-2]
-    return H
-
-def EL_functional(x,v,a, deg_x, deg_v):
-    #computes the functional \ell^x(x,v,a)
-    #only works if x,v,a are a single point.
-    #you should be able to vector-rize this using parallel for-loops.
-    partial_x = np.diag( 2*(np.arange(deg_x+1)+1),k=-1 )
-    partial_v = np.diag( 2*(np.arange(deg_v+1)+1),k=-1 )
-    h_of_x = eval_Hermites(x,deg_x)
-    h_prime_of_x = partial_x.dot(h_of_x)
-    h_of_v = eval_Hermites(v,deg_v)
-    h_prime_of_v = partial_v.dot(h_of_v)
-    h_double_prime_of_v = partial_v.dot(h_prime_of_v)
-    t1 = np.kron( h_prime_of_x , h_prime_of_v*v )
-    t2 = np.kron( h_of_x , h_double_prime_of_v*a )
-    t3 = - np.kron( h_prime_of_x , h_of_v )
-    return t1+t2+t3
-
-def EL_functional_2d(x,vx,ax,y,vy,ay,deg_x=1,deg_v=1):
-    h_of_x = eval_Hermites(x,deg_x)
-    h_of_y = eval_Hermites(y,deg_x)
-    h_of_vx = eval_Hermites(vx,deg_v)
-    h_of_vy = eval_Hermites(vy,deg_v)
-    e1 = reduce( np.kron, [EL_functional(x, vx, ax, deg_x, deg_v) , h_of_y , h_of_vy])
-    e2 = reduce( np.kron, [h_of_x , h_of_vx , EL_functional(y, vy, ay, deg_x, deg_v)])
-    return [e1,e2]
-
 def display_trajectories(x_list,y_list,scene):
     from matplotlib import pyplot as plt
     directory_name = "../annotations/" + scene + "/video0/"
@@ -106,42 +76,7 @@ def get_transformation_to_reference( reference_points, target_points ):
     return list( solve( M , reference_points.flatten() ) )
 
 if __name__ == '__main__':
-    print "Let us test this baby"
-    from pandas import read_csv
-    reference_points = read_csv('../annotations/deathCircle/video0/reference_points.csv').as_matrix()
-    origin = reference_points[0,:]
-    reference_points -= origin
-    #For the deathCircle videos the resolution is 1630 x 1948
-    #we normalist to the square [-1 1 -1 1]
-    reference_points[:,0] = 2*reference_points[:,0]/float(1630) - 1
-    reference_points[:,1] = 2*reference_points[:,0]/float(1948) - 1
-    base_directory = '../annotations/deathCircle/'
-    from time import time
-    for folder in ['video0/','video1/','video2/','video3/','video4/']:
-        fname = base_directory + folder + 'annotations.txt'
-        x_raw,y_raw = get_trajectories( fname )
-        #NOW YOU TRANFORM THEM TO REF COORDINATES HERE
-        target_points = read_csv( base_directory+folder+'reference_points.csv').as_matrix()
-        x_list,vx_list,ax_list,y_list,vy_list,ay_list = smooth_trajectories(x_raw, y_raw)
-        a,b,c,d,e,f = get_transformation_to_reference( reference_points, target_points )
-        x_arr = map( lambda x,y: a*x+b*y+e , x_list, y_list)
-        y_arr = map( lambda x,y: c*x+d*y+f , x_list, y_list)
-        vx_arr = map( lambda x,y: a*x+b*y , vx_list, vy_list )
-        vy_arr = map( lambda x,y: c*x+d*y , vx_list, vy_list )
-        ax_arr = map( lambda x,y: a*x+b*y , ax_list, ay_list )
-        ay_arr = map( lambda x,y: c*x+d*y , ax_list, ay_list )
-        deg_x = 1
-        deg_v = 1
-        functionals = np.zeros( [ (deg_x**2)*(deg_v**2)  , len(ax_arr) ] )
-        print 'obtained processed trajectories for ' + folder
-        t0 = time()
-        for traj_tuple in zip(x_arr, vx_arr, ax_arr, y_arr, vy_arr, ay_arr):
-            for k,arg in enumerate( zip( *traj_tuple) ):
-                functionals[:,k] = EL_functional_2d(*arg)
-        print "Obtained functionals. Total computation time = %f." % (time()-t0)
-        t0 = time()
-        Q = np.einsum('ki,kj->ij', functionals , functionals)
-        total_time = time() - t0
-        print "Computing Q from ells tooks %f seconds" % total_time
-    np.save( "Q_matrix")
-
+    from matplotlib import pyplot as plt
+    x,y = get_trajectories("../annotations/coupa/video0/annotations.txt", label="Biker")
+    plt.plot(x[3])
+    plt.show()
