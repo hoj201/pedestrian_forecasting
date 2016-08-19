@@ -1,0 +1,180 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%2345678901234567890123456789012345678901234567890123456789012345678901234567890
+%        1         2         3         4         5         6         7         8
+
+\documentclass[letterpaper, 10 pt, conference]{ieeeconf}  % Comment this line out if you need a4paper
+
+%\documentclass[a4paper, 10pt, conference]{ieeeconf}      % Use this line for a4 paper
+
+\IEEEoverridecommandlockouts                              % This command is only needed if 
+                                                          % you want to use the \thanks command
+
+\overrideIEEEmargins                                      % Needed to meet printer requirements.
+
+% See the \addtolength command later in the file to balance the column lengths
+% on the last page of the document
+
+% The following packages can be found on http:\\www.ctan.org
+%\usepackage{graphics} % for pdf, bitmapped graphics files
+%\usepackage{epsfig} % for postscript graphics files
+%\usepackage{mathptmx} % assumes new font selection scheme installed
+%\usepackage{times} % assumes new font selection scheme installed
+\usepackage{amsmath} % assumes amsmath package installed
+\usepackage{amssymb}  % assumes amsmath package installed
+
+\title{\LARGE \bf
+Real-time Forecasting of Pedestrian Probability Densities*
+}
+
+
+\author{Henry O. Jacobs, Ram Vasudevan, and Matt Johnson-Roberson$^{2}$% <-this % stops a space
+\thanks{*This work was supported by ???}% <-this % stops a space
+\thanks{$^{2}$Bernard D. Researcheris with the Department of Electrical Engineering, Wright State University,
+        Dayton, OH 45435, USA
+        {\tt\small b.d.researcher@ieee.org}}%
+}
+
+
+\begin{document}
+
+
+
+\maketitle
+\thispagestyle{empty}
+\pagestyle{empty}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{abstract}
+
+This electronic document is a “live” template. The various components of your paper [title, text, heads, etc.] are already defined on the style sheet, as illustrated by the portions given in this document.
+
+\end{abstract}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{INTRODUCTION}
+
+blah blah blah
+
+\section{PREVIOUS WORK}
+
+\subsection{Social Force Models}
+Cite these papers \cite{Henderson1971,Helbing1992}
+
+\subsection{MDP Models}
+Cite these papers \cite{Kitani2012,Ballan2016,Karasev2016,Ziebart2008}
+
+\section{MODEL DESCRIPTION}
+We adopt an \emph{inverse optimal control} based approach in a spirit akin to \cite{Kitani2012}.
+However, our approach differs from \cite{Kitani2012}, firstly, because our dynamic model is a continuous dynamical system rather than a discrete time Markov decision process.
+Specifically, if agents seek to move from location $\vec{x}_0 \in D$ to location $\vec{x}_T \in D$ at some time $T>0$, we suppose
+they choose a curve $\vec{x}^*: [0,T] \to D$ which minimizes the action
+\begin{align*}
+	A[ \vec{x} ] := \int_0^T L( \vec{x}(t)  ,\dot{\vec{x}} (t) ) dt
+\end{align*}
+for some function $L: D \times \mathbb{R}^2 \to \mathbb{R}$, known as the \emph{Lagrangian}.
+For simplicity, we assume that agents use approximately the same Lagrangian and do not interact.
+Under such an assumptions, an agent's dynamics must necessarily satisfy the differential algebraic equations
+\begin{align*}
+	\frac{d}{dt} \left( \frac{\partial L}{\partial \vec{v} } \right) - \frac{ \partial L}{ \partial \vec{x} } = 0, \quad \dot{\vec{x}} = \vec{v}
+\end{align*}
+known as the Euler-Lagrange equation.
+Training the model amounts to learning a Lagrangian, $L$.
+In principle, the family of candidates for $L$ can be quite general.
+For this paper we will consider a parametrized family of Lagrangians on the domain $D = [-w/2,w/2] \times [-h/2,h/2]$ of the form
+\begin{align*}
+	L( \vec{x} ,\dot{\vec{x}} ; \theta) &= \frac{1}{2} \| \dot{\vec{x}} \| - V( \vec{x}; \theta)
+\end{align*}
+where
+\begin{align*}
+	V(x,y ; \theta) := \sum_{ k_1,k_2 = 0 }^{K,K} \theta_{k_1,k_2} \ell_{k_1}(2x/w) \ell_{k_2}(2y/h) 
+\end{align*}
+and $\ell_k$ is the $k^{th}$ Legendre polynomial.
+Learning $L$ amounts to learning the coefficients, $\theta_{k_1,k_2}$, for $k_1,k_2 = 0,\dots,K$.
+
+To foster intuition consider the following cases.
+When all the coefficients, $\theta$, vanish, then $V=0$ and the resulting dynamics seek to minimize distance.
+In this case agents will move in straight lines with constant velocity.
+When $\theta$ is  non-zero agents will deviate from straight line trajectories in order to avoid regions where $V$ is high.
+
+\subsection{Benefits}
+The primary benefit of this model is that we can compute relevant probability densities in real time.
+Once $L$ is known, the Euler-Lagrange equation takes the form
+$$
+	\ddot{ \vec{x} } = - \nabla V( \vec{x} ; \theta)
+$$
+This is a second order ordinary differential equation (ODE) that can be evaluated in $\mathcal{O}(K^2)$ time.
+In order to account for modeling error we can add noise to this model and consider the stochastic differential equation (SDE)
+$$
+	d\vec{x} = \vec{v} dt + \frac{1}{2} \sigma^2  d\vec{W} \quad, \quad d\vec{v} = \nabla V(\vec{x};\theta)dt.
+$$
+The evolution of a probability density, $\rho$, under the above stochastic dynamics is given by the Fokker-Planck equation
+\begin{align*}
+	\partial_t \rho + v \partial_x \rho + \partial_x V_\theta \partial_v \rho = \frac{1}{2} \sigma^2 \partial_x^2 \rho
+\end{align*}
+This is a linear evolution equation, and the solution can be computed in real time with known error bounds for a fairly generic class of initial conditions.
+That are model is allows us to use pre-existing tools from numerical analysis is our primary motivation for choosing this model.
+
+\section{LEARNING}
+
+\subsection{Data}
+We use the Stanford Drone dataset (SDD) [THE CITATION SEEMS TO BE MISSING]
+
+\subsection{Clustering}
+Rather than training on all the data it is useful to cluster many of the trajectories.
+The reason for this is ...
+
+\subsection{Training}
+
+
+\section{EXPIREMENTS}
+
+\subsection{Single trajectory prediction}
+Compare to Ballan-Savarese and linear.... Note CPU times, although none are available for Ballan-Savarese [trash talk mean Hausdorff distance].
+
+\subsection{Density estimator}
+Compare to a linear estimator + Weiner process.   Note CPU times
+
+\section{CONCLUSIONS}
+
+A conclusion section is not required. Although a conclusion may review the main points of the paper, do not replicate the abstract as the conclusion. A conclusion might elaborate on the importance of the work or suggest applications and extensions. 
+
+\addtolength{\textheight}{-12cm}   % This command serves to balance the column lengths
+                                  % on the last page of the document manually. It shortens
+                                  % the textheight of the last page by a suitable amount.
+                                  % This command does not take effect until the next page
+                                  % so it should come on the page before the last. Make
+                                  % sure that you do not shorten the textheight too much.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{APPENDIX}
+
+Appendixes should appear before the acknowledgment.
+
+\section*{ACKNOWLEDGMENT}
+
+The preferred spelling of the word “acknowledgment” in America is without an “e” after the “g”. Avoid the stilted expression, “One of us (R. B. G.) thanks . . .”  Instead, try “R. B. G. thanks”. Put sponsor acknowledgments in the unnumbered footnote on the first page.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+References are important to the reader; therefore, each citation must be complete and correct. If at all possible, references should be commonly available publications.
+
+
+\bibliographystyle{IEEEtrans}
+\bibliography{hoj}
+
+
+
+
+\end{document}
