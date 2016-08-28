@@ -72,6 +72,43 @@ def Ds_predict( theta, s, x0, y0, t_arr ):
     return state_arr[:,0], state_arr[:,1], state_arr[:,2], state_arr[:,3]
 
 
+def Dtheta_grad_U( x , y ):
+    global V_scale, k_max
+    """ Returns dU_dxdtheta
+
+    args:
+        x: float
+        y: float
+
+    returns:
+        dUdx_dtheta, dUdy_dtheta (numpy.ndarray)
+    """
+    
+    #dUdx_dtheta[i,j] = L_i'(x / V_scale[0]) L_j( y / V_scale[0] )
+    #Note  P'_{n+1} = (2n+1) P_n + P'_{n-1}
+    #P'_0 = 0, P'_1 = 1
+    #Note (n+1)P_{n+1} = (2n+1) x P_n  - n P_{n-1}
+    Leg = np.zeros( (k_max + 1, k_max + 1) )
+    Leg[0,0] = 1.0
+    Leg[1,0] = x/ V_scale[0]
+    for i in range(1,k_max):
+        Leg[i+1,0] = ( (2*i+1)*x*Leg[i,0]/V_scale[0] - Leg[i-1,0]) / float(i+1)
+    Leg[:,1] = Leg[:,0]*y / V_scale[1]
+    for j in range(1,k_max):
+        Leg[:,j+1] = ( (2*j+1)*y*Leg[:,j]/V_scale[1] - j*Leg[:,j-1] ) / float(j+1)
+
+    dUdx_dtheta = np.zeros( (k_max+1, k_max+1) )
+    dUdx_dtheta[1,:] = Leg[0,:]/V_scale[0]
+    for i in range(1,k_max):
+        dUdx_dtheta[i+1,:] = (2*i+1)*Leg[i,:]/V_scale[0] + dUdx_dtheta[i-1,:]
+
+    dUdy_dtheta = np.zeros( (k_max+1, k_max+1) )
+    dUdy_dtheta[:,1] = Leg[:,0]/V_scale[1]
+    for j in range(1,k_max):
+        dUdy_dtheta[:,j+1] = (2*j+1)*Leg[:,j]/V_scale[1] + dUdy_dtheta[:,j-1]
+    
+    return dUdx_dtheta, dUdy_dtheta
+
 def Dtheta_predict( theta, s, x0, y0, t_arr ):
     """ Returns the sensitivity of a predicted trajectory to perturbations in theta
 
@@ -97,19 +134,10 @@ def Dtheta_predict( theta, s, x0, y0, t_arr ):
         epsilon = 0.1
         dUdx = legval2d( x/V_scale[0], y/V_scale[1], legder(theta, axis=0) ) / V_scale[0]
         dUdy = legval2d( x/V_scale[0], y/V_scale[1], legder(theta, axis=1) ) / V_scale[1]
-        dUdx_dtheta = np.zeros_like( theta )
-        dUdy_dtheta = np.zeros_like( theta )
-        for i in range(1+k_max):
-            for j in range(1+k_max):
-                dtheta = np.zeros_like( theta )
-                dtheta[i,j] = 1.0
-                dUdx_dtheta[i,j] = legval2d( x/V_scale[0], y/V_scale[1], legder( dtheta, axis = 0 ) ) / V_scale[0]
-                dUdy_dtheta[i,j] = legval2d( x/V_scale[0], y/V_scale[1], legder( dtheta, axis = 1 ) ) / V_scale[1]
-
+        dUdx_dtheta, dUdy_dtheta = Dtheta_grad_U( x, y )
         mag_dU = np.sqrt( dUdx**2 + dUdy**2 )
         dmag_dU_dtheta = ( dUdx*dUdx_dtheta + dUdy*dUdy_dtheta ) / (mag_dU**2)
         epsilon = 0.1
-        out = np.zeros_like( state )
         x_dot = - s*dUdx / (mag_dU + epsilon)
         y_dot = - s*dUdy / (mag_dU + epsilon)
         dx_dot = - s*dUdx_dtheta / (mag_dU + epsilon)
@@ -207,76 +235,87 @@ def Dtheta_regularization( theta ):
     k_span = np.arange(k_max+1)
     return np.einsum('i,j->ij', k_span**2+1, k_span**2 + 1 )
 
-k_max = 6
-theta = np.zeros( (k_max+1, k_max+1) )
-theta[1,1] = 1.0 
-s = 0.5
-x0 = 1.5
-y0 = 1.2
-V_scale = (300, 500)
-t_arr = np.arange(0,100)
-
-print "TESTING prediction sensitivity to s:"
-pert = 1e-6
-x_pred_pert, y_pred_pert = predict( theta, s + pert, x0, y0, t_arr )
-x_pred, y_pred = predict( theta, s, x0, y0, t_arr)
-x_pred_comp, y_pred_comp, dx_pred, dy_pred = Ds_predict( theta, s, x0, y0, t_arr )
-
-fd = x_pred_pert - x_pred
-computed = dx_pred*pert
-print "finite difference = %g" % fd[-1]
-print "computed          = %g" % computed[-1]
-print "error             = %g" % np.abs(fd[-1]-computed[-1]).max()
 
 
-print "TESTING prediction sensitivity to theta:"
-pert = np.random.randn(k_max+1,k_max+1)*1e-6
-x_pred_pert, y_pred_pert = predict( theta + pert, s, x0, y0, t_arr )
-x_pred, y_pred = predict( theta, s, x0, y0, t_arr)
-x_pred_comp, y_pred_comp, dx_pred, dy_pred = Dtheta_predict( theta, s, x0, y0, t_arr )
 
 
-fd = x_pred_pert - x_pred
-computed = np.einsum( 'tij,ij', dx_pred, pert)
-print "finite difference = %g" % fd[-1]
-print "computed          = %g" % computed[-1]
-print "error             = %g" % np.abs(fd[-1]-computed[-1]).max()
-
-from random import randint
-obs_ls = [ np.random.randn( 2, randint(2,200) ) for _ in range(6) ]
-
-print "TESTING cost sensitivity to s"
-pert = 1e-6
-c1 = cost( theta, s+pert, obs_ls)
-c0 = cost( theta, s, obs_ls )
-fd = c1 - c0
-computed = D_s_cost( theta, s, obs_ls ) * pert
-
-print "finite difference = %g" % fd
-print "computed          = %g" % computed
-print "error             = %g" % (fd-computed)
 
 
-print "TESTING cost sensitivity to theta"
-pert = np.random.randn( k_max+1, k_max+1) * 1e-5
-c1 = cost( theta + pert, s, obs_ls )
-c0 = cost( theta, s, obs_ls )
-fd = c1 - c0
-computed = np.einsum('ij,ij', D_theta_cost( theta, s, obs_ls ), pert )
+if __name__ == "__main__":
+    k_max = 4
+    np.random.RandomState(seed=42)
+    k_span = np.arange(0,k_max+1)
+    theta = np.random.randn( k_max+1, k_max+1 ) / np.outer( k_span**2+1, k_span**2+1)
+    s = 0.5
+    x0 = 1.5
+    y0 = 1.2
+    V_scale = (300, 500)
+    t_arr = np.arange(0,100)
 
-print "finite difference = %g" % fd
-print "computed          = %g" % computed
-print "error             = %g" % (fd-computed)
+    print "TESTING prediction sensitivity to s:"
+    pert = 1e-6
+    x_pred_pert, y_pred_pert = predict( theta, s + pert, x0, y0, t_arr )
+    x_pred, y_pred = predict( theta, s, x0, y0, t_arr)
+    x_pred_comp, y_pred_comp, dx_pred, dy_pred = Ds_predict( theta, s, x0, y0, t_arr )
+
+    fd = x_pred_pert - x_pred
+    computed = dx_pred*pert
+    print " finite difference = %g" % fd[-1]
+    print " computed          = %g" % computed[-1]
+    print " error             = %g" % np.abs(fd[-1]-computed[-1]).max()
+    print "\n"
 
 
-print "TESTING regularization sensitivity"
+    print "TESTING prediction sensitivity to theta:"
+    pert = np.random.randn(k_max+1,k_max+1)*1e-6
+    x_pred_pert, y_pred_pert = predict( theta + pert, s, x0, y0, t_arr )
+    x_pred, y_pred = predict( theta, s, x0, y0, t_arr)
+    x_pred_comp, y_pred_comp, dx_pred, dy_pred = Dtheta_predict( theta, s, x0, y0, t_arr )
 
-R1 = regularization(theta + pert)
-R0 = regularization(theta )
-fd = R1 - R0
-computed = np.einsum( 'ij,ij', Dtheta_regularization( theta ) , pert )
 
-print "finite difference = %g" % fd
-print "computed          = %g" % computed
-print "error             = %g" % (fd-computed)
+    fd = x_pred_pert - x_pred
+    computed = np.einsum( 'tij,ij', dx_pred, pert)
+    print " finite difference = %g" % fd[-1]
+    print " computed          = %g" % computed[-1]
+    print " error             = %g" % np.abs(fd[-1]-computed[-1]).max()
+    print "\n"
 
+    from random import randint
+    obs_ls = [ np.random.randn( 2, randint(2,200) ) for _ in range(6) ]
+
+    print "TESTING cost sensitivity to s"
+    pert = 1e-6
+    c1 = cost( theta, s+pert, obs_ls)
+    c0 = cost( theta, s, obs_ls )
+    fd = c1 - c0
+    computed = D_s_cost( theta, s, obs_ls ) * pert
+
+    print " finite difference = %g" % fd
+    print " computed          = %g" % computed
+    print " error             = %g" % (fd-computed)
+    print "\n"
+
+
+    print "TESTING cost sensitivity to theta"
+    pert = np.random.randn( k_max+1, k_max+1) * 1e-6
+    c1 = cost( theta + pert, s, obs_ls )
+    c0 = cost( theta, s, obs_ls )
+    fd = c1 - c0
+    computed = np.einsum('ij,ij', D_theta_cost( theta, s, obs_ls ), pert )
+
+    print " finite difference = %g" % fd
+    print " computed          = %g" % computed
+    print " error             = %g" % (fd-computed)
+    print "\n"
+
+
+    print "TESTING regularization sensitivity"
+
+    R1 = regularization(theta + pert)
+    R0 = regularization(theta )
+    fd = R1 - R0
+    computed = np.einsum( 'ij,ij', Dtheta_regularization( theta ) , pert )
+
+    print " finite difference = %g" % fd
+    print " computed          = %g" % computed
+    print " error             = %g" % (fd-computed)
