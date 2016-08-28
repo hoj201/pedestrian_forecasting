@@ -1,6 +1,8 @@
 import numpy as np
 from numpy.polynomial.legendre import legder, legval2d
 
+epsilon = 0.1
+
 def predict( theta, s, x0, y0, t_arr ):
     global V_scale
     """ Returns a predicted trajectory
@@ -17,20 +19,20 @@ def predict( theta, s, x0, y0, t_arr ):
         y_pred: x coordinates at times in t_arr (numpy.ndarray)
     """
     def ode_func( xy, t, theta, s ):
+        global epsilon
         x = xy[0]
         y = xy[1]
         epsilon = 0.1
         dUdx = legval2d( x/V_scale[0], y/V_scale[1], legder(theta, axis=0) ) / V_scale[0]
         dUdy = legval2d( x/V_scale[0], y/V_scale[1], legder(theta, axis=1) ) / V_scale[1]
         mag_dU = np.sqrt( dUdx**2 + dUdy**2 )
-        epsilon = 0.1
         out = np.zeros_like(xy)
         out[0] = - s*dUdx / (mag_dU + epsilon)
         out[1] = - s*dUdy / (mag_dU + epsilon)
         return out
     from scipy.integrate import odeint
     xy0 = np.array([x0,y0])
-    xy_arr = odeint( ode_func, xy0, t_arr, args=(theta,s) ) 
+    xy_arr = odeint( ode_func, xy0, t_arr, args=(theta,s), rtol=1e-10 ) 
     return xy_arr[:,0], xy_arr[:,1]
 
 
@@ -51,11 +53,11 @@ def Ds_predict( theta, s, x0, y0, t_arr ):
         Ds_y_pred: sensitivities of y coordinates at times in t_arr (numpy.ndarray)
     """
     def ode_func( state, t, theta, s ):
+        global epsilon
         x = state[0]
         y = state[1]
         dxds = state[2]
         dyds = state[3]
-        epsilon = 0.1
         dUdx = legval2d( x/V_scale[0], y/V_scale[1], legder(theta, axis=0) ) / V_scale[0]
         dUdy = legval2d( x/V_scale[0], y/V_scale[1], legder(theta, axis=1) ) / V_scale[1]
         mag_dU = np.sqrt( dUdx**2 + dUdy**2 )
@@ -68,7 +70,7 @@ def Ds_predict( theta, s, x0, y0, t_arr ):
         return out
     from scipy.integrate import odeint
     state0 = np.array([ x0, y0, 0.0, 0.0] )
-    state_arr = odeint( ode_func, state0, t_arr, args=(theta,s) , rtol=1e-8) 
+    state_arr = odeint( ode_func, state0, t_arr, args=(theta,s) , rtol=1e-10) 
     return state_arr[:,0], state_arr[:,1], state_arr[:,2], state_arr[:,3]
 
 
@@ -83,11 +85,6 @@ def Dtheta_grad_U( x , y ):
     returns:
         dUdx_dtheta, dUdy_dtheta (numpy.ndarray)
     """
-    
-    #dUdx_dtheta[i,j] = L_i'(x / V_scale[0]) L_j( y / V_scale[0] )
-    #Note  P'_{n+1} = (2n+1) P_n + P'_{n-1}
-    #P'_0 = 0, P'_1 = 1
-    #Note (n+1)P_{n+1} = (2n+1) x P_n  - n P_{n-1}
     Leg = np.zeros( (k_max + 1, k_max + 1) )
     Leg[0,0] = 1.0
     Leg[1,0] = x/ V_scale[0]
@@ -96,17 +93,14 @@ def Dtheta_grad_U( x , y ):
     Leg[:,1] = Leg[:,0]*y / V_scale[1]
     for j in range(1,k_max):
         Leg[:,j+1] = ( (2*j+1)*y*Leg[:,j]/V_scale[1] - j*Leg[:,j-1] ) / float(j+1)
-
     dUdx_dtheta = np.zeros( (k_max+1, k_max+1) )
     dUdx_dtheta[1,:] = Leg[0,:]/V_scale[0]
     for i in range(1,k_max):
         dUdx_dtheta[i+1,:] = (2*i+1)*Leg[i,:]/V_scale[0] + dUdx_dtheta[i-1,:]
-
     dUdy_dtheta = np.zeros( (k_max+1, k_max+1) )
     dUdy_dtheta[:,1] = Leg[:,0]/V_scale[1]
     for j in range(1,k_max):
         dUdy_dtheta[:,j+1] = (2*j+1)*Leg[:,j]/V_scale[1] + dUdy_dtheta[:,j-1]
-    
     return dUdx_dtheta, dUdy_dtheta
 
 def Dtheta_predict( theta, s, x0, y0, t_arr ):
@@ -127,6 +121,7 @@ def Dtheta_predict( theta, s, x0, y0, t_arr ):
     """
     global k_max
     def ode_func( state, t, theta, s ):
+        global epsilon
         x = state[0]
         y = state[1]
         dx_dtheta = state[2:(k_max+1)**2+2].reshape( (k_max+1, k_max+1) )
@@ -137,7 +132,6 @@ def Dtheta_predict( theta, s, x0, y0, t_arr ):
         dUdx_dtheta, dUdy_dtheta = Dtheta_grad_U( x, y )
         mag_dU = np.sqrt( dUdx**2 + dUdy**2 )
         dmag_dU_dtheta = ( dUdx*dUdx_dtheta + dUdy*dUdy_dtheta ) / (mag_dU**2)
-        epsilon = 0.1
         x_dot = - s*dUdx / (mag_dU + epsilon)
         y_dot = - s*dUdy / (mag_dU + epsilon)
         dx_dot = - s*dUdx_dtheta / (mag_dU + epsilon)
@@ -299,7 +293,7 @@ def jac_cost_function_for_minimizer( decision_vector, obs_ls ):
     theta_sensitivity = Dtheta_cost( theta, s_ls, obs_ls )
     theta_sensitivity += lambda_regularization * Dtheta_regularization(theta)
     s_sensitivity = Ds_cost( theta, s_ls, obs_ls )
-    return np.hstack( [ theta_sensitivity.flatten() , s_sensitivity] )
+    return encode( theta_sensitivity, s_sensitivity )
 
 
 if __name__ == "__main__":
@@ -314,7 +308,7 @@ if __name__ == "__main__":
     t_arr = np.arange(0,100)
 
     print "TESTING prediction sensitivity to s:"
-    pert = 1e-6
+    pert = 1e-4
     x_pred_pert, y_pred_pert = predict( theta, s + pert, x0, y0, t_arr )
     x_pred, y_pred = predict( theta, s, x0, y0, t_arr)
     x_pred_comp, y_pred_comp, dx_pred, dy_pred = Ds_predict( theta, s, x0, y0, t_arr )
@@ -325,7 +319,7 @@ if __name__ == "__main__":
     print " error             = %g\n" % np.abs(fd[-1]-computed[-1]).max()
 
     print "TESTING prediction sensitivity to theta:"
-    pert = np.ones( (k_max+1,k_max+1) )*1e-5
+    pert = np.ones( (k_max+1,k_max+1) )*1e-4
     pert[2,2] = 0.2
     x_pred_pert, y_pred_pert = predict( theta + pert, s, x0, y0, t_arr )
     x_pred, y_pred = predict( theta, s, x0, y0, t_arr)
@@ -338,7 +332,7 @@ if __name__ == "__main__":
 
     print "TESTING cost sensitivity to s"
     from random import randint
-    obs_ls = [ np.random.randn( 2, randint(2,200) ) for _ in range(6) ]
+    obs_ls = [ np.random.randn( 2, randint(2,10) ) for _ in range(6) ]
     s_ls = np.random.rand(6)
     pert = 1e-5*np.random.randn(6)
     c1 = cost( theta, s_ls+pert, obs_ls)
@@ -372,7 +366,10 @@ if __name__ == "__main__":
 
     print "TESTING cost_for_minizer_jacobian"
     decision_vector = encode( theta, s_ls )
-    pert = (1.0 + np.random.rand( len(decision_vector) ) )*1e-5
+    pert_theta = np.random.randn(k_max+1,k_max+1) / np.dot( k_span**2 + 1, k_span**2 + 1)
+    pert_theta *= 1e-4
+    pert_s_ls = 1e-4*np.random.randn( len(s_ls) )
+    pert = encode( pert_theta, pert_s_ls )
     C1 = cost_function_for_minimizer( decision_vector + pert , obs_ls )
     C0 = cost_function_for_minimizer( decision_vector, obs_ls )
     fd = C1 - C0
