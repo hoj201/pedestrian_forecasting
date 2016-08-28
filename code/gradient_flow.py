@@ -68,7 +68,7 @@ def Ds_predict( theta, s, x0, y0, t_arr ):
         return out
     from scipy.integrate import odeint
     state0 = np.array([ x0, y0, 0.0, 0.0] )
-    state_arr = odeint( ode_func, state0, t_arr, args=(theta,s) ) 
+    state_arr = odeint( ode_func, state0, t_arr, args=(theta,s) , rtol=1e-8) 
     return state_arr[:,0], state_arr[:,1], state_arr[:,2], state_arr[:,3]
 
 
@@ -149,7 +149,7 @@ def Dtheta_predict( theta, s, x0, y0, t_arr ):
     state0 = np.zeros( 2*(k_max+1)**2 + 2 )
     state0[0] = x0
     state0[1] = y0
-    state_arr = odeint( ode_func, state0, t_arr, args=(theta,s) ) 
+    state_arr = odeint( ode_func, state0, t_arr, args=(theta,s), rtol=1e-10 ) 
     x_pred = state_arr[:,0]
     y_pred = state_arr[:,1]
     dx_pred = state_arr[:,2:(k_max+1)**2+2].reshape( (len(t_arr),k_max+1,k_max+1) )
@@ -157,7 +157,7 @@ def Dtheta_predict( theta, s, x0, y0, t_arr ):
     return x_pred, y_pred, dx_pred, dy_pred
 
 
-def cost( theta, s, obs_ls ):
+def cost( theta, s_ls, obs_ls ):
     """ computes the L2 error of the predictions
 
     args:
@@ -170,7 +170,7 @@ def cost( theta, s, obs_ls ):
     """
     L2_sqr = lambda x: np.dot( x,x)
     out = 0.0
-    for obs in obs_ls:
+    for s,obs in zip(s_ls, obs_ls):
         x_obs,y_obs = list( obs )
         x0 = x_obs[0]
         y0 = y_obs[0]
@@ -180,7 +180,7 @@ def cost( theta, s, obs_ls ):
         out += 0.5*L2_sqr( y_pred - y_obs )
     return out
 
-def D_s_cost( theta, s, obs_ls ):
+def Ds_cost( theta, s_ls, obs_ls ):
     """ computes sensitivity of L2 error of the predictions with respect to s
 
     args:
@@ -191,18 +191,18 @@ def D_s_cost( theta, s, obs_ls ):
     returns:
         out: derivative of cost with respect to s (float)
     """
-    out = 0.0
-    for obs in obs_ls:
+    out = np.zeros( len(s_ls) )
+    for k,(s,obs) in enumerate(zip(s_ls,obs_ls)):
         x_obs,y_obs = list( obs )
         x0 = x_obs[0]
         y0 = y_obs[0]
         t_arr = np.arange( len(x_obs) )
         x_pred, y_pred, dx_pred, dy_pred = Ds_predict( theta, s, x0, y0, t_arr)
-        out += np.dot(x_pred-x_obs, dx_pred)
-        out += np.dot(y_pred-y_obs, dy_pred)
+        out[k] = np.dot(x_pred-x_obs, dx_pred)
+        out[k] += np.dot(y_pred-y_obs, dy_pred)
     return out
 
-def D_theta_cost( theta, s, obs_ls ):
+def Dtheta_cost( theta, s_ls, obs_ls ):
     """ computes sensitivity of L2 error of the predictions with respect to theta
 
     args:
@@ -214,7 +214,7 @@ def D_theta_cost( theta, s, obs_ls ):
         out: derivative of cost with respect to theta (numpy.ndarray)
     """
     out = np.zeros_like(theta)
-    for obs in obs_ls:
+    for s,obs in zip(s_ls, obs_ls):
         x_obs,y_obs = list( obs )
         x0 = x_obs[0]
         y0 = y_obs[0]
@@ -236,9 +236,70 @@ def Dtheta_regularization( theta ):
     return np.einsum('i,j->ij', k_span**2+1, k_span**2 + 1 )
 
 
+def encode( theta,s_ls ):
+    """
+    encodes a decision vector for input into an optimizer
+
+    Args:
+        theta (numpy.ndarray): coefficients for potential function
+        s (numpy.ndarray): time-scale parameters
+
+    Returns:
+        decision_vector (numpy.ndarray):
+    """
+    return np.hstack( [ theta.flatten(), s_ls] )
 
 
+def decode( decision_vector ):
+    """
+    Inverse of encode.
 
+    Args:
+        decision_vector (numpy.ndarray)
+
+    Returns:
+        theta (numpy.ndarray): coefficients for potential function
+        s_ls (numpy.ndarray): time-scale parameters
+    """
+    global k_max
+    theta = decision_vector[:(k_max+1)**2].reshape( (k_max+1,k_max+1) )
+    s_ls = decision_vector[(k_max+1)**2:]
+    return theta, s_ls
+
+
+#TODO: Code the following routines
+lambda_regularization = 1e-5
+def cost_function_for_minimizer( decision_vector, obs_ls ):
+    """
+    A cost function for input into scipy.optimize.minimize
+
+    Args:
+        decision_vector (numpy.ndarray):
+        obs_ls (list(numpy.ndarray) ): A list of 2D curves
+
+    Returns:
+        total cost (float):
+    """
+    theta,s_ls = decode( decision_vector)
+    return cost( theta, s_ls, obs_ls ) + lambda_regularization * regularization(theta)
+
+
+def jac_cost_function_for_minimizer( decision_vector, obs_ls ):
+    """
+    Return the Jacobian of the cost_function_for_minizer(...)
+
+    Args:
+        decision_vector (numpy.ndarray)
+        obs_ls (list(numpy.ndarray) ): A list of 2D curves
+
+    Returns:
+        jac_cost (numpy.ndarray)
+    """
+    theta, s_ls = decode( decision_vector )
+    theta_sensitivity = Dtheta_cost( theta, s_ls, obs_ls )
+    theta_sensitivity += lambda_regularization * Dtheta_regularization(theta)
+    s_sensitivity = Ds_cost( theta, s_ls, obs_ls )
+    return np.hstack( [ theta_sensitivity.flatten() , s_sensitivity] )
 
 
 if __name__ == "__main__":
@@ -257,65 +318,65 @@ if __name__ == "__main__":
     x_pred_pert, y_pred_pert = predict( theta, s + pert, x0, y0, t_arr )
     x_pred, y_pred = predict( theta, s, x0, y0, t_arr)
     x_pred_comp, y_pred_comp, dx_pred, dy_pred = Ds_predict( theta, s, x0, y0, t_arr )
-
     fd = x_pred_pert - x_pred
     computed = dx_pred*pert
     print " finite difference = %g" % fd[-1]
     print " computed          = %g" % computed[-1]
-    print " error             = %g" % np.abs(fd[-1]-computed[-1]).max()
-    print "\n"
-
+    print " error             = %g\n" % np.abs(fd[-1]-computed[-1]).max()
 
     print "TESTING prediction sensitivity to theta:"
-    pert = np.random.randn(k_max+1,k_max+1)*1e-6
+    pert = np.ones( (k_max+1,k_max+1) )*1e-5
+    pert[2,2] = 0.2
     x_pred_pert, y_pred_pert = predict( theta + pert, s, x0, y0, t_arr )
     x_pred, y_pred = predict( theta, s, x0, y0, t_arr)
     x_pred_comp, y_pred_comp, dx_pred, dy_pred = Dtheta_predict( theta, s, x0, y0, t_arr )
-
-
     fd = x_pred_pert - x_pred
     computed = np.einsum( 'tij,ij', dx_pred, pert)
     print " finite difference = %g" % fd[-1]
     print " computed          = %g" % computed[-1]
-    print " error             = %g" % np.abs(fd[-1]-computed[-1]).max()
-    print "\n"
-
-    from random import randint
-    obs_ls = [ np.random.randn( 2, randint(2,200) ) for _ in range(6) ]
+    print " error             = %g\n" % np.abs(fd[-1]-computed[-1]).max()
 
     print "TESTING cost sensitivity to s"
-    pert = 1e-6
-    c1 = cost( theta, s+pert, obs_ls)
-    c0 = cost( theta, s, obs_ls )
+    from random import randint
+    obs_ls = [ np.random.randn( 2, randint(2,200) ) for _ in range(6) ]
+    s_ls = np.random.rand(6)
+    pert = 1e-5*np.random.randn(6)
+    c1 = cost( theta, s_ls+pert, obs_ls)
+    c0 = cost( theta, s_ls, obs_ls )
     fd = c1 - c0
-    computed = D_s_cost( theta, s, obs_ls ) * pert
-
+    computed = np.dot( Ds_cost( theta, s_ls, obs_ls ), pert)
     print " finite difference = %g" % fd
     print " computed          = %g" % computed
-    print " error             = %g" % (fd-computed)
-    print "\n"
-
+    print " error             = %g\n" % (fd-computed)
 
     print "TESTING cost sensitivity to theta"
-    pert = np.random.randn( k_max+1, k_max+1) * 1e-6
-    c1 = cost( theta + pert, s, obs_ls )
-    c0 = cost( theta, s, obs_ls )
+    pert = ( np.ones( (k_max+1, k_max+1)) + np.random.rand(k_max+1,k_max+1) ) * 1e-5
+    pert[2,2] = 0.2
+    c1 = cost( theta + pert, s_ls, obs_ls )
+    c0 = cost( theta, s_ls, obs_ls )
     fd = c1 - c0
-    computed = np.einsum('ij,ij', D_theta_cost( theta, s, obs_ls ), pert )
-
+    computed = np.einsum('ij,ij', Dtheta_cost( theta, s_ls, obs_ls ), pert )
     print " finite difference = %g" % fd
     print " computed          = %g" % computed
-    print " error             = %g" % (fd-computed)
-    print "\n"
+    print " error             = %g\n" % (fd-computed)
 
 
     print "TESTING regularization sensitivity"
-
     R1 = regularization(theta + pert)
     R0 = regularization(theta )
     fd = R1 - R0
     computed = np.einsum( 'ij,ij', Dtheta_regularization( theta ) , pert )
+    print " finite difference = %g" % fd
+    print " computed          = %g" % computed
+    print " error             = %g\n" % (fd-computed)
 
+    print "TESTING cost_for_minizer_jacobian"
+    decision_vector = encode( theta, s_ls )
+    pert = (1.0 + np.random.rand( len(decision_vector) ) )*1e-5
+    C1 = cost_function_for_minimizer( decision_vector + pert , obs_ls )
+    C0 = cost_function_for_minimizer( decision_vector, obs_ls )
+    fd = C1 - C0
+    computed = np.dot(jac_cost_function_for_minimizer( decision_vector, obs_ls ), pert)
     print " finite difference = %g" % fd
     print " computed          = %g" % computed
     print " error             = %g" % (fd-computed)
