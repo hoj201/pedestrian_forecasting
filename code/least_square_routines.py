@@ -121,91 +121,89 @@ def jac_EL_constraint( decision_variables , x_obs_ls, y_obs_ls, k_max):
     Block_3 = np.concatenate([Dtheta_EL_op(x,y,m,theta).reshape((2*len(x),theta.size)) for (x,y,m) in zip(x_ls,y_ls,mass_ls)], axis=0 )
     return np.hstack([Block_0.todense(), Block_1.todense(), Block_2.todense(), Block_3 ])
 
+if __name__ == "__main__":
+    #TESTS
+    k_max = 3
+    theta = np.zeros( (k_max+1, k_max + 1) )
+    theta[0,1] = 1.0
+    V_scale = (200,300)
+    x_arr = np.linspace( 0, 100, 200) + 10*np.sin( np.linspace(-np.pi, np.pi,200) )
+    y_arr = np.linspace( 0, 50, 200) + 10*np.sin( np.linspace(-np.pi, np.pi, 200) )
+    mass = 1.5
 
-#TESTS
-k_max = 3
-theta = np.zeros( (k_max+1, k_max + 1) )
-theta[0,1] = 1.0
-V_scale = (200,300)
-x_arr = np.linspace( 0, 100, 200) + 10*np.sin( np.linspace(-np.pi, np.pi,200) )
-y_arr = np.linspace( 0, 50, 200) + 10*np.sin( np.linspace(-np.pi, np.pi, 200) )
-mass = 1.5
+    x0 = x_arr[0]
+    xf = x_arr[-1]
+    y0 = y_arr[0]
+    yf = y_arr[-1]
 
-x0 = x_arr[0]
-xf = x_arr[-1]
-y0 = y_arr[0]
-yf = y_arr[-1]
-
-print "TESTING Dx_EL_op:"
-pert = np.random.randn( len(x_arr) )*1e-4
-fd = EL_op( x_arr+pert, y_arr, mass, theta, x0, y0, xf, yf) - EL_op( x_arr, y_arr, mass, theta, x0, y0, xf, yf )
-computed = Dx_EL_op( x_arr, y_arr, mass, theta).dot( pert )
-print "\t Finite difference = %g" % fd[3]
-print "\t Computed          = %g" % computed[3]
-print "\t Error             = %g\n" % np.max( np.abs(fd - computed) )
-
-
-print "TESTING Dy_EL_op:"
-pert = np.random.randn( len(y_arr) )*1e-4
-fd = EL_op( x_arr, y_arr + pert , mass, theta, x0, y0, xf, yf) - EL_op( x_arr, y_arr, mass, theta, x0, y0, xf, yf )
-computed = Dy_EL_op( x_arr, y_arr, mass, theta).dot( pert )
-print "\t Finite difference = %g" % fd[len(x_arr)+3]
-print "\t Computed          = %g" % computed[len(x_arr)+3]
-print "\t Error             = %g\n" % np.max( np.abs(fd - computed) )
+    print "TESTING Dx_EL_op:"
+    pert = np.random.randn( len(x_arr) )*1e-4
+    fd = EL_op( x_arr+pert, y_arr, mass, theta, x0, y0, xf, yf) - EL_op( x_arr, y_arr, mass, theta, x0, y0, xf, yf )
+    computed = Dx_EL_op( x_arr, y_arr, mass, theta).dot( pert )
+    print "\t Finite difference = %g" % fd[3]
+    print "\t Computed          = %g" % computed[3]
+    print "\t Error             = %g\n" % np.max( np.abs(fd - computed) )
 
 
-
-print "TESTING Dmass_EL_op:"
-pert = np.random.randn()*1e-4
-fd = EL_op( x_arr, y_arr, mass+pert, theta, x0, y0, xf, yf) - EL_op( x_arr, y_arr, mass, theta, x0, y0, xf, yf )
-computed = Dmass_EL_op( x_arr, y_arr, mass, theta).dot( pert )
-print "\t Finite difference = %g" % fd[len(x_arr)+3]
-print "\t Computed          = %g" % computed[len(x_arr)+3]
-print "\t Error             = %g\n" % np.max( np.abs(fd - computed) )
-
-
-print "TESTING Dtheta_EL_op:"
-pert = np.random.randn(k_max+1,k_max+1)*1e-2
-fd = EL_op( x_arr, y_arr, mass, theta+pert, x0, y0, xf, yf) - EL_op( x_arr, y_arr, mass, theta, x0, y0, xf, yf )
-computed = np.einsum( 'ijk,jk', Dtheta_EL_op( x_arr, y_arr, mass, theta) , pert )
-print "\t Finite difference = %g" % fd[len(x_arr)+3]
-print "\t Computed          = %g" % computed[len(x_arr)+3]
-print "\t Error             = %g\n" % np.max( np.abs(fd - computed) )
+    print "TESTING Dy_EL_op:"
+    pert = np.random.randn( len(y_arr) )*1e-4
+    fd = EL_op( x_arr, y_arr + pert , mass, theta, x0, y0, xf, yf) - EL_op( x_arr, y_arr, mass, theta, x0, y0, xf, yf )
+    computed = Dy_EL_op( x_arr, y_arr, mass, theta).dot( pert )
+    print "\t Finite difference = %g" % fd[len(x_arr)+3]
+    print "\t Computed          = %g" % computed[len(x_arr)+3]
+    print "\t Error             = %g\n" % np.max( np.abs(fd - computed) )
 
 
-
-print "TESTING encode / decode routines:"
-from random import randint
-x_ls = [ np.random.randn(randint(1,100)) for _ in range(10) ]
-y_ls = [ np.random.randn(len(x)) for x in x_ls ]
-x_obs_ls = [ np.random.randn(len(x)) for x in x_ls ]
-y_obs_ls = [ np.random.randn(len(x)) for x in x_ls ]
-mass_ls = np.random.rand( len(x_ls) )
-
-decision_vars = encode_decision_vars( x_ls, y_ls, mass_ls, theta )
-x_ls_out, y_ls_out, mass_ls_out, theta_out = decode_decision_vars( decision_vars, x_obs_ls, y_obs_ls, k_max )
-
-x_res = all( map( np.allclose , x_ls_out,  x_ls ) )
-y_res = all( map( np.allclose , y_ls_out,  y_ls ) )
-mass_res = np.allclose( mass_ls_out,  mass_ls )
-theta_res = np.allclose( theta_out, theta )
-
-if x_res and y_res and mass_res and theta_res:
-    print "\t PASSED!\n"
-else:
-    print "\t FAIL!\n"
+    print "TESTING Dmass_EL_op:"
+    pert = np.random.randn()*1e-4
+    fd = EL_op( x_arr, y_arr, mass+pert, theta, x0, y0, xf, yf) - EL_op( x_arr, y_arr, mass, theta, x0, y0, xf, yf )
+    computed = Dmass_EL_op( x_arr, y_arr, mass, theta).dot( pert )
+    print "\t Finite difference = %g" % fd[len(x_arr)+3]
+    print "\t Computed          = %g" % computed[len(x_arr)+3]
+    print "\t Error             = %g\n" % np.max( np.abs(fd - computed) )
 
 
-print "TESTING jacobian of EL_constraint"
-pert = np.random.randn( len(decision_vars) )*1e-6
-out1 = EL_constraint( decision_vars+pert , x_obs_ls, y_obs_ls, k_max )
-out0 = EL_constraint( decision_vars-pert , x_obs_ls, y_obs_ls, k_max )
-fd = 0.5*(out1-out0)
-Jacobian = jac_EL_constraint( decision_vars, x_obs_ls, y_obs_ls, k_max)
-computed =  np.dot(Jacobian,pert)
+    print "TESTING Dtheta_EL_op:"
+    pert = np.random.randn(k_max+1,k_max+1)*1e-2
+    fd = EL_op( x_arr, y_arr, mass, theta+pert, x0, y0, xf, yf) - EL_op( x_arr, y_arr, mass, theta, x0, y0, xf, yf )
+    computed = np.einsum( 'ijk,jk', Dtheta_EL_op( x_arr, y_arr, mass, theta) , pert )
+    print "\t Finite difference = %g" % fd[len(x_arr)+3]
+    print "\t Computed          = %g" % computed[len(x_arr)+3]
+    print "\t Error             = %g\n" % np.max( np.abs(fd - computed) )
 
-print "\t Finite difference = %g" % fd[3]
-print "\t Computed          = %g" % computed[0,3]
-print "\t Error             = %g\n" % np.max( np.abs(fd - computed) )
 
-print np.mean( np.abs(fd - computed) )
+    print "TESTING encode / decode routines:"
+    from random import randint
+    x_ls = [ np.random.randn(randint(1,100)) for _ in range(10) ]
+    y_ls = [ np.random.randn(len(x)) for x in x_ls ]
+    x_obs_ls = [ np.random.randn(len(x)) for x in x_ls ]
+    y_obs_ls = [ np.random.randn(len(x)) for x in x_ls ]
+    mass_ls = np.random.rand( len(x_ls) )
+
+    decision_vars = encode_decision_vars( x_ls, y_ls, mass_ls, theta )
+    x_ls_out, y_ls_out, mass_ls_out, theta_out = decode_decision_vars( decision_vars, x_obs_ls, y_obs_ls, k_max )
+
+    x_res = all( map( np.allclose , x_ls_out,  x_ls ) )
+    y_res = all( map( np.allclose , y_ls_out,  y_ls ) )
+    mass_res = np.allclose( mass_ls_out,  mass_ls )
+    theta_res = np.allclose( theta_out, theta )
+
+    if x_res and y_res and mass_res and theta_res:
+        print "\t PASSED!\n"
+    else:
+        print "\t FAIL!\n"
+
+
+    print "TESTING jacobian of EL_constraint"
+    pert = np.random.randn( len(decision_vars) )*1e-6
+    out1 = EL_constraint( decision_vars+pert , x_obs_ls, y_obs_ls, k_max )
+    out0 = EL_constraint( decision_vars-pert , x_obs_ls, y_obs_ls, k_max )
+    fd = 0.5*(out1-out0)
+    Jacobian = jac_EL_constraint( decision_vars, x_obs_ls, y_obs_ls, k_max)
+    computed =  np.dot(Jacobian,pert)
+
+    print "\t Finite difference = %g" % fd[3]
+    print "\t Computed          = %g" % computed[0,3]
+    print "\t Error             = %g\n" % np.max( np.abs(fd - computed) )
+
+    print np.mean( np.abs(fd - computed) )
