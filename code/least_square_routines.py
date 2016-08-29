@@ -97,7 +97,6 @@ def encode_decision_vars( x_ls, y_ls, mass_ls, theta):
 
 
 
-#TODO: CODE ALL THE FUNCTIONS BELOW
 def EL_constraint( decision_variables, x_obs_ls, y_obs_ls, k_max ):
     #Compute the EL_operator on each curve and stacks the result
     x_ls, y_ls, mass_ls, theta = decode_decision_vars( decision_variables, x_obs_ls, y_obs_ls, k_max )
@@ -120,6 +119,22 @@ def jac_EL_constraint( decision_variables , x_obs_ls, y_obs_ls, k_max):
     Block_2 = Block_2.transpose()
     Block_3 = np.concatenate([Dtheta_EL_op(x,y,m,theta).reshape((2*len(x),theta.size)) for (x,y,m) in zip(x_ls,y_ls,mass_ls)], axis=0 )
     return np.hstack([Block_0.todense(), Block_1.todense(), Block_2.todense(), Block_3 ])
+
+
+#TODO: Code these routines
+def L2_cost( decision_variables, x_obs_ls, y_obs_ls, k_max ):
+    x_ls, y_ls, _,_ = decode_decision_vars( decision_variables, x_obs_ls, y_obs_ls, k_max )
+    L2 = lambda x: 0.5*np.dot(x,x)
+    out = reduce( lambda x,y:x+y, [ L2(x-x_obs) for (x,x_obs) in zip(x_ls,x_obs_ls) ] , 0.0)
+    out += reduce( lambda x,y:x+y, [ L2(y-y_obs) for (y,y_obs) in zip(y_ls,y_obs_ls) ] , 0.0)
+    return out
+
+def jac_L2_cost( decision_variables, x_obs_ls, y_obs_ls, k_max):
+    x_ls, y_ls, _,_ = decode_decision_vars( decision_variables, x_obs_ls, y_obs_ls, k_max)
+    a_list = [x-x_obs for (x,x_obs) in zip(x_ls,x_obs_ls) ]
+    a_list += [y-y_obs for (y,y_obs) in zip(y_ls,y_obs_ls)] 
+    a_list += [0,]*( (k_max+1)**2 + len(x_obs_ls) )
+    return np.hstack(a_list )
 
 if __name__ == "__main__":
     #TESTS
@@ -204,6 +219,15 @@ if __name__ == "__main__":
 
     print "\t Finite difference = %g" % fd[3]
     print "\t Computed          = %g" % computed[0,3]
-    print "\t Error             = %g\n" % np.max( np.abs(fd - computed) )
+    print "\t Error             = %g\n" % np.abs(fd - computed)[0,3]
 
-    print np.mean( np.abs(fd - computed) )
+
+    print "TESTING Cost function"
+    out1 = L2_cost( decision_vars + pert , x_obs_ls, y_obs_ls, k_max )
+    out0 = L2_cost( decision_vars - pert , x_obs_ls, y_obs_ls, k_max )
+    fd = 0.5*(out1-out0)
+    computed = np.dot( jac_L2_cost( decision_vars, x_obs_ls, y_obs_ls, k_max ), pert )
+
+    print "\t Finite difference = %g" % fd
+    print "\t Computed          = %g" % computed
+    print "\t Error             = %g\n" % np.abs(fd - computed)
