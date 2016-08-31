@@ -122,11 +122,17 @@ def trajectory_to_directors( trajectory, step = 5 ):
         v (numpy.ndarray): y-component of direction
     """
     n = trajectory.shape[1]
-    u = trajectory[0,step::step] - trajectory[0,:n-step:step]
-    v = trajectory[1,step::step] - trajectory[1,:n-step:step]
-    speed = np.sqrt(u**2 + v**2)
     x = 0.5*(trajectory[0,step::step] + trajectory[0,:n-step:step])
     y = 0.5*(trajectory[1,step::step] + trajectory[1,:n-step:step])
+    u = trajectory[0,step::step] - trajectory[0,:n-step:step]
+    v = trajectory[1,step::step] - trajectory[1,:n-step:step]
+    speed = np.sqrt(u**2 + v**2) 
+    remove_baddies = lambda x: x[np.nonzero(speed)]
+    x = remove_baddies(x)
+    y = remove_baddies(y)
+    u = remove_baddies(u)
+    v = remove_baddies(v)
+    speed = remove_baddies(speed)
     return np.vstack([x,y]), np.vstack([u,v])/speed 
 
 def ode_function( xy, t, alpha, speed ):
