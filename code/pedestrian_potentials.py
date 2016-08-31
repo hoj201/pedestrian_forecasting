@@ -85,6 +85,21 @@ def prune_trajectories( curves ):
     return filter( is_not_outlier , curves )
 
 
+def prune_cluster( cluster ):
+    """Given a cluster, we remove the odd curves
+
+    args:
+    cluster -- list of numpy.ndarray
+
+    kwargs:
+    None
+    """
+
+    #Compute IQR
+    l2 = lambda x,xr: np.dot(x-xr, x-xr)
+    return 0
+
+
 def cluster_trajectories( curves ):
     """Given a list of curves, cluster_trajectories will cluster them."""
     n_curves = len(curves)
@@ -118,6 +133,23 @@ def cluster_trajectories( curves ):
         cluster = map( lambda k: curves[k] , filter( lambda k: cluster_labels[k] == label , range( n_curves) ) )
         out.append( cluster )
     return out
+
+def Stormer_Verlet(x0, y0, x1, y1, n_steps, theta, V_scale, Delta_t=1.0):
+    from numpy.polynomial.legendre import legder,legval2d
+    theta_x = legder( theta, axis=0, m=1)
+    theta_y = legder( theta, axis=1, m=1)
+    x_pred = np.zeros(n_steps)
+    y_pred = np.zeros(n_steps)
+    x_pred[0],x_pred[1] = (x0,x1)
+    y_pred[0],y_pred[1] = (y0,y1)    
+    for k in range(n_steps-2):
+        x1,y1 = (x_pred[k+1],y_pred[k+1])
+        x0,y0 = (x_pred[k],y_pred[k])
+        V_x = legval2d( x1/V_scale[0], y1/V_scale[1], theta_x )/V_scale[0]
+        V_y = legval2d( x1/V_scale[0], y1/V_scale[1], theta_y )/V_scale[1]
+        x_pred[k+2] = 2*x1 - x0 - Delta_t**2 * V_x
+        y_pred[k+2] = 2*y1 - y0 - Delta_t**2 * V_y
+    return x_pred, y_pred
 
 if __name__ == "__main__":
     print "Gathering trajectories"
