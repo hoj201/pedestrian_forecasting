@@ -52,6 +52,30 @@ def cluster_trajectories( curves ):
     return map( align_cluster, out)
 
 
+def prune_cluster( cluster ):
+    """ Removes the abnormally long/short trajectories from a cluster
+
+    args:
+        cluster (list(numpy.ndarray) ) : clusters of trajectories
+
+    returns:
+        cluster (list(numpy.ndarray) ) : the pruned clusters
+    """
+    def length_of_traj( traj ):
+        n = traj.shape[1]
+        u = traj[0,1:] - traj[0,:n-1]
+        v = traj[1,1:] - traj[1,:n-1]
+        return np.sqrt(u**2+v**2).sum()
+    n = len(cluster)
+    lengths = map( length_of_traj , cluster)
+    lengths.sort()
+    #Compute IQR
+    Q1 = lengths[n/4]
+    Q3 = lengths[3*n/4]
+    IQR = Q3-Q1
+    keep_it = lambda traj: length_of_traj( traj ) < Q3+1.5*IQR and length_of_traj( traj ) > Q1-1.5*IQR
+    return filter( keep_it , cluster )
+
 def compute_prior( clusters ):
     """ returns probability function over the clusters
 
@@ -79,62 +103,62 @@ def merge_small_clusters( clusters):
     N_linear = 0
     P_of_c = compute_prior( clusters )
     for cl in clusters:
-        if len(cl) < 5 or P_of_c[k] < 0.1:
+        if len(cl) < 4 or P_of_c[k] < 0.1:
             N_linear += len(cl)
         else:
             new_clusters.append( cl )
     new_clusters[0] = ["Linear"]*N_linear
     return new_clusters
 
+if __name__ == "__main__":
+    print "Testing clustering routine"
+    import numpy as np
+    import process_data
+    process_data = reload(process_data)
+    folder = '../annotations/coupa/video2/'
+    fname = folder + 'annotations.txt'
+    x_raw,y_raw = process_data.get_trajectories(fname,label="Biker")
 
-print "Testing clustering routine"
-import numpy as np
-import process_data
-process_data = reload(process_data)
-folder = '../annotations/coupa/video2/'
-fname = folder + 'annotations.txt'
-x_raw,y_raw = process_data.get_trajectories(fname,label="Biker")
+    from PIL import Image
+    fname = folder + 'reference.jpg'
+    im = Image.open(fname)
+    width,height = im.size
+    print "width = %f, height = %f" % (width,height)
+    x_data = map( lambda x: x-width/2 , x_raw )
+    y_data = map( lambda x: x-height/2 , y_raw )
+    import matplotlib.pyplot as plt
+    for k in range(len(x_data)):
+        plt.plot(x_data[k], y_data[k],'b-')
+    plt.grid()
+    plt.axis('equal')
+    plt.show()
 
-from PIL import Image
-fname = folder + 'reference.jpg'
-im = Image.open(fname)
-width,height = im.size
-print "width = %f, height = %f" % (width,height)
-x_data = map( lambda x: x-width/2 , x_raw )
-y_data = map( lambda x: x-height/2 , y_raw )
-import matplotlib.pyplot as plt
-for k in range(len(x_data)):
-    plt.plot(x_data[k], y_data[k],'b-')
-plt.grid()
-plt.axis('equal')
-plt.show()
+    curves = map( np.vstack , zip(x_data, y_data) )
+    clusters = cluster_trajectories( curves )
+    n_cluster = len(clusters)
+    fig, ax_arr = plt.subplots( n_cluster , 1 , figsize = (5,10))
+    for k,cl in enumerate(clusters):
+        for curve in cl:
+            ax_arr[k].plot( curve[0] , curve[1] , 'b-')
+            ax_arr[k].axis( [-width/2, width/2, -height/2, height/2])
+    plt.title("Clusters")
+    plt.show()
 
-curves = map( np.vstack , zip(x_data, y_data) )
-clusters = cluster_trajectories( curves )
-n_cluster = len(clusters)
-fig, ax_arr = plt.subplots( n_cluster , 1 , figsize = (5,10))
-for k,cl in enumerate(clusters):
-    for curve in cl:
-        ax_arr[k].plot( curve[0] , curve[1] , 'b-')
-        ax_arr[k].axis( [-width/2, width/2, -height/2, height/2])
-plt.title("Clusters")
-plt.show()
-
-print "Testing cluster merging routine"
-new_clusters = merge_small_clusters( clusters )
-n_cluster = len(new_clusters)
-fig, ax_arr = plt.subplots( n_cluster-1 , 1 , figsize = (5,10))
-for k,cl in enumerate(new_clusters[1:]):
-    for curve in cl:
-        ax_arr[k].plot( curve[0] , curve[1] , 'b-')
-        ax_arr[k].axis( [-width/2, width/2, -height/2, height/2])
-plt.show()
-plt.title("Just the large clusters")
+    print "Testing cluster merging routine"
+    new_clusters = merge_small_clusters( clusters )
+    n_cluster = len(new_clusters)
+    fig, ax_arr = plt.subplots( n_cluster-1 , 1 , figsize = (5,10))
+    for k,cl in enumerate(new_clusters[1:]):
+        for curve in cl:
+            ax_arr[k].plot( curve[0] , curve[1] , 'b-')
+            ax_arr[k].axis( [-width/2, width/2, -height/2, height/2])
+    plt.show()
+    plt.title("Just the large clusters")
 
 
-print "Testing computation of prior"
-P_of_c = compute_prior( new_clusters )
-print "P(c) = " 
-print P_of_c
-print "Sum = %f" % P_of_c.sum()
+    print "Testing computation of prior"
+    P_of_c = compute_prior( new_clusters )
+    print "P(c) = " 
+    print P_of_c
+    print "Sum = %f" % P_of_c.sum()
 
