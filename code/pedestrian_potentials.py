@@ -1,23 +1,23 @@
-"""
-pedestrian potentials is a suite of functions for learning potential functions 
-"""
-
 import numpy as np
 
-def learn_potential( x_arr, y_arr , width, height, k_max = 6 ):
+V_scale = (1.0, 1.0 )
+k_max = 4
+print "Remember to set V_scale and k_max"
+
+def learn_potential( x_arr, y_arr , k_max = 6 ):
     """Returns the legendre coefficients of a potential function learned from a list of point in a 2D domain.
 
     args:
-    x_arr -- iterable
-    y_arr -- iterable (len(x_arr)==len(y_arr))
-    domain -- iterable (dtype = int, len(domain) = 4)
-    
-    kwargs:
-    None
+        x_arr (iterable): sequence of x coordinates
+        y_arr (iterable): sequence of y coordinates (len(x_arr)==len(y_arr))
+        width (numeric):
+        height (numeric) : 
+    returns:
+        out (numpy.ndarray) : coeffs for 2D Legendre series describing potential funciton.
     """
+    global V_scale
 
     # COST FUNCTION 
-    V_scale = ( 1.2*(width/2) , 1.2*(height/2) )
     def cost_function(theta_flat ):
         V_sum = 0
         N = 0
@@ -61,6 +61,43 @@ def learn_potential( x_arr, y_arr , width, height, k_max = 6 ):
     return res.x.reshape( (k_max+1, k_max+1) )
 
 
+def posterior( x , y , alpha ):
+    """ Computes the posterior probability  P( position | class )
+    
+    args:
+        x (float): x-coordinate
+        y (float): y-coordinate
+        alpha (numpy.ndarray): array of coefficients for the potential function of the class
+
+    returns:
+        out (float): probability of being at position (x,y) given class defined by alpha.
+    """
+    global V_scale
+    Z = partition_function( alpha )
+    V = np.polynomial.legendre.legval2d( x / V_scale[0], y / V_scale[1], alpha)
+    return np.exp( -V ) / Z
+
+
+def memoize(f):
+    memo = {}
+    def helper(x):
+        if x.tostring() not in memo:
+            memo[x.tostring()] = f(x)
+        return memo[x.tostring()]
+    return helper
+
+
+@memoize
+def partition_function( alpha ):
+    global V_scale
+    res = 50
+    x_grid, y_grid = np.meshgrid( np.linspace( -V_scale[0], V_scale[0],res),
+            np.linspace(-V_scale[1], V_scale[1], res ) )
+    V_grid = np.polynomial.legendre.legval2d( x_grid / V_scale[0], y_grid / V_scale[0], alpha)
+    return 4*V_scale[0]*V_scale[1]*np.exp(-V_grid).mean()
+
+
+
 def prune_trajectories( curves ):
     """Given a list of curves, prune_trajectories(curves) returns a sublist of curves where the outlying curves (in terms of length) are removed
 
@@ -85,55 +122,6 @@ def prune_trajectories( curves ):
     return filter( is_not_outlier , curves )
 
 
-def prune_cluster( cluster ):
-    """Given a cluster, we remove the odd curves
-
-    args:
-    cluster -- list of numpy.ndarray
-
-    kwargs:
-    None
-    """
-
-    #Compute IQR
-    l2 = lambda x,xr: np.dot(x-xr, x-xr)
-    return 0
-
-
-def cluster_trajectories( curves ):
-    """Given a list of curves, cluster_trajectories will cluster them."""
-    n_curves = len(curves)
-    X_2B_clstrd = np.zeros( (n_curves, 4) )
-    X_2B_clstrd[:,0] = np.array( [ curves[k][0, 0] for k in range(n_curves) ] )
-    X_2B_clstrd[:,1] = np.array( [ curves[k][1, 0] for k in range(n_curves) ] )
-    X_2B_clstrd[:,2] = np.array( [ curves[k][0,-1] for k in range(n_curves) ] )
-    X_2B_clstrd[:,3] = np.array( [ curves[k][1,-1] for k in range(n_curves) ] )
-        
-    for col in range( 4 ):
-        X_2B_clstrd[:,col] /=  X_2B_clstrd[:,col].std()
-        
-    def distance_metric(a,b):
-        #A distance metric on R^4 modulo the involution
-        #(x0,x2,x3,x4) -> (x3,x4,x1,x2)
-        d = lambda a,b : np.sqrt( np.sum( (a-b)**2 ) )
-        T = lambda x: np.array([x[2],x[3],x[0],x[1]])
-        return min( d(a,b) , d(T(a),b) )
-    from sklearn.cluster import AffinityPropagation
-    clusterer = AffinityPropagation(affinity='precomputed', convergence_iter=100)
-    aff = np.zeros((n_curves, n_curves))
-    for i in range(n_curves):
-        for j in range(i+1,n_curves):
-            aff[i,j] = np.exp(-distance_metric( X_2B_clstrd[i], X_2B_clstrd[j])**2)
-            aff[j,i] = aff[i,j]
-
-    #clusterer.Affinity = aff
-    cluster_labels = clusterer.fit_predict(aff)
-    out = []
-    for label in set( cluster_labels):
-        cluster = map( lambda k: curves[k] , filter( lambda k: cluster_labels[k] == label , range( n_curves) ) )
-        out.append( cluster )
-    return out
-
 def Stormer_Verlet(x0, y0, x1, y1, n_steps, theta, V_scale, Delta_t=1.0):
     from numpy.polynomial.legendre import legder,legval2d
     theta_x = legder( theta, axis=0, m=1)
@@ -151,37 +139,17 @@ def Stormer_Verlet(x0, y0, x1, y1, n_steps, theta, V_scale, Delta_t=1.0):
         y_pred[k+2] = 2*y1 - y0 - Delta_t**2 * V_y
     return x_pred, y_pred
 
+
 if __name__ == "__main__":
-    print "Gathering trajectories"
-    import numpy as np
-    import process_data
-    process_data = reload(process_data)
-    folder = '../annotations/coupa/video2/'
-    fname = folder + 'annotations.txt'
-    x_raw,y_raw = process_data.get_trajectories(fname,label="Biker")
-    from PIL import Image
-    fname = folder + 'reference.jpg'
-    im = Image.open(fname)
-    width,height = im.size
-    print "width = %f, height = %f" % (width,height)
-    x_data = map( lambda x: x-width/2 , x_raw )
-    y_data = map( lambda x: x-height/2 , y_raw )
-    curves = map( np.vstack, zip(x_data, y_data) )
-    curves = prune_trajectories( curves )
-    clusters = cluster_trajectories( curves )
+    print "Testing partition function"
+    alpha = np.zeros( (k_max+1, k_max+1) )
+    Z = partition_function( alpha )
+    print "Z = %f" % Z
+    print "Correct answer is Z=4"
 
-    print "Learning a potential for the first cluster"
-    points_0 = np.hstack( clusters[1] )
-    theta = learn_potential( points_0[0], points_0[1], width, height) 
-
-    print "Plotting"
-    from matplotlib import pyplot as plt
-    x_grid,y_grid = np.meshgrid( np.linspace(-width/2,width/2,50) , np.linspace(-height/2,height/2,50))
-    from numpy.polynomial.legendre import legval2d
-    V_scale = ( 1.2*width/2, 1.2*height/2)
-    V = legval2d(x_grid/V_scale[0] , y_grid/V_scale[1], theta)
-    fig = plt.figure(figsize=(15,7))
-    plt.contourf(x_grid,y_grid,V , 50, cmap='viridis')
-    plt.colorbar()
-    plt.plot( points_0[0] , points_0[1],'k*')
-    plt.show()
+    print "Testing posterior(x,y, alpha)"
+    x = np.random.rand()
+    y = np.random.rand()
+    p = posterior( x, y, alpha )
+    print "p = %f" % p
+    print "Correct answer = 0.25"
