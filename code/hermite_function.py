@@ -29,8 +29,8 @@ class hermite_function_series:
             M = [M,]
         if isinstance(deg,int):
             deg = [deg,]
-        self.M = M
-        self.deg = deg
+        self.M = list(M)
+        self.deg = list(deg)
         self.dim = len(M)
         shape_tuple = map( lambda x: x+1 , deg )
         if(coeffs is None):
@@ -181,7 +181,8 @@ class FP_operator:
                             )
                         )
                 self.op -= derivative_op.dot( mult_by_poly )
-                self.op += 0.5*sigma[k]**2 * derivative_op.dot( derivative_op )
+                if(sigma is not None):
+                    self.op += 0.5*sigma[k]**2 * derivative_op.dot( derivative_op )
  
     def __add__(self, other ):
         assert( type(self) == type(other) )
@@ -209,6 +210,12 @@ class FP_operator:
         else:
             x_arr = odeint(lambda x,t: self.op.dot(x), x0, np.array([0,t]), rtol=rtol )
         return hermite_function_series( coeffs=x_arr[1].reshape( h_series.coeffs.shape ), M=self.M, deg=self.deg)
+
+    def cayley_step(self, h_series, dt ):
+        from scipy.sparse.linalg import solve
+        #save cayley op as an attribute
+        #Q = (I+0.5*A)*(I-0.5*A)**-1
+        return h_series
 
 def compute_hermite_coeffs(n_max):
     #computes the coefficients a[n][k] where h_n(x) = \exp(-x^2 / 2) \sum_{k=0}^{n} a_{n,k} x^{k}
