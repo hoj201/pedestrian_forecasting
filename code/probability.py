@@ -2,6 +2,8 @@ import numpy as np
 
 V_scale = (1.0, 1.0 )
 k_max = 4
+sigma_x = V_scale[0] / 10
+sigma_v = V_scale[0] / 10
 print "Remember to set V_scale and k_max"
 
 def learn_potential( x_arr, y_arr , k_max = 6 ):
@@ -60,82 +62,36 @@ def learn_potential( x_arr, y_arr , k_max = 6 ):
     assert(res.success)
     return res.x.reshape( (k_max+1, k_max+1) )
 
-def joint_posterior( alpha, speed, x, y, eta_x, eta_y, mu_x, mu_y ):
-    """ Computes the posterior P(class, speed, position | measured velocity and measured position )
-    
-    args:
-        alpha : 
-        speed (float):
-        x (float):
-        y (float):
-        eta_x (float):
-        eta_y (float):
-        mu_x (float):
-        mu_y (float):
-    
-    returns:
-        probability (float):
-    """
-    P_speed = posterior_speed( speed , alpha, eta_x, eta_y, mu_x, mu_y )
-    P_class = posterior_class( alpha , mu_x, mu_y )
-    P_position = posterior_position( x , y, mu_x, mu_y)
-    return P_speed * P_class * P_position
 
-
-def posterior_position( x, y, mu_x, mu_y ):
-    """ Computes the pdf for the position given a measurement
-    
-    args:
-        x,y (floats): positions coordinates
-        mu_x, mu_y (floats): measurements of position coordinates
-
-    returns:
-        probability (float): between 0.0 and 1.0
-    """ 
-    global sigma_measurement
-    Gaussian = lambda x,mu : np.exp( -(x-mu)**2 / (2*sigma_measurement**2) ) / np.sqrt( 2*np.pi*sigma_measurement**2)
-    return Gaussian( x , mu_x) * Gaussian( y, mu_y )
-
-
-def posterior_class():
-    #TODO:  This should be computed using P(x | c) and Baye's theorem followed by a Guassian convolution
-    return -1
-
-
-def posterior_speed( speed, alpha, eta_x, eta_y, mu_x, mu_y ):
-    """ Computes the pdf for the speed given the class and measurement of position and velocity
-    
-    args:
-        speed (float):
-        alpha (numpy.ndarray): coefficients for angles of director field
-        eta_x, eta_y (float): measured velocity
-        mu_x, mu_y (float): measuredposition
-    
-    returns:
-        probability (float): between 0.0 and 1.0
-    """
-    sigma_speed = 0.2
-
-    #TODO: This should output a Gaussian centered around np.dot( eta , X_c(mu) )
-    return -1
-
-
-
-def posterior( x , y , alpha ):
+def x_given_ck( x , alpha ):
     """ Computes the posterior probability  P( position | class )
     
     args:
-        x (float): x-coordinate
-        y (float): y-coordinate
-        alpha (numpy.ndarray): array of coefficients for the potential function of the class
+        x (numpy.ndarray): array of points
+        alpha (numpy.ndarray): array of coefficients for the director-fields, shape = (n, k_max+1,k_max+1)
 
     returns:
-        out (float): probability of being at position (x,y) given class defined by alpha.
+        out (numpy.ndarray): probability of being at position given class.  shape = (N_points,n).
     """
     global V_scale
+    #TODO:  This need to able to handle a 3-dimensional alphs
     Z = partition_function( alpha )
-    V = np.polynomial.legendre.legval2d( x / V_scale[0], y / V_scale[1], alpha)
+    V = np.polynomial.legendre.legval2d( x[0] / V_scale[0], x[1] / V_scale[1], alpha)
     return np.exp( -V ) / Z
+
+def ck_given_x( alpha, x ):
+    """ Computes the probability of a class given a location of an agent
+    
+    args:
+        x (numpy.ndarray): array of points
+        alpha (numpy.ndarray): array of coefficients for angle of class. shape=(n,k_max+1, k_max+1)
+
+    returns:
+        out (float): probability of being at position given class defined by alpha, shape=(n,N_points).
+    """
+    #TODO: Use Baye's theorem an the x_given_ck routine
+    return -1
+
 
 
 def memoize(f):
@@ -157,47 +113,99 @@ def partition_function( alpha ):
     return 4*V_scale[0]*V_scale[1]*np.exp(-V_grid).mean()
 
 
-
-def prune_trajectories( curves ):
-    """Given a list of curves, prune_trajectories(curves) returns a sublist of curves where the outlying curves (in terms of length) are removed
+def x_T_given_mu_eta_c0( x_T, mu, eta):
+    """ Computes the probability of x_T given measurements under linear motion dynamics
 
     args:
-    curves -- list of numpy.ndarray
+        x_T (numpy.ndarray) : (2,N) array of points
+        mu (numpy.ndarray) : (2,) array of measurment of initial position
+        eta (numpy.ndarray) : (2,) array of measurement of initial velocity
 
-    kwargs:
-    None
+    returns:
+        p (numpy.ndarray) : (N,) array of floats between 0.0 and 1.0
     """
+    global V_scale, sigma_x, sigma_v
+    p = np.zeros( len(x_T[0]) )
+    #TODO:  See formula with happy face
 
-    #Compute IQR
-    log_length = lambda c: np.log( c.shape[1] )
-    log_curve_lengths = map( log_length , curves )
-    log_curve_lengths.sort()
-    num_curves = len(curves)
-    IQ_1 = log_curve_lengths[ num_curves / 4 ]
-    IQ_3 = log_curve_lengths[ 3*num_curves / 4 ]
-    IQR = IQ_3 - IQ_1
-
-    #Determin which curves fall within IQR+/- 1.5*width range
-    is_not_outlier = lambda c : log_length(c) > IQ_1 - 1.5*IQR or log_length(c) < IQ_3 + 1.5*IQR
-    return filter( is_not_outlier , curves )
+    return -1
 
 
-def Stormer_Verlet(x0, y0, x1, y1, n_steps, theta, V_scale, Delta_t=1.0):
-    from numpy.polynomial.legendre import legder,legval2d
-    theta_x = legder( theta, axis=0, m=1)
-    theta_y = legder( theta, axis=1, m=1)
-    x_pred = np.zeros(n_steps)
-    y_pred = np.zeros(n_steps)
-    x_pred[0],x_pred[1] = (x0,x1)
-    y_pred[0],y_pred[1] = (y0,y1)    
-    for k in range(n_steps-2):
-        x1,y1 = (x_pred[k+1],y_pred[k+1])
-        x0,y0 = (x_pred[k],y_pred[k])
-        V_x = legval2d( x1/V_scale[0], y1/V_scale[1], theta_x )/V_scale[0]
-        V_y = legval2d( x1/V_scale[0], y1/V_scale[1], theta_y )/V_scale[1]
-        x_pred[k+2] = 2*x1 - x0 - Delta_t**2 * V_x
-        y_pred[k+2] = 2*y1 - y0 - Delta_t**2 * V_y
-    return x_pred, y_pred
+def c0_given_mu_eta( mu, eta ):
+    """ Compute the probability of class = c0 given measurements
+
+    args:
+        mu (numpy.ndarray) : (2,) array of measurment of initial position
+        eta (numpy.ndarray) : (2,) array of measurement of initial velocity
+
+    returns:
+        p (float) : between 0.0 and 1.0
+    """
+    #TODO:  See formula with happy face
+    return -1
+
+
+def ck_given_mu_eta( alpha , mu, eta ):
+    """ Computes the probabilities of classes c1,...,cn given measuremenst
+
+    args:
+        alpha (numpy.ndarray) : legendre coeffs for angle field, shape=(n,k_max+1,k_max+1)
+        mu (numpy.ndarray) : (2,) array of measurment of initial position
+        eta (numpy.ndarray) : (2,) array of measurement of initial velocity
+
+    returns:
+        p (numpy.ndarray) : floats between 0.0 and 1.0, size=n
+    """
+    #TODO: See formula with a penis by it
+    return -1
+
+def ck_and_s_given_mu_eta( alpha, s, mu, eta ):
+    """ Computes the joint probabilities of classes c1,...,cn and speed=s, given measuremenst
+
+    args:
+        alpha (numpy.ndarray) : legendre coeffs for angle field, shape=(n,k_max+1,k_max+1)
+        s (float) : speed
+        mu (numpy.ndarray) : (2,) array of measurment of initial position
+        eta (numpy.ndarray) : (2,) array of measurement of initial velocity
+
+    returns:
+        p (numpy.ndarray) : floats between 0.0 and 1.0, size=n, one for each class
+    """
+    #TODO: See formula with a coffee cup by it
+    return -1
+
+
+def s_given_c_eta_mu( s, alpha, eta, mu )
+    """ Computes the joint probabilities of speed=s, for each class, given measurement
+
+    args:
+        s (float) : speed
+        alpha (numpy.ndarray) : legendre coeffs for angle field, shape=(n,k_max+1,k_max+1)
+        s (float) : speed
+        mu (numpy.ndarray) : (2,) array of measurment of initial position
+        eta (numpy.ndarray) : (2,) array of measurement of initial velocity
+
+    returns:
+        p (numpy.ndarray) : floats between 0.0 and 1.0, size=n, one for each class
+    """
+    #TODO: See formula with a angry face and a fish.
+    return -1
+
+
+def x_given_ck_mu( x, alpha, mu ):
+    """ Computes the probability of position x given class c1,...,cn and measurement mu
+
+    args:
+        x (numpy.ndarray) : (2,N) array of points
+        alpha (numpy.ndarray) : legendre coeffs for angle field, shape=(n,k_max+1,k_max+1)
+        mu (numpy.ndarray) : (2,) array of measurment of initial position
+
+    returns:
+        p (numpy.ndarray) : floats between 0.0 and 1.0, size=n, one for each class
+    """
+    #TODO: See formula with flower next to it.
+    return -1
+
 
 
 if __name__ == "__main__":
