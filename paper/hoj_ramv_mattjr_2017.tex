@@ -21,13 +21,16 @@
 %\usepackage{times} % assumes new font selection scheme installed
 \usepackage{amsmath} % assumes amsmath package installed
 \usepackage{amssymb}  % assumes amsmath package installed
+\usepackage{graphicx}
+
+\newtheorem{thm}{Theorem}
 
 \title{\LARGE \bf
 Real-time Forecasting of Pedestrian Probability Densities*
 }
 
 
-\author{Henry O. Jacobs, Ram Vasudevan, and Matt Johnson-Roberson$^{2}$% <-this % stops a space
+\author{Henry O. Jacobs, Matt Johnson-Roberson, and Ram Vasudevan$^{2}$% <-this % stops a space
 \thanks{*This work was supported by ???}% <-this % stops a space
 \thanks{$^{2}$Bernard D. Researcheris with the Department of Electrical Engineering, Wright State University,
         Dayton, OH 45435, USA
@@ -65,76 +68,184 @@ Cite these papers \cite{Henderson1971,Helbing1992}
 \subsection{MDP Models}
 Cite these papers \cite{Kitani2012,Ballan2016,Karasev2016,Ziebart2008}
 
+\section{DATA EXPLORATION}
+Simply viewing some of the plots we can make some qualitative observations regarding trajectories.
+We can use these observations to simplify our analysis of the data and build our prediction algorithm.
+
+\subsection{Speed is piecewise constant}
+	The speed of the agents appears to be constant over the course of a few seconds.
+	Changes is speed occur abruptly, shifting from one constant to another.
+	A typical plot of speed is displayed in figure \ref{fig:speed}.
+
+\begin{figure}[b] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=0.5\textwidth]{./figures/speed_plot.pdf} 
+   \caption{We observe that speed appears to be a sum of step functions with widths lasting a few seconds}
+   \label{fig:speed}
+\end{figure}
+
+\subsection{There is substantial spatial structure}
+We see that the vast majority of trajectories appear to fall under a small number of clusters.
+A plot of all trajectories from one video is depicted in figure \ref{fig:trajectories}.
+Later, we will exploit this structure by using affinity propagation to cluster the trajectories and produce a
+finite set of classes of motion for each scene.
+
+\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=3in]{./figures/trajectories.pdf} 
+   \caption{A plot of trajectories from one scene in the Stanford drone data-set}
+   \label{fig:trajectories}
+\end{figure}
+
 \section{MODEL DESCRIPTION}
-We adopt an \emph{inverse optimal control} based approach in a spirit akin to \cite{Kitani2012}.
-However, our approach differs from \cite{Kitani2012}, firstly, because our dynamic model is a continuous dynamical system rather than a discrete time Markov decision process.
-Specifically, if agents seek to move from location $\vec{x}_0 \in D$ to location $\vec{x}_T \in D$ at some time $T>0$, we suppose
-they choose a curve $\vec{x}^*: [0,T] \to D$ which minimizes the action
-\begin{align*}
-	A[ \vec{x} ] := \int_0^T L( \vec{x}(t)  ,\dot{\vec{x}} (t) ) dt
-\end{align*}
-for some function $L: D \times \mathbb{R}^2 \to \mathbb{R}$, known as the \emph{Lagrangian}.
-For simplicity, we assume that agents use approximately the same Lagrangian and do not interact.
-Under such an assumptions, an agent's dynamics must necessarily satisfy the differential algebraic equations
-\begin{align*}
-	\frac{d}{dt} \left( \frac{\partial L}{\partial \vec{v} } \right) - \frac{ \partial L}{ \partial \vec{x} } = 0, \quad \dot{\vec{x}} = \vec{v}
-\end{align*}
-known as the Euler-Lagrange equation.
-Training the model amounts to learning a Lagrangian, $L$.
-In principle, the family of candidates for $L$ can be quite general.
-For this paper we will consider a parametrized family of Lagrangians on the domain $D = [-w/2,w/2] \times [-h/2,h/2]$ of the form
-\begin{align*}
-	L( \vec{x} ,\dot{\vec{x}} ; \theta) &= \frac{1}{2} \| \dot{\vec{x}} \| - V( \vec{x}; \theta)
-\end{align*}
-where
-\begin{align*}
-	V(x,y ; \theta) := \sum_{ k_1,k_2 = 0 }^{K,K} \theta_{k_1,k_2} \ell_{k_1}(2x/w) \ell_{k_2}(2y/h) 
-\end{align*}
-and $\ell_k$ is the $k^{th}$ Legendre polynomial.
-Learning $L$ amounts to learning the coefficients, $\theta_{k_1,k_2}$, for $k_1,k_2 = 0,\dots,K$.
+We consider a model where each agent belongs to an unobserved class from the set $C = \{c_0,c_1,\dots,c_n\}$.
+Classes $c_1$ through $c_n$ are each associated with vector fields $X_1, \dots, X_n$ which determine the dynamics of the agent, modulo the observed speed.
+Class $c_0$ corresponds to a linear predictor (i.e. moving with constant velocity).
 
-To foster intuition consider the following cases.
-When all the coefficients, $\theta$, vanish, then $V=0$ and the resulting dynamics seek to minimize distance.
-In this case agents will move in straight lines with constant velocity.
-When $\theta$ is  non-zero agents will deviate from straight line trajectories in order to avoid regions where $V$ is high.
+Training entails learning the classes $c_1,\dots,c_n$ and the vector-field $X_1, \dots, X_n$ from observations of agent motion within a fixed scene.
+We also learn the posterior probability of an agent being in a location given its class, as well as the prior probabilities for each class.
+We view this learning step as a pre-computation.
+At runtime we infer the probability of the class of an observed agent using it's position data.
+This induces a probability distribution at time $t=0$ which we can evolve in time according to the dynamics of the vector-fields $X_1,\dots,X_n$.
 
-\subsection{Benefits}
-The primary benefit of this model is that we can compute relevant probability densities in real time.
-Once $L$ is known, the Euler-Lagrange equation takes the form
-$$
-	\ddot{ \vec{x} } = - \nabla V( \vec{x} ; \theta)
-$$
-This is a second order ordinary differential equation (ODE) that can be evaluated in $\mathcal{O}(K^2)$ time.
-In order to account for modeling error we can add noise to this model and consider the stochastic differential equation (SDE)
-$$
-	d\vec{x} = \vec{v} dt + \frac{1}{2} \sigma^2  d\vec{W} \quad, \quad d\vec{v} = \nabla V(\vec{x};\theta)dt.
-$$
-The evolution of a probability density, $\rho$, under the above stochastic dynamics is given by the Fokker-Planck equation
-\begin{align*}
-	\partial_t \rho + v \partial_x \rho + \partial_x V_\theta \partial_v \rho = \frac{1}{2} \sigma^2 \partial_x^2 \rho
-\end{align*}
-This is a linear evolution equation, and the solution can be computed in real time with known error bounds for a fairly generic class of initial conditions.
-That are model is allows us to use pre-existing tools from numerical analysis is our primary motivation for choosing this model.
+\subsection{Offline computations}
+Offline, the primary task is to learn the classes for the agents.
+This entails clustering observed trajectories, and constructing a vector-field for each cluster.
 
-\section{LEARNING}
+\subsubsection{Clustering}
+For a fixed scene with a database of agent trajectories we cluster the trajectories by applying the Affinity propagation algorithm to the end-points.
+We then prune the clusters by discarding trajectories which are outliers with respect to total length (we define an outlier using the standard inter-quartile range criterion with a IQR coefficient of $1.5$).
+We then throw out clusters which contain less than $10\%$ of the trajectories.
+We associate class labels, $c_1,\dots,c_n$,  to the remaining clusters, and we will develop a model for each of these classes in the next section.
+We also add an additional class, $c_0$, where the underlying model will be a linear predictor.
+Finally, we define a prior, $P(c)$ to compute the probability that a given agent falls within one of these classes.
+We set $P(c_0) = ( \text{\# discarded trajectories} / \text{ \# trajectories } )$ and $P(c_k ) = ( \text{\# trajectories in cluster $c_k$} / \text{ \# trajectories } )$ for $k=1,\dots,n$.
+
+\subsubsection{Compute the posterior of class given a position}
+Given an agent located at $x \in D$, we would like to know the conditional probability
+that this agent is of class $c$. That is, we'd like to compute $P(c \mid x)$.
+Moreover, during runtime we will need this computation to be fast.
+This rules out standard probabilistic classification schemes such as support vector-machines and other local voting based methods.
+The CPU time to evaluate grows with the amount of data in these methods.
+
+Instead we uses a probability density inspired by statistical mechanics.
+First, we use Baye's theorem to convert the computation into choosing Likelihood $P( x \mid c)$.
+For the linear-predictor class, $c_0$ we assume $P(x \mid c_0 )$ is a uniform distribution over our domain.
+
+For classes $c_1, \dots, c_n$ we use the following strategy.
+Given points $x_{1,k},\dots,x_{N,k}$ associated to class $c_k$ we define
+\begin{align}
+	P(x \mid c_k) = \frac{1}{Z_k } e^{-V_k(x) } \label{eq:x given c}
+\end{align}
+where $V_k(x)$ is the minimizer of
+$$
+	C[ V_k ] =  \log \left( \int e^{ - V_k(x) } dx \right) + \sum_{i=1}^N V_k(x_{i,k} ).
+$$
+over some finite-dimensional function space (perhaps a space of low order polynomials).
+Physically, $V_k(x)$ is the most likely potential function given observations $\{ x_{i,k}\}_{k=1}^N$ under the assumption that points are drawn from \eqref{eq:x given c}.
+
+Again, the advantage to this approach is that we may restrict $V_c$ to a class of quickly computable functions which will not slow down performance at runtime.
+In this paper we restrict $V_c$ to be a sum of tensor products of low order Legendre polynomials.
+
+[SHOW A PICTURE OF LEARNED PDF]
+
+\subsubsection{Learning vector fields}
+Given trajectories, we may fit a director field of the form $X(x,y) = ( \cos( \theta_\alpha(x,y) ) , \sin( \theta_\alpha(x,y) ) )$
+where 
+$$
+	\theta_\alpha(x,y) = \sum_{ij} \alpha_{ij} L_i(x / w) L_j(y / h).
+$$
+
+
+Given observations $\vec{x}_0,  \dots, \vec{x}_n \in \mathbb{R}^2$ we may compute a series of unit vectors, $\vec{u}_k = \Delta \vec{x}_k / \| \Delta \vec{x}_k  \|$,
+where $\Delta \vec{x}_k = \vec{x}_{k+1} - \vec{x}_k$.
+A director-field may be learned from these directions by maximizing
+$$
+	R(\alpha ) = \sum_{k} \frac{x_{k+1} + x_k}{2} \cos( \theta_\alpha(\vec{x}_k) ) + \frac{y_{k+1} + y_k}{2}  \sin( \theta_\alpha( \vec{x}_k ) ).
+$$
+In words, this reward function measures the alignment of the director-field with an observation (i.e. the dot product), and takes sum over all observations.
+An example of a learned director field is depicted in figure \ref{fig:director field}
+
+\begin{figure}[b] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=3in]{./figures/director_field.pdf} 
+   \caption{A director field learned from the trajectories (blue)}
+   \label{fig:director field}
+\end{figure}
+
+\subsection{Online computations}
+At run time, our goal is to compute a probability density, $P_T$ at time $T>0$ which correspond to the positions of the agents, given a measurement of position and velocity,  $\mu_0$ and $\eta_0$, at time $t=0$.
+In more precise terms, we desire to compute
+\begin{equation}
+\begin{split}
+&P(x_T \mid \eta_0, \mu_0 ) = \\
+&\left( \sum_{ k=1}^n \int_{s \in S} ds P(x_T \mid \eta_0, \mu_0, c_k , s ) \cdot P( c_k , s \mid \eta_0, \mu_0 ) \right) \\
+&+ P(x_T \mid \eta_0, \mu_0, c_0 ) \cdot P( c_0 \mid \eta_0, \mu_0 ) \label{eq:prob at T}
+\end{split}
+\end{equation}
+
+%\left( \sum_{ k=1}^n \int_{s \in S} ds P(x_T \mid x_0, \eta_0, \mu_0, c_k , s ) \cdot P( c_k , s, x_0 \mid \eta_0, \mu_0 ) \right) 
+
+\begin{thm} \label{thm:FP}
+	Let $\rho_k^{+}(t,x)$ solve the Fokker-Planck equation
+	\begin{align*}
+		\partial_t \rho_k^{+}  + \partial_\alpha (  \rho_k^+ X^\alpha_{c_k} ) = \frac{\sigma^2}{2} \Delta \rho_k^+
+	\end{align*}
+	and similarly, let $\rho_k^-$ satisfy
+	\begin{align*}
+		\partial_t \rho_k^{-}  - \partial_\alpha (  \rho_k^- X^\alpha_{c_k} ) = \frac{\sigma^2}{2} \Delta \rho_k^-
+	\end{align*}
+	over the time interval $[0,T]$.
+	Moreover, assume the initial condition $\rho^+(0,x) = \rho^-(0,x) = P(x \mid c_k , \mu_0 )$.
+	Then $P(x_T \mid \eta_0 , \mu_0 )$ is given by
+	\begin{align*}
+		&\left( \sum_{k=1}^n \int_{s > 0} \rho_k^+( x , st ) P( c_k , s \mid \eta_0, \mu_0 )ds \right) \\
+		&\left( \sum_{k=1}^n \int_{s > 0 } \rho_k^-( x , st ) P( c_k , - s \mid \eta_0, \mu_0 ) ds \right) \\
+		&+ P(x_T \mid \eta_0, \mu_0, c_0 ) \cdot P( c_0 \mid \eta_0, \mu_0 )
+	\end{align*}
+\end{thm}
+
+The proof of this theorem may be found in Appendix \ref{app:Fokker Planck}.
+
+Theorem \ref{thm:FP} reduce the computation of \eqref{eq:prob at T} to the computation of solutions to a linear PDE
+and the computation of a few conditional probabilities at time $t=0$ (these are given in Appendix \ref{app:prob}).
+We can approximate the solution of this linear PDE numerically, with a known error bound.
+Such a numerical solution boils down to solving the ode, $\dot{x} = A \cdot x$, for a sparse matrix $A$.
+
+\section{IMPLEMENTATION DETAILS}
 
 \subsection{Data}
 We use the Stanford Drone dataset (SDD) [THE CITATION SEEMS TO BE MISSING]
 
 \subsection{Clustering}
 Rather than training on all the data it is useful to cluster many of the trajectories.
-The reason for this is ...
+The reason for this is.
 
 \subsection{Training}
 
 
 \section{EXPIREMENTS}
 
-\subsection{Single trajectory prediction}
-Compare to Ballan-Savarese and linear.... Note CPU times, although none are available for Ballan-Savarese [trash talk mean Hausdorff distance].
+\begin{enumerate}
+	\item Accuracy = percentage of time prediction is within a 95\% confidence neighborhood
+	\item Precision = size of 95\% confidence neighborhood
+	\item CPU time = time to compute trajectory/density
+	\item $L^1$ error of density. (we replace observation with a Gaussian)
+\end{enumerate}
 
-\subsection{Density estimator}
-Compare to a linear estimator + Weiner process.   Note CPU times
+\begin{tabular}{|c|c|c|}
+	\hline
+	- & Linear & Us \\
+	\hline
+	Precision & - & - \\
+	\hline
+	Accuracy & - & - \\
+	\hline
+	error & - & - \\
+	\hline
+	CPU time & - & - \\
+	\hline
+\end{tabular}
 
 \section{CONCLUSIONS}
 
@@ -158,7 +269,135 @@ A conclusion section is not required. Although a conclusion may review the main 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{APPENDIX}
 
-Appendixes should appear before the acknowledgment.
+\subsection{Probability computations} \label{app:probs}
+The goal of this section is to put \eqref{eq:prob at T} into a tractable form for numerical computation.
+We denote measurements of position by $\mu_0$ and we denote the ``true'' position by $x_0$.
+Similarly, we denote a speed measurement by $\eta_0$ and we denote the ``true'' speed by $v_0$.
+We choose a Gaussian noise model for the measurements:
+\begin{align*}
+	P( x_0 \mid \mu_0) = P( \mu_0 \mid x_0 ) = (2\pi \sigma_x^2)^{-1/2} \exp \left( \frac{ -\| x_0 - \mu_0 \|^2 }{ 2 \sigma_x^2 } \right) \\
+	P( v_0 \mid \eta_0) = P( \eta_0 \mid v_0 ) = (2\pi \sigma_v^2)^{-1/2} \exp \left( \frac{ -\| v_0 - \eta_0 \|^2 }{ 2 \sigma_v^2 } \right)
+\end{align*}
+and we assume that $v_0$ is independent of $\mu_0$ given $\eta_0$.
+Similarly, we assume that $x_0$ is independent of $\eta_0$ given $\mu_0$.
+Thus $P( x_0, v_0 \mid \mu_0, \eta_0 ) = P(x_0 \mid \mu_0 ) P( v_0 \mid \eta_0)$.
+These assumptions are enough to compute the conditional probabilities in \eqref{eq:prob at T}.
+
+There are two components to \eqref{eq:prob at T}.
+There is the $c_1,\dots,c_k$ component, and there is the linear predictor component, $c_0$.
+Let's first focus on the $c_1,\dots,c_k$ component for a fixed $k$ and speed, $s$.
+
+By Bayes' theorem
+\begin{equation}
+\begin{split}
+	&P(x_T \mid \eta_0, \mu_0, c_k, s) = \\
+	&\quad \int P(x_T \mid x_0, \eta_0, \mu_0, c_k, s) P( x_0 \mid \eta_0, \mu_0, c_k, x) dx_0.
+\end{split}
+\end{equation}
+As $c_k$ and $s$ determine the dynamics completely and $\mu_0$ and $\eta_0$ contribute no new information when $x_0$ is given, we can write this as.
+\begin{align*}
+	&P(x_T \mid \eta_0, \mu_0, c_k, s) =\\
+	&\quad \int P(x_T \mid x_0, c_k, s) P( x_0 \mid \eta_0, \mu_0, c_k, s) dx_0.
+\end{align*}
+Taking a derivative with respect to $T$ illustrates that $P(x_T \mid \eta_0 , \mu_0, c_k, s)$ can be seen as the solution of the Fokker-Planck equation at time $t=T$
+with the initial condition $P(x_0 \mid \eta_0, \mu_0, c_k, s)$.
+Thus we should derive a tractable expression for $P(x_0 \mid \eta_0, \mu_0, c_k, s)$.
+By assumption, $x_0$ is independent of velocity information.
+Thus $P(x_0 \mid \eta_0 ,\mu_0, c_k, s ) = P(x_0 \mid \mu_0 , c_k)$.
+
+To compute $P(x_0 \mid c_k, \mu_0)$ we would like to use our known expressions for $P(x_0 \mid c_k)$ (see \eqref{eq:x given c}) and the Gaussian measurement model.
+These two probability are sufficient to compute $P(x_0 \mid c_k,\mu_0)$ assuming that $c_k$ and $\mu_0$ are independent given $x_0$.
+Such an assumption is reasonable given that our measuring device existed long before our model did.
+Indeed
+\begin{equation}
+\begin{split}
+	& P(x_0 \mid c_k , \mu_0) \propto P(c_k, \mu_0 \mid x_0 ) P(x_0) \\
+	&=  P( \mu_0 \mid x_0) P( c_k \mid x_0 ) P(x_0)
+\end{split} \label{eq: x given c and mu}
+\end{equation}
+We can compute $P(c_k \mid x_0)$ from Bayes' theorem and \eqref{eq:x given c}.
+By our measurement mode, $P( \mu_0 \mid x_0)$ is normally distributed about $x_0$ with variance $\sigma_m$.
+Moreover, $P(x_0) = \sum_{c} P(x_0 \mid c) P(c)$
+where $P(c)$ is learned from the data and $P(x_0 \mid c)$ is given in \eqref{eq:x given c}.
+
+We also need to compute the coefficient $P(c_k,s \mid \mu_0, \eta_0 )$.
+By Bayes' theorem we find
+\begin{align*}
+	P(c_k,s \mid \mu_0, \eta_0 ) = P(s \mid \mu_0, \eta_0, c_k ) P(c_k \mid \mu_0, \eta_0 )
+\end{align*}
+Again, by Bayes' theorem
+\begin{align*}
+	P(s \mid c , \eta_0, \mu_0 ) = \int P(s \mid c , \eta_0, \mu_0 , x_0, v_0 ) P( x_0, v_0 \mid \mu_0, \eta_0 ) dx_0 dv_0.
+\end{align*}
+The speed $s$ is independent of the measurements $\eta_0$ and $\mu_0$ when the exact position and velocity are known.
+Thus $P(s \mid c,\eta_0, \mu_0, x_0, v_0) = P(s \mid c , x_0, v_0 )$.
+Moreover, if the agent is in class $c$ at position $x_0$  with velocity $v_0$, then $s$ is the unique scalar such that $s X_c(x_0) = v_0$.
+Thus $P(s \mid c, x_0, v_0)$ is a Dirac-delta like distribution on the subspace described by $s X_c(x_0) = v_0$.
+The integral then becomes
+\begin{align*}
+&P(s \mid c , \eta_0, \mu_0 ) = \int_{sX_c(x_0) = v_0} P( x_0, v_0 \mid \mu_0, \eta_0 ) dx_0 dv_0 \\
+&= \int_{sX_c(x_0) = v_0 } P(x_0 \mid \mu_0 ) P( v_0 \mid \eta_0 ) dx_0 dv_0 \\
+&= \frac{1}{ 2 \pi \sigma_x \sigma_v } \int \exp \left( \frac{- \| x_0 - \mu_0 \|^2 }{2 \sigma_x^2 } + \frac{ - \| s X_c(x_0) - \eta_0 \| }{ 2 \sigma_v^2 } \right) dx_0
+\end{align*}
+
+Finally, we must compute $P(c_k \mid \eta_0, \mu_0)$.
+By Bayes' theorem
+\begin{equation}
+\begin{split}
+	& P(c_k \mid \eta_0 , \mu_0 ) = \\
+	&\quad \int P(c_k \mid v_0 , x_0 , \mu_0 , \eta_0 ) P( v_0, x_0 \mid \mu_0, \eta_0 ) dx_0 dv_0 \label{eq: c given measurements}
+\end{split}
+\end{equation}
+where $v_0$ is a dummy variable for the ``true'' velocity.
+Assuming independence of measurements in time we find
+\begin{align*}
+	P(v_0,x_0 \mid \mu_0 , \eta_0 ) &= P( x_0 \mid \mu_0 , \eta_0 ) P( v_0 \mid \mu_0 , \eta_0 ) \\
+	&=P( x_0 \mid \mu_0 ) P( v_0 \mid \eta_0 ) \\
+	&= \frac{1}{ 2\pi \sigma_m \sigma_v } \exp \left( \frac{- \|x_0 - \mu_0 \|^2 }{2\sigma_m^2} \right) \\
+	&\quad \cdot \exp \left( \frac{- \|v_0 - \eta_0 \|^2 }{ 2\sigma_v^2 } \right)
+\end{align*}
+Moreover, $c_k$ is independent of the measurements given we know the true position and velocity.
+That is $P(c_k \mid v_0, x_0, \mu_0, \eta_0 ) = P(c \mid x_0, v_0 )$.
+The latter can be computed precisely
+\begin{align*}
+	P( c_k \mid x_0 , v_0 ) =
+	\begin{cases}
+		1 \text{ if } X_{c_k}(x_0) = v_0 \\
+		0 \text{ else }
+	\end{cases}
+\end{align*}
+Substitution into \eqref{eq: c given measurements} reveals
+\begin{equation}
+\begin{split}
+	& P(c_k \mid \eta_0 , \mu_0 ) = \\
+	&\quad \frac{1}{2\pi \sigma_m \sigma_v} \int \exp \left( \frac{ - \| x_0 - \mu_0 \| }{ 2 \sigma_m^2} + \frac{ - \| \eta_0 - X_c( x_0 ) \| }{ 2 \sigma_v^2} \right) dx_0 
+\end{split} \label{eq: c given measurements}
+\end{equation}
+
+where we have assumed that $X_{c_i}(x_0) \neq X_{c_j}(x_0)$ almost surely in $x_0$ (this is certainly the case for vector-fields we'd learn from in practice).
+
+
+This completes the discussion for $c \in \{c_1,\dots, c_n \}$.
+
+For the linear predictor case ($c=c_0$) we compute
+\begin{align*}
+	&P(x_T \mid \eta_0 , \mu_0, c_0 )  \\
+	&= \int P(x_T \mid x_0, v_0, \mu_0, \eta_0, c_0) P( x_0, v_0 \mid \mu_0, \eta_0, c_0 ) dx_0 dv_0 \\
+	&= \int \delta( x_T -  (x_0 + Tv_0) ) P( x_0, v_0 \mid \mu_0, \eta_0, c_0 ) dx_0 dv_0 \\
+	&= \int P(x_0 = x_T - Tv_0 , v_0 \mid \mu_0 , \eta_0, c_0 ) dv_0
+\end{align*}
+
+In the case of a linear predictor, all velocities are equally valid and space is homogenous.
+Thus $c_0$ adds no information given measurement $\mu_0$ and $\eta_0$ and the above line becomes
+\begin{align*}
+	&= \int P(x_0 = x_T - Tv_0 \mid \mu_0 ) P( v_0 \mid \eta_0 ) dv_0 \\
+	&= \frac{1}{ 2\pi \sigma_x \sigma_v } \int \exp \left( \frac{ - \| x_T - Tv_0 \| }{ 2 \sigma_x^2} + \frac{ - \| v_0 - \eta_0 \|^2 }{ 2 \sigma_v^2 } \right) dv_0 
+\end{align*}
+Moreover, $P(c_0 \mid \eta_0 , \mu_0 ) = 1 - \sum_{k=1}^n P(c_k \mid \eta_0, \mu_0)$
+where $P(c_k \mid \eta_0, \mu_0 )$ for $k=1,\dots,n$ is given by \eqref{eq: c given measurements}
+
+\section*{Fokker Planck}
+Proof = cuz math.
 
 \section*{ACKNOWLEDGMENT}
 
