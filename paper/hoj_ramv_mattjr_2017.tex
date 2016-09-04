@@ -22,6 +22,7 @@
 \usepackage{amsmath} % assumes amsmath package installed
 \usepackage{amssymb}  % assumes amsmath package installed
 \usepackage{graphicx}
+\usepackage{todonotes}
 
 \newtheorem{thm}{Theorem}
 
@@ -147,7 +148,12 @@ Physically, $V_k(x)$ is the most likely potential function given observations $\
 Again, the advantage to this approach is that we may restrict $V_c$ to a class of quickly computable functions which will not slow down performance at runtime.
 In this paper we restrict $V_c$ to be a sum of tensor products of low order Legendre polynomials.
 
-[SHOW A PICTURE OF LEARNED PDF]
+\begin{figure}[t] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=2in]{./figures/learned_potentials.pdf} 
+   \caption{Some learned potentials for computing $P(x|c_k)$}
+   \label{fig:learned potentials}
+\end{figure}
 
 \subsubsection{Learning vector fields}
 Given trajectories, we may fit a director field of the form $X(x,y) = ( \cos( \theta_\alpha(x,y) ) , \sin( \theta_\alpha(x,y) ) )$
@@ -196,7 +202,7 @@ In more precise terms, we desire to compute
 		\partial_t \rho_k^{-}  - \partial_\alpha (  \rho_k^- X^\alpha_{c_k} ) = \frac{\sigma^2}{2} \Delta \rho_k^-
 	\end{align*}
 	over the time interval $[0,T]$.
-	Moreover, assume the initial condition $\rho^+(0,x) = \rho^-(0,x) = P(x \mid c_k , \mu_0 )$.
+	Moreover, assume the initial condition $\rho^{\pm}(0,x) = P(x \mid c_k , \mu_0 , \eta_0 , s=\pm1)$.
 	Then $P(x_T \mid \eta_0 , \mu_0 )$ is given by
 	\begin{align*}
 		&\left( \sum_{k=1}^n \int_{s > 0} \rho_k^+( x , st ) P( c_k , s \mid \eta_0, \mu_0 )ds \right) \\
@@ -208,9 +214,14 @@ In more precise terms, we desire to compute
 The proof of this theorem may be found in Appendix \ref{app:Fokker Planck}.
 
 Theorem \ref{thm:FP} reduce the computation of \eqref{eq:prob at T} to the computation of solutions to a linear PDE
-and the computation of a few conditional probabilities at time $t=0$ (these are given in Appendix \ref{app:prob}).
+and the computation of a finite number of conditional probabilities at time $t=0$ (these are given in Appendix \ref{app:prob}).
 We can approximate the solution of this linear PDE numerically, with a known error bound.
 Such a numerical solution boils down to solving the ode, $\dot{x} = A \cdot x$, for a sparse matrix $A$.
+
+\todo[inline]{
+EXISTING ISSUE:
+Still coding the various probabilities in Appendix.  As is, we are not computing many of them fast enough (CPU times in the seconds).  Some of them are throwing low-accuracy warnings too and failing to compute at all.
+}
 
 \section{IMPLEMENTATION DETAILS}
 
@@ -269,7 +280,8 @@ A conclusion section is not required. Although a conclusion may review the main 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{APPENDIX}
 
-\subsection{Probability computations} \label{app:probs}
+\subsection{Probability computations} \label{app:prob}
+\todo[inline]{This section as been re-written from scratch every day for five days, and resulted in a different code each time.  It's the primary obstacle to implementation at the moment.}
 The goal of this section is to put \eqref{eq:prob at T} into a tractable form for numerical computation.
 We denote measurements of position by $\mu_0$ and we denote the ``true'' position by $x_0$.
 Similarly, we denote a speed measurement by $\eta_0$ and we denote the ``true'' speed by $v_0$.
@@ -302,81 +314,65 @@ As $c_k$ and $s$ determine the dynamics completely and $\mu_0$ and $\eta_0$ cont
 Taking a derivative with respect to $T$ illustrates that $P(x_T \mid \eta_0 , \mu_0, c_k, s)$ can be seen as the solution of the Fokker-Planck equation at time $t=T$
 with the initial condition $P(x_0 \mid \eta_0, \mu_0, c_k, s)$.
 Thus we should derive a tractable expression for $P(x_0 \mid \eta_0, \mu_0, c_k, s)$.
-By assumption, $x_0$ is independent of velocity information.
-Thus $P(x_0 \mid \eta_0 ,\mu_0, c_k, s ) = P(x_0 \mid \mu_0 , c_k)$.
 
-To compute $P(x_0 \mid c_k, \mu_0)$ we would like to use our known expressions for $P(x_0 \mid c_k)$ (see \eqref{eq:x given c}) and the Gaussian measurement model.
-These two probability are sufficient to compute $P(x_0 \mid c_k,\mu_0)$ assuming that $c_k$ and $\mu_0$ are independent given $x_0$.
-Such an assumption is reasonable given that our measuring device existed long before our model did.
-Indeed
-\begin{equation}
-\begin{split}
-	& P(x_0 \mid c_k , \mu_0) \propto P(c_k, \mu_0 \mid x_0 ) P(x_0) \\
-	&=  P( \mu_0 \mid x_0) P( c_k \mid x_0 ) P(x_0)
-\end{split} \label{eq: x given c and mu}
-\end{equation}
-We can compute $P(c_k \mid x_0)$ from Bayes' theorem and \eqref{eq:x given c}.
-By our measurement mode, $P( \mu_0 \mid x_0)$ is normally distributed about $x_0$ with variance $\sigma_m$.
-Moreover, $P(x_0) = \sum_{c} P(x_0 \mid c) P(c)$
-where $P(c)$ is learned from the data and $P(x_0 \mid c)$ is given in \eqref{eq:x given c}.
-
-We also need to compute the coefficient $P(c_k,s \mid \mu_0, \eta_0 )$.
-By Bayes' theorem we find
+We will assume, the symmetry
 \begin{align*}
-	P(c_k,s \mid \mu_0, \eta_0 ) = P(s \mid \mu_0, \eta_0, c_k ) P(c_k \mid \mu_0, \eta_0 )
+	P( x_0 \mid \mu_0 , \eta_0 , c_k , s ) = P( x_0 \mid \mu_0 , \gamma \eta_0 , c_k , \gamma s )
 \end{align*}
-Again, by Bayes' theorem
+for arbitrary $\gamma \in \mathbb{R}$.
+Thus we may focus on the case where $s = 1$.
+The primary bit of information one can glean on the location of $x_0$ given these measurements comes from the alignment between $X_c$ and the normalized vector $\hat{\eta}_0 = \eta_0 / \| \eta_0 \|$.
+The magnitude, $\| \eta_0 \|$ and the speed lend no further information.
+Thus $P( x_0 \mid \mu_0 , \eta_0 , c_k , s ) = P( x_0 \mid \mu_0 , \hat{\eta}_0 , c_k , s=1 )$.
+We expect this to be high when $x_0$ is close to $\mu_0$ and $X_c(x_0)$ is close to $\hat{\eta}_0$.
+We can't disintegrate this into conditionals we've already decided upon, so we introduce a new choice.
 \begin{align*}
-	P(s \mid c , \eta_0, \mu_0 ) = \int P(s \mid c , \eta_0, \mu_0 , x_0, v_0 ) P( x_0, v_0 \mid \mu_0, \eta_0 ) dx_0 dv_0.
-\end{align*}
-The speed $s$ is independent of the measurements $\eta_0$ and $\mu_0$ when the exact position and velocity are known.
-Thus $P(s \mid c,\eta_0, \mu_0, x_0, v_0) = P(s \mid c , x_0, v_0 )$.
-Moreover, if the agent is in class $c$ at position $x_0$  with velocity $v_0$, then $s$ is the unique scalar such that $s X_c(x_0) = v_0$.
-Thus $P(s \mid c, x_0, v_0)$ is a Dirac-delta like distribution on the subspace described by $s X_c(x_0) = v_0$.
-The integral then becomes
-\begin{align*}
-&P(s \mid c , \eta_0, \mu_0 ) = \int_{sX_c(x_0) = v_0} P( x_0, v_0 \mid \mu_0, \eta_0 ) dx_0 dv_0 \\
-&= \int_{sX_c(x_0) = v_0 } P(x_0 \mid \mu_0 ) P( v_0 \mid \eta_0 ) dx_0 dv_0 \\
-&= \frac{1}{ 2 \pi \sigma_x \sigma_v } \int \exp \left( \frac{- \| x_0 - \mu_0 \|^2 }{2 \sigma_x^2 } + \frac{ - \| s X_c(x_0) - \eta_0 \| }{ 2 \sigma_v^2 } \right) dx_0
+	&P(x_0 \mid \eta_0 ,\mu_0, c_k, s ) :=\\
+	& \frac{1}{Z_{c_k,\mu_0,\hat{\eta}_0 }} \exp \left( \frac{ - \| X_{c_k} (x_0) - \hat{\eta_0} \| }{ 2 \sigma_v^2} + \frac{- \| x_0 - \mu_0 \| }{2 \sigma_x^2 } \right) 
 \end{align*}
 
-Finally, we must compute $P(c_k \mid \eta_0, \mu_0)$.
+%To compute $P(x_0 \mid c_k, \mu_0)$ we would like to use our known expressions for $P(x_0 \mid c_k)$ (see \eqref{eq:x given c}) and the Gaussian measurement model.
+%These two probability are sufficient to compute $P(x_0 \mid c_k,\mu_0)$ assuming that $c_k$ and $\mu_0$ are independent given $x_0$.
+%Such an assumption is reasonable given that our measuring device existed long before our model did.
+%Indeed
+%\begin{equation}
+%\begin{split}
+%	& P(x_0 \mid c_k , \mu_0) \propto P(c_k, \mu_0 \mid x_0 ) P(x_0) \\
+%	&=  P( \mu_0 \mid x_0) P( c_k \mid x_0 ) P(x_0)
+%\end{split} \label{eq: x given c and mu}
+%\end{equation}
+%We can compute $P(c_k \mid x_0)$ from Bayes' theorem and \eqref{eq:x given c}.
+%By our measurement mode, $P( \mu_0 \mid x_0)$ is normally distributed about $x_0$ with variance $\sigma_m$.
+%Moreover, $P(x_0) = \sum_{c} P(x_0 \mid c) P(c)$
+%where $P(c)$ is learned from the data and $P(x_0 \mid c)$ is given in \eqref{eq:x given c}.
+
+We also need to compute $P(c_k,s \mid \mu_0, \eta_0 )$.
 By Bayes' theorem
-\begin{equation}
-\begin{split}
-	& P(c_k \mid \eta_0 , \mu_0 ) = \\
-	&\quad \int P(c_k \mid v_0 , x_0 , \mu_0 , \eta_0 ) P( v_0, x_0 \mid \mu_0, \eta_0 ) dx_0 dv_0 \label{eq: c given measurements}
-\end{split}
-\end{equation}
-where $v_0$ is a dummy variable for the ``true'' velocity.
-Assuming independence of measurements in time we find
 \begin{align*}
-	P(v_0,x_0 \mid \mu_0 , \eta_0 ) &= P( x_0 \mid \mu_0 , \eta_0 ) P( v_0 \mid \mu_0 , \eta_0 ) \\
-	&=P( x_0 \mid \mu_0 ) P( v_0 \mid \eta_0 ) \\
-	&= \frac{1}{ 2\pi \sigma_m \sigma_v } \exp \left( \frac{- \|x_0 - \mu_0 \|^2 }{2\sigma_m^2} \right) \\
-	&\quad \cdot \exp \left( \frac{- \|v_0 - \eta_0 \|^2 }{ 2\sigma_v^2 } \right)
+	& P(c_k,s \mid \mu_0 , \eta_0) \\
+	& = \int P(c_k,s \mid x_0, v_0, \mu_0 , \eta_0) P(x_0, v_0 \mid \mu_0, \eta_0 ) dx_0 dv_0 
 \end{align*}
-Moreover, $c_k$ is independent of the measurements given we know the true position and velocity.
-That is $P(c_k \mid v_0, x_0, \mu_0, \eta_0 ) = P(c \mid x_0, v_0 )$.
-The latter can be computed precisely
+Assuming the measurements yield no additional information given the true position and velocity, we can assume $P(c_k,s \mid x_0, v_0, \mu_0 , \eta_0) = P(c_k,s \mid x_0, v_0)$.
+The latter distribution is Dirac-delta like, and only activated when $s X_{c_k}(x_0) = v_0$.
+Moreover, by assumption $P(x_0,v_0 \mid \mu_0, \eta_0) = P(x_0 \mid \mu_0) P(v_0 \mid \eta_0)$ is just a product a Gaussian distributions.
+This yields the result
 \begin{align*}
-	P( c_k \mid x_0 , v_0 ) =
-	\begin{cases}
-		1 \text{ if } X_{c_k}(x_0) = v_0 \\
-		0 \text{ else }
-	\end{cases}
+	&P(c_k,s \mid \mu_0 , \eta_0) = \\
+	&\frac{1}{Z_{\mu_0,\eta_0} } \int  \exp \left( \frac{ - \| x_0 - \mu_0 \| }{ 2 \sigma_x^2 } + \frac{ - \| sX_{c_k}(x_0) - \eta_0 \| }{2 \sigma_v^2 } \right) dx_0
 \end{align*}
-Substitution into \eqref{eq: c given measurements} reveals
-\begin{equation}
-\begin{split}
-	& P(c_k \mid \eta_0 , \mu_0 ) = \\
-	&\quad \frac{1}{4\pi^2 \sigma_x^2 \sigma_v^2 } \int \exp \left( \frac{ - \| x_0 - \mu_0 \| }{ 2 \sigma_m^2} + \frac{ - \| \eta_0 - X_c( x_0 ) \| }{ 2 \sigma_v^2} \right) dx_0 
-\end{split} \label{eq: c given measurements}
-\end{equation}
 
-where we have assumed that $X_{c_i}(x_0) \neq X_{c_j}(x_0)$ almost surely in $x_0$ (this is certainly the case for vector-fields we'd learn from in practice).
-
-
+In order to compute the normalizing constant we must know $P(c_0 \mid \mu_0, \eta_0)$.
+Again, we must make a choice.  Such a choice determines how often we will use the linear predictor.
+We'd like to use the linear predictor when a measured position is far from the training set (spatially)
+or if a measured velocity is mis-aligned with all the director fields at the measured position.
+This inspires the following choice
+\begin{align*}
+	& P(c_0 \mid \mu_0, \eta_0) = \\
+	&\quad \prod_{k=1}^n \left[ 1 - | \cos \left( \hat{\eta}_0 \cdot X_{c_k}(\mu_0) \right) |^{\gamma_a} \tanh \left( \gamma_x e^{ - V_{c_k}(\mu_0) } \right)  \right]
+\end{align*}
+where $\gamma_x > 0$ and $\gamma_a > 0$ are a tunable hyper-parameters.
+When $\gamma_x$ is large or when $\gamma_a$ is small we will tend to rely on the linear predictor more often.
+$\gamma_a$ pertains to how much we care about alignment between the measured velocity, and the velocity of the given class, while $\gamma_x$ pertains to how close we like to be to the test set when using a one of the classes we've learned.
 This completes the discussion for $c \in \{c_1,\dots, c_n \}$.
 
 For the linear predictor case ($c=c_0$) we compute
@@ -387,16 +383,17 @@ For the linear predictor case ($c=c_0$) we compute
 	&= \int P(x_0 = x_T - Tv_0 , v_0 \mid \mu_0 , \eta_0, c_0 ) dv_0
 \end{align*}
 
-In the case of a linear predictor, all velocities are equally valid and space is homogenous.
-Thus $c_0$ adds no information given measurement $\mu_0$ and $\eta_0$ and the above line becomes
+To compute $P(x_0, v_0 \mid \mu_0 , \eta_0, c_0)$ we will assume independence.
+$P(x_0, v_0 \mid \mu_0 , \eta_0, c_0) =  P(x_0 \mid \mu_0 , \eta_0, c_0)P(v_0 \mid \mu_0 , \eta_0, c_0)$.
+The probability $P(x_0 \mid \mu_0, \eta_0 , c_0)$ can be computed from the Law of total probability
 \begin{align*}
-	&= \int P(x_0 = x_T - Tv_0 \mid \mu_0 ) P( v_0 \mid \eta_0 ) dv_0 \\
-	&= \frac{1}{ 4\pi^2 \sigma_x^2 \sigma_v^2 } \int \exp \left( \frac{ - \| x_T - Tv_0 - \mu_0 \| }{ 2 \sigma_x^2} + \frac{ - \| v_0 - \eta_0 \|^2 }{ 2 \sigma_v^2 } \right) dv_0 
+	& P(x_0 \mid \mu_0, \eta_0 , c_0) P(c_0) = \\
+	& P(x_0 \mid \mu_0 ,\eta_0) - \sum_{k=1}^{n} \int P(x_0 \mid \mu_0 ,\eta_0, c_k,s ) P( c_k,s \mid \mu_0, \eta_0 ) ds
 \end{align*}
-Moreover, $P(c_0 \mid \eta_0 , \mu_0 ) = 1 - \sum_{k=1}^n P(c_k \mid \eta_0, \mu_0)$
-where $P(c_k \mid \eta_0, \mu_0 )$ for $k=1,\dots,n$ is given by \eqref{eq: c given measurements}
+CODE THIS ONE
 
-\section*{Fokker Planck}
+
+\section*{Fokker Planck} \label{app:Fokker Planck}
 Proof = cuz math.
 
 \section*{ACKNOWLEDGMENT}
