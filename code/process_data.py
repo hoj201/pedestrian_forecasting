@@ -1,6 +1,7 @@
 def get_trajectories( fname , label='Pedestrian' ):
     #a function to load trajectories from annotation data.
     # LOAD DATA
+    # Labels can be Pedestrian or Biker
     import pandas as pd
 
     data = pd.read_csv( fname, sep=" ")
