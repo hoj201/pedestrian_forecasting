@@ -278,7 +278,7 @@ class scene():
         y_upper = lambda x: mu[1] + np.sqrt( (7*sigma_x)**2 - (self.mu[0]-x)**2 )
         
         from scipy.integrate import dblquad
-        integral, abs_err = dblquad( integrand, x_lower, x_upper, y_lower, y_upper )
+        integral, abs_err = dblquad( integrand, x_lower, x_upper, y_lower, y_upper , epsabs = 1e-5, epsrel=1e-5)
         if abs_err > 1e-5:
             print "Warning in P_of_c_and_s_given_measurements"
         return integral / Z #MAKE Z A STATIC VARIABLE
@@ -400,36 +400,47 @@ if __name__ == "__main__":
     print coupa_scene.eta
 
     x = np.zeros(2)
-    
+
+    from time import time
+    t0 = time()
     print "Testing if P(x|mu,eta,nlc,s) runs"
     res = coupa_scene.P_of_x_given_measurements_nonlinear_class_speed(  x, 0 , 1.5 )
     print "result = %f" % res
-
-    print "Testing if P(c,s|mu,eta) runs"
-    coupa_scene.mu = np.array( [0.0, 0.6] )
-    coupa_scene.eta = coupa_scene.director_field(0, 0.0, 0.6 )
-    res = coupa_scene.P_of_nonlinear_class_and_speed_given_measurements( 0, 1.0 )
-    print "result = %f" % res
+    print "CPU time = %f \n" % (time()-t0)
 
 
     print "Testing if P(xT | linear, mu, eta ) runs"
     T = np.random.rand()
     xT = coupa_scene.mu + T*coupa_scene.eta
+    t0 = time()
     res = coupa_scene.P_of_future_position_given_linear_class_and_measurements(xT, T )
     print "result = %f" % res
+    print "CPU time = %f \n" % (time()-t0)
+
 
     print "Testing P( linear | mu,eta) runs"
     coupa_scene.set_mu( [0.5, -0.5])
     coupa_scene.set_eta( np.array( [1.0,-1.0] ) )
+    t0 = time()
     res = coupa_scene.P_of_linear_given_measurements()
     print "result = %f" % res
     print "Should be nearly 1"
+    print "CPU time = %f \n" % (time()-t0)
+
 
     coupa_scene.set_mu( np.array([0.0, 0.4]) )
     coupa_scene.set_eta( np.array( [1.0,0.0] ) )
+    t0 = time()
     res = coupa_scene.P_of_linear_given_measurements()
     print "result = %f" % res
-    print "Should be positive but nearly 0"
+    print "Should be positive but closer to 0 than 1"
+    print "CPU time = %f \n" % (time()-t0)
 
 
-
+    print "Testing if P(c,s|mu,eta) runs"
+    coupa_scene.mu = np.array( [0.0, 0.6] )
+    coupa_scene.eta = coupa_scene.director_field(0, 0.0, 0.6 )
+    t0 = time()
+    res = coupa_scene.P_of_nonlinear_class_and_speed_given_measurements( 0, 1.0 )
+    print "result = %f" % res
+    print "CPU time = %f \n" % (time()-t0)
