@@ -1,11 +1,9 @@
 import numpy as np
 from numpy.polynomial.legendre import legval2d, legder
 
-k_max = 4
-V_scale = (1.0, 1.0)
 regularization_coefficient = 0.1
 
-def get_angle( points, alpha):
+def get_angle( points, alpha, k_max, V_scale):
     """ Return angle at points given Legendre coefficients
 
     args:
@@ -15,22 +13,21 @@ def get_angle( points, alpha):
     returns:
         angle (numpy.ndarray): an array of shape (N,)
     """
-    global k_max
     alpha = alpha.reshape( (k_max+1, k_max+1) )
     from numpy.polynomial.legendre import legval2d
     return legval2d( points[0] / V_scale[0] , points[1] / V_scale[1], alpha ) 
 
-def jac_get_angle( points, alpha ):
+def jac_get_angle( points, alpha, k_max, V_scale ):
     """ Return sensitivity of angle at points with respec to Legendre coefficients
 
     args:
         points (numpy.ndarray): an array of shape (2 x N_points)
         alpha (numpy.ndarray): an array of shape (k_max+1, k_max+1)
+        V_scale (tuple<int>) : describes the size of the domain
 
     returns:
         angle (numpy.ndarray): an array of shape (N_points, k_max+1, k_max+1)
     """
-    global k_max, V_scale
     N_points = points.shape[1]
     alpha = alpha.reshape( (k_max+1, k_max+1) )
     x = points[0]
@@ -44,65 +41,69 @@ def jac_get_angle( points, alpha ):
         Leg[:,:,j+1] = ( (2*j+1)*np.einsum('pj,p->pj',Leg[:,:,j], y/V_scale[1]) - j*Leg[:,:,j-1] ) / float(j+1)
     return Leg
 
-def cost( alpha, points, directions ):
+def cost( alpha, points, directions, k_max, V_scale ):
     """ Returns the cost of a director field
 
     args:
         alpha (numpy.ndarray): size= (k_max+1)**2
         points (numpy.ndarray): shape=(2, N_points)
         directions (numpy.ndarray): shape=(2,N_points)
+        k_max (int): max degree of polynomial for angle-field
+        V_scale (tuple<int>) : describes the size of the domain
 
     return:
         total_cost (float)
     """
-    theta = get_angle( points , alpha )
+    theta = get_angle( points , alpha, k_max, V_scale )
     out = -( directions[0]*np.cos( theta)+directions[1]*np.sin(theta) ).sum() 
-    out += regularization_coefficient*regularization( alpha )
+    out += regularization_coefficient*regularization( alpha, k_max )
     return out
 
-def jac_cost( alpha, points, directions ):
+def jac_cost( alpha, points, directions, k_max, V_scale ):
     """ Returns the sensitivity of cost wrt alpha
 
     args:
         alpha (numpy.ndarray): size= (k_max+1)**2
         points (numpy.ndarray): shape=(2, N_points)
         directions (numpy.ndarray): shape=(2,N_points)
+        k_max (int): max degree of polynomial for angle-field
+        V_scale (tuple<int>) : describes the size of the domain
 
     return:
         out (numpy.ndarray): size=(k_max+1)**2
     """
-    theta = get_angle( points, alpha )
-    jac_theta = jac_get_angle( points, alpha )
+    theta = get_angle( points, alpha, k_max, V_scale )
+    jac_theta = jac_get_angle( points, alpha, k_max, V_scale )
     out = np.einsum('k,kij', directions[0]*np.sin(theta)-directions[1]*np.cos(theta) , jac_theta).flatten()
-    out += regularization_coefficient * jac_regularization( alpha ).flatten()
+    out += regularization_coefficient * jac_regularization( alpha, k_max ).flatten()
     return out
 
 
-def regularization( alpha ):
+def regularization( alpha, k_max ):
     """ Returns a regularization term to penalize coefficients of alpha
 
     args:
         alpha (numpy.ndarray): size=(k_max+1)**2
+        k_max : int
 
     return:
         out (float)
     """
-    global k_max
     k_span = np.arange( k_max + 1 )
     alpha = alpha.reshape( (k_max+1, k_max+1) )
     return np.einsum( 'ij,i,j', 0.5*alpha**2, k_span**2 +1, k_span**2 +1 )
 
 
-def jac_regularization( alpha ):
+def jac_regularization( alpha, k_max ):
     """ Returns the jacobian of the regularization term 
 
     args:
         alpha (numpy.ndarray): size=(k_max+1)**2
+        k_max: (int)
 
     return:
         out (numpy.ndarray): out.shape == alpha.shape
     """
-    global k_max
     k_span = np.arange( k_max + 1)
     alpha = alpha.reshape( (k_max+1, k_max+1) )
     return np.einsum('ij,i,j->ij', alpha, k_span**2+1, k_span**2+1).reshape( alpha.shape )
@@ -179,7 +180,7 @@ def jac_ode_function( xy, t, alpha, speed ):
     out *= speed
     return out
 
-def predict( x0, y0, alpha, speed ):
+def rk4_predict( x0, y0, alpha, speed ):
     global V_scale
     def rk4_step( xy , h ):
         k1 = ode_function( xy, 0.0, alpha, speed)
@@ -201,7 +202,7 @@ def predict( x0, y0, alpha, speed ):
     return xy_arr[:,0], xy_arr[:,1]
 
 
-def trajectories_to_director_field( trajectories, step = 10 ):
+def trajectories_to_director_field( trajectories, V_scale, step = 10, k_max = 6 ):
     """ Converts a collection of trajectories into a director field
 
     args:
@@ -213,7 +214,6 @@ def trajectories_to_director_field( trajectories, step = 10 ):
     returns:
         alpha (numpy.ndarray) : coeficients for 2D legendre series, shape = (k_max+1, k_max+1)
     """
-    global k_max
     points_ls, directions_ls = zip(*[trajectory_to_directors(traj,step=step) for traj in trajectories ] )
     points = np.hstack(points_ls)
     directions = np.hstack( directions_ls)
@@ -221,7 +221,7 @@ def trajectories_to_director_field( trajectories, step = 10 ):
     av_dir = np.power( reduce( lambda x,y: x*y, directions[0]+1j*directions[1]), 1.0 / directions.shape[1])
     alpha_guess[0,0] = np.log( av_dir ).imag
     from scipy.optimize import minimize
-    res = minimize( cost, alpha_guess, jac = jac_cost, args = (points, directions), method ='Newton-CG')
+    res = minimize( cost, alpha_guess, jac = jac_cost, args = (points, directions,k_max,V_scale), method ='Newton-CG')
     if not res.success:
         print res.message
     alpha = res.x.reshape( (k_max+1, k_max+1) )
