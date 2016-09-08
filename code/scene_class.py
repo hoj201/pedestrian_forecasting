@@ -204,21 +204,20 @@ class scene():
             for k in range( len( self.P_of_c) -1):
                 def Z_integrand( xys ):
                     #make this evaluate on a Nx3 array
-                    xy = xys[0:2]
                     x = xys[0]
                     y = xys[1]
                     s = xys[2]
-                    v = s * self.director_field_vectorized( k, xy)
-                    out = G( x - self.mu[0] , sigma_x )
-                    out *= G( y - self.mu[1] , sigma_x )
-                    out *= G( v[0] - self.eta[0] , sigma_v )
-                    out *= G( v[1] - self.eta[1] , sigma_v )
+                    v = np.einsum('j,ij->ij', s, self.director_field( k, x, y) )
+                    out = np.exp( -(x - self.mu[0])**2 / (2*sigma_x**2) )
+                    out = np.exp( -(y - self.mu[1])**2 / (2*sigma_x**2) )
+                    out = np.exp( -(v[0] - self.eta[0])**2 / (2*sigma_v**2) )
+                    out = np.exp( -(v[1] - self.eta[1])**2 / (2*sigma_v**2) )
                     return out
                 #Using Clenshaw-Curtis quadrature rule
                 #remapping the quadrature nodes
 
                 #evaluate on nodes
-                node_vals = np.array( map( Z_integrand , list( sparse_grid_quad_nodes ) ) )
+                node_vals = Z_integrand( sparse_grid_quad_nodes.transpose() ).flatten()
                 Z +=  np.dot( sparse_grid_quad_weights, node_vals )
             Vol = (2*s_max) * (2*7*sigma_x) * (2*7*sigma_x)
             Z *= Vol
@@ -226,9 +225,7 @@ class scene():
             #Now we divide by (1-P( Linear | measurements) ) #TODO:  Overflow error when Linear predictor is likely
             Z /= 1.0 - self.P_of_linear_given_measurements()
             self.Z_nl_c_given_measurements = Z
-
         return numerator / self.Z_nl_c_given_measurements
-
 
     def P_of_future_position_given_linear_class_and_measurements( self, xT, T ):
         """ Computes the probability density at xT at time T under linear motion
