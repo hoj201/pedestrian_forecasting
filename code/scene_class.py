@@ -148,21 +148,22 @@ class scene():
         if np.sqrt(ss(self.eta)) <= 1e-5:
             return P_of_x_given_mu( x )
         eta_hat = self.eta / np.sqrt( ss(self.eta))
-        def integrand(y,x): #This swapping of variables is deliberate
-            xy = np.array( [x,y] )
-            out = np.exp( - ss( self.director_field(k,x,y) - eta_hat)) / (2*np.pi*sigma_v**2)
-            out *= np.exp( -ss( xy - self.mu )) / (2*np.pi*sigma_x**2) 
+        def integrand_sparse(xy): #This swapping of variables is deliberate
+            v = self.director_field(k, xy[0], xy[1] ) 
+            out = np.exp( - (v[0]-eta_hat[0])**2 / (2*sigma_v**2) ) / np.sqrt( 2*np.pi*sigma_v**2 )
+            out *= np.exp( - (v[1]-eta_hat[1])**2 / (2*sigma_v**2) ) / np.sqrt( 2*np.pi*sigma_v**2 )
+            out *= np.exp( - ( xy[0] - self.mu[0] )**2 / (2*sigma_x**2) )  / np.sqrt(2*np.pi*sigma_x**2 ) 
+            out *= np.exp( - ( xy[1] - self.mu[1] )**2 / (2*sigma_x**2) )  / np.sqrt(2*np.pi*sigma_x**2 ) 
             return out
 
-        x_lower = self.mu[0] - 7*sigma_x
-        x_upper = self.mu[0] + 7*sigma_x
-        y_lower = lambda x: self.mu[1] - np.sqrt( (7*sigma_x)**2 - (x-self.mu[0])**2 )
-        y_upper = lambda x: self.mu[1] + np.sqrt( (7*sigma_x)**2 - (x-self.mu[0])**2 )
-
-        Z, abs_err = dblquad( integrand, x_lower, x_upper, y_lower, y_upper) #TODO:  It would be wise to make this only computed once per class
-        if abs_err > 1e-5:
-            print "Warning: quadature error is %g in x_given_eta_mu_c_s computation"
-        return integrand(x[1],x[0])/ Z
+        transformed_nodes = np.zeros_like( sparse_grid_nodes_2d)
+        transformed_nodes[:,0] = (sparse_grid_nodes_2d[:,0]-0.5)*2*7*sigma_x + self.mu[0]
+        transformed_nodes[:,1] = (sparse_grid_nodes_2d[:,1]-0.5)*2*7*sigma_x + self.mu[1]
+        vals_at_nodes = integrand_sparse( transformed_nodes.transpose() )
+        Vol = 4*49*sigma_x**2
+        Z_sg = np.dot( vals_at_nodes, sparse_grid_weights_2d )*Vol
+        print Z_sg
+        return integrand_sparse(x)/ Z_sg
 
     #TODO: This runs and appears to behave right.  Has not been checked for accu.
     def P_of_nonlinear_class_and_speed_given_measurements( self, class_index, speed ):
