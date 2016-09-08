@@ -2,6 +2,12 @@ import numpy as np
 
 sigma_x = 0.1
 sigma_v = 0.1
+
+from pandas import read_csv
+sparse_grid_quad_nodes = read_csv('./sparse_grid_data/points_3d.dat', sep=',', header=None).values
+sparse_grid_quad_weights = read_csv('./sparse_grid_data/weights_3d.dat', sep=',', header=None).values.flatten()
+
+
 print "Remember to set sigma_x and sigma_v"
 
 def memoize(f):
@@ -70,6 +76,28 @@ class scene():
                 self.theta_coeffs[k]
                 )
         return np.array( [ np.cos(theta), np.sin(theta) ] )
+
+
+    def director_field_vectorized( self, k, xy ):
+        """ Returns the director field at a variety of points
+
+        args:
+            k (int):
+            xy (ndarray): shape = (2,n)
+
+        returns:
+            out (ndarray): shape = (2,n)
+        """
+        x = xy[0]
+        y = xy[1]
+        theta = np.polynomial.legendre.legval2d(
+                x/self.V_scale[0],
+                y/self.V_scale[1],
+                self.theta_coeffs[k]
+                )
+        return np.vstack( [ np.cos(theta), np.sin(theta) ] )
+        
+
 
     def P_of_x_given_nl_class( self, x, k ):
         """ Computes the probability density of the true position, given only the class
@@ -167,30 +195,34 @@ class scene():
         else:
             print "Yay"
         if not hasattr( self, 'Z_nl_c_given_measurements' ):
-            #WE MUST COMPUTE A NORMALIZING CONSTANT
             Z = 0.0
+            s_max = np.sqrt( np.dot(self.eta, self.eta) ) + np.sqrt( np.dot(self.eta,self.eta) + (7*sigma_x)**2 )
+            quad_nodes = np.zeros_like( sparse_grid_quad_nodes )
+            quad_nodes[:,0] = (sparse_grid_quad_nodes[:,0]-0.5 )*2*7*sigma_x + self.mu[0]
+            quad_nodes[:,1] = (sparse_grid_quad_nodes[:,1]-0.5 )*2*7*sigma_x + self.mu[1]
+            quad_nodes[:,2] = (sparse_grid_quad_nodes[:,2]-0.5 )*2*s_max
             for k in range( len( self.P_of_c) -1):
-                def Z_integrand(s,y,x):
-                    v = s * self.director_field(k,x,y)
-                    xy = np.array([x,y])
-                    out = G( xy - self.mu , sigma_x )
-                    out *= G( v - self.eta , sigma_v )
+                def Z_integrand( xys ):
+                    #make this evaluate on a Nx3 array
+                    xy = xys[0:2]
+                    x = xys[0]
+                    y = xys[1]
+                    s = xys[2]
+                    v = s * self.director_field_vectorized( k, xy)
+                    out = G( x - self.mu[0] , sigma_x )
+                    out *= G( y - self.mu[1] , sigma_x )
+                    out *= G( v[0] - self.eta[0] , sigma_v )
+                    out *= G( v[1] - self.eta[1] , sigma_v )
                     return out
-                
-                from scipy.integrate import tplquad
-                x_lower = self.mu[0] - 7*sigma_x
-                x_upper = self.mu[0] + 7*sigma_x
-                y_lower = lambda x:self.mu[1] - np.sqrt( (7*sigma_x)**2 - (x-self.mu[0])**2 )
-                y_lower = lambda x:self.mu[1] + np.sqrt( (7*sigma_x)**2 - (x-self.mu[0])**2 )
-                helper = lambda x,y: np.dot(self.director_field(k,x,y), self.eta )
-                sos = lambda x: np.dot(x,x)
-                s_lower = lambda x,y: helper(x,y) - np.sqrt( helper(x,y)**2 - ( sos(self.eta) - (7*sigma_v)**2 ))
-                s_upper = lambda x,y: helper(x,y) + np.sqrt( helper(x,y)**2 - ( sos(self.eta) - (7*sigma_v)**2 ))
-                #TODO:  This integral is throwing accuracy errors.  It is also taking too long to compute.
-                integral, abs_err = tplquad( Z_integrand, x_lower, x_upper, y_lower, y_upper, s_lower, s_upper , epsrel = 1e-5, epsabs = 1e-5)
-                if abs_err > 1e-5:
-                    print "Warning in computation of normalizing constatn for nl_c given measurements"
-                Z += integral
+                #Using Clenshaw-Curtis quadrature rule
+                #remapping the quadrature nodes
+
+                #evaluate on nodes
+                node_vals = np.array( map( Z_integrand , list( sparse_grid_quad_nodes ) ) )
+                Z +=  np.dot( sparse_grid_quad_weights, node_vals )
+            Vol = (2*s_max) * (2*7*sigma_x) * (2*7*sigma_x)
+            Z *= Vol
+            print "Z = %f" % Z
             #Now we divide by (1-P( Linear | measurements) ) #TODO:  Overflow error when Linear predictor is likely
             Z /= 1.0 - self.P_of_linear_given_measurements()
             self.Z_nl_c_given_measurements = Z
@@ -442,5 +474,6 @@ if __name__ == "__main__":
     coupa_scene.eta = coupa_scene.director_field(0, 0.0, 0.6 )
     t0 = time()
     res = coupa_scene.P_of_nonlinear_class_and_speed_given_measurements( 0, 1.0 )
-    print "result = %f" % res
+    print "result = "
+    print res
     print "CPU time = %f \n" % (time()-t0)
