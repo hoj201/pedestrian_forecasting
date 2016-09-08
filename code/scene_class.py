@@ -9,6 +9,27 @@ sparse_grid_weights_3d = read_csv('./sparse_grid_data/weights_3d.dat', sep=',', 
 sparse_grid_nodes_2d = read_csv('./sparse_grid_data/points_2d.dat', sep=',', header=None).values
 sparse_grid_weights_2d = read_csv('./sparse_grid_data/weights_2d.dat', sep=',', header=None).values.flatten()
 
+
+def sparse_grid_quad_2d( integrand, x_min, x_max, y_min, y_max ):
+    #Computes the sparse grid quadrature of the integrand over the box [x_min,x_max] x [y_min, y_max]
+    transformed_nodes = np.zeros_like( sparse_grid_nodes_2d )
+    transformed_nodes[:,0] = sparse_grid_nodes_2d[:,0]*(x_max-x_min) + x_min
+    transformed_nodes[:,1] = sparse_grid_nodes_2d[:,1]*(y_max-y_min) + y_min
+    vals_on_nodes = integrand( transformed_nodes.transpose() )
+    Vol = (x_max - x_min ) * (y_max - y_min )
+    return np.dot( vals_on_nodes , sparse_grid_weights_2d ) * Vol
+
+def sparse_grid_quad_3d( integrand, x_min, x_max, y_min, y_max, z_min, z_max ):
+    #Computes the sparse grid quadrature of the integrand over the box [x_min,x_max] x [y_min, y_max]
+    transformed_nodes = np.zeros_like( sparse_grid_nodes_3d )
+    transformed_nodes[:,0] = sparse_grid_nodes_3d[:,0]*(x_max-x_min) + x_min
+    transformed_nodes[:,1] = sparse_grid_nodes_3d[:,1]*(y_max-y_min) + y_min
+    transformed_nodes[:,2] = sparse_grid_nodes_3d[:,2]*(z_max-z_min) + z_min
+    vals_on_nodes = integrand( transformed_nodes.transpose() )
+    Vol = ( x_max-x_min ) * ( y_max - y_min) * (z_max - z_min )
+    return np.dot( vals_on_nodes , sparse_grid_weights_3d ) * Vol
+
+
 def memoize(f):
     memo = {}
     def helper(x):
@@ -114,16 +135,8 @@ class scene():
                 def integrand(xy):
                     V = np.polynomial.legendre.legval2d( xy[0]/self.V_scale[0], xy[1]/self.V_scale[1], self.alpha_arr[index] )
                     return np.exp(-V)
-                x_lower = -self.V_scale[0]
-                x_upper = self.V_scale[0]
-                y_lower = lambda x: -self.V_scale[1]
-                y_upper = lambda x: self.V_scale[1]
-                
-                transformed_nodes = np.zeros_like( sparse_grid_nodes_2d )
-                transformed_nodes[:,0] = (sparse_grid_nodes_2d[:,0]-0.5)*2*self.V_scale[0]
-                transformed_nodes[:,1] = (sparse_grid_nodes_2d[:,1]-0.5)*2*self.V_scale[1]
-                vals_at_nodes = integrand( transformed_nodes.transpose() )
-                Z_ls.append( np.dot( vals_at_nodes , sparse_grid_weights_2d )*4*self.V_scale[0]*self.V_scale[1] )
+                Z = sparse_grid_quad_2d( integrand, -self.V_scale[0], self.V_scale[0], -self.V_scale[1], self.V_scale[1] )
+                Z_ls.append( Z )
             self.Z_x_given_c = tuple( Z_ls )
 
         V = np.polynomial.legendre.legval2d( x[0] / self.V_scale[0], x[1] / self.V_scale[1], self.alpha_arr[k] )
@@ -147,6 +160,7 @@ class scene():
         #If measured speed is nearly zero we assume no motion
         if np.sqrt(ss(self.eta)) <= 1e-5:
             return P_of_x_given_mu( x )
+
         eta_hat = self.eta / np.sqrt( ss(self.eta))
         def integrand_sparse(xy): #This swapping of variables is deliberate
             v = self.director_field(k, xy[0], xy[1] ) 
@@ -156,13 +170,11 @@ class scene():
             out *= np.exp( - ( xy[1] - self.mu[1] )**2 / (2*sigma_x**2) )  / np.sqrt(2*np.pi*sigma_x**2 ) 
             return out
 
-        transformed_nodes = np.zeros_like( sparse_grid_nodes_2d)
-        transformed_nodes[:,0] = (sparse_grid_nodes_2d[:,0]-0.5)*2*7*sigma_x + self.mu[0]
-        transformed_nodes[:,1] = (sparse_grid_nodes_2d[:,1]-0.5)*2*7*sigma_x + self.mu[1]
-        vals_at_nodes = integrand_sparse( transformed_nodes.transpose() )
-        Vol = 4*49*sigma_x**2
-        Z_sg = np.dot( vals_at_nodes, sparse_grid_weights_2d )*Vol
-        print Z_sg
+        x_min = self.mu[0] - 7*sigma_x
+        x_max = self.mu[0] + 7*sigma_x
+        y_min = self.mu[1] - 7*sigma_x
+        y_max = self.mu[1] + 7*sigma_x
+        Z_sg = sparse_grid_quad_2d( integrand_sparse, x_min, x_max, y_min, y_max )
         return integrand_sparse(x)/ Z_sg
 
     #TODO: This runs and appears to behave right.  Has not been checked for accu.
@@ -174,35 +186,30 @@ class scene():
             speed : float
 
         returns:
-            out : non-negative float
+            out : float between 0 and 1
         """
-        from scipy.integrate import dblquad
-
-        G = lambda x,s : np.exp( -np.dot(x,x) / (2*s**2) )
-        def integrand(y,x):  #This swap in labels is deliberate.  See dblquad documentation.
-            v = speed * self.director_field(class_index, x, y)
-            xy = np.array([x,y])
-            out = G( xy-self.mu , sigma_x )
-            out *= G( v - self.eta , sigma_v)
+        def integrand_sparse(xy):
+            v = speed * self.director_field(class_index, xy[0], xy[1])
+            out = np.exp( -(xy[0]-self.mu[0] )**2 / (2*sigma_x**2) )
+            out *= np.exp( -(xy[1]-self.mu[1] )**2 / (2*sigma_x**2) )
+            out *= np.exp( -(v[0]-self.eta[0] )**2 / (2*sigma_v**2) )
+            out *= np.exp( -(v[1]-self.eta[1] )**2 / (2*sigma_v**2) )
             return out
-        
-        x_lower = self.mu[0]-7*sigma_x
-        x_upper = self.mu[0]+7*sigma_x
-        y_lower = lambda x: self.mu[1] - np.sqrt( (7*sigma_x)**2 - (x-self.mu[0])**2 )
-        y_upper = lambda x: self.mu[1] + np.sqrt( (7*sigma_x)**2 - (x-self.mu[0])**2 )
 
-        numerator, abs_err = dblquad( integrand, x_lower, x_upper, y_lower, y_upper )
-        if abs_err > 1e-5:
-            print "Warning: integrand error exceeded %g" % abs_err
-        else:
-            print "Yay"
+        x_min = self.mu[0] - 7*sigma_x
+        x_max = self.mu[0] + 7*sigma_x
+        y_min = self.mu[1] - 7*sigma_x
+        y_max = self.mu[1] + 7*sigma_x
+        numerator = sparse_grid_quad_2d( integrand_sparse, x_min, x_max, y_min, y_max )
+
         if not hasattr( self, 'Z_nl_c_given_measurements' ):
             Z = 0.0
+            x_min = self.mu[0] - 7*sigma_x
+            x_max = self.mu[0] + 7*sigma_x
+            y_min = self.mu[1] - 7*sigma_x
+            y_max = self.mu[1] + 7*sigma_x
             s_max = np.sqrt( np.dot(self.eta, self.eta) ) + np.sqrt( np.dot(self.eta,self.eta) + (7*sigma_x)**2 )
-            quad_nodes = np.zeros_like( sparse_grid_nodes_3d )
-            quad_nodes[:,0] = (sparse_grid_nodes_3d[:,0]-0.5 )*2*7*sigma_x + self.mu[0]
-            quad_nodes[:,1] = (sparse_grid_nodes_3d[:,1]-0.5 )*2*7*sigma_x + self.mu[1]
-            quad_nodes[:,2] = (sparse_grid_nodes_3d[:,2]-0.5 )*2*s_max
+            s_min = -s_max
             for k in range( len( self.P_of_c) -1):
                 def Z_integrand( xys ):
                     #make this evaluate on a Nx3 array
@@ -216,14 +223,9 @@ class scene():
                     out = np.exp( -(v[1] - self.eta[1])**2 / (2*sigma_v**2) )
                     return out
                 #Using Clenshaw-Curtis quadrature rule
-                #remapping the quadrature nodes
-
                 #evaluate on nodes
                 node_vals = Z_integrand( sparse_grid_nodes_3d.transpose() ).flatten()
-                Z +=  np.dot( sparse_grid_weights_3d, node_vals )
-            Vol = (2*s_max) * (2*7*sigma_x) * (2*7*sigma_x)
-            Z *= Vol
-            print "Z = %f" % Z
+                Z += sparse_grid_quad_3d( Z_integrand, x_min, x_max, y_min, y_max, s_min, s_max )
             #Now we divide by (1-P( Linear | measurements) ) #TODO:  Overflow error when Linear predictor is likely
             Z /= 1.0 - self.P_of_linear_given_measurements()
             self.Z_nl_c_given_measurements = Z
@@ -243,23 +245,19 @@ class scene():
         #1/(2pi sig_x sig_v) \int G_{sig_x}( xT - Tv - mu ) + G_{sig_v}( v - eta) dv
         from scipy.integrate import dblquad
         G = lambda x,s: np.exp( -x**2 / (2*s**2) ) / np.sqrt(2*np.pi*s**2)
-        def integrand(v,u): #Notes: Scipy docs say that we must swap the order like this.  This is not a typo.
-            out = G( xT[0]-T*u - self.mu[0] , sigma_x)
-            out *= G( xT[1]-T*v - self.mu[1] , sigma_x)
-            out *= G( self.eta[0] - u , sigma_v)
-            out *= G( self.eta[1] - v , sigma_v)
+        def integrand_sparse(uv):
+            out = G( xT[0]-T*uv[0] - self.mu[0] , sigma_x)
+            out *= G( xT[1]-T*uv[1] - self.mu[1] , sigma_x)
+            out *= G( self.eta[0] - uv[0] , sigma_v)
+            out *= G( self.eta[1] - uv[1] , sigma_v)
             return out
-        u_upper = self.eta[0]+7*sigma_v
-        u_lower = self.eta[0]-7*sigma_v
-        v_upper = lambda u: self.eta[1]+np.sqrt( (7*sigma_v)**2 - (u-self.eta[0])**2 )
-        v_lower = lambda u: self.eta[1]-np.sqrt( (7*sigma_v)**2 - (u-self.eta[0])**2 )
-
-        out, abs_err = dblquad( integrand, u_lower, u_upper, v_lower, v_upper )
-        if abs_err > 1e-5:
-            print "Warning: abserr of quadrature computation = %g" % abs_err
+        u_min = self.eta[0]+7*sigma_v
+        u_max = self.eta[0]-7*sigma_v
+        v_min = self.eta[1]+7*sigma_v
+        v_max = self.eta[1]-7*sigma_v
+        out = sparse_grid_quad_2d( integrand_sparse, u_min, u_max, v_min, v_max )
         return out
 
-    #TODO: THis is super slow
     def P_of_linear_given_measurements(self ):
         """ Computes the probability of the linear class given measurements
 
