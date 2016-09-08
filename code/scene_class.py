@@ -4,11 +4,10 @@ sigma_x = 0.1
 sigma_v = 0.1
 
 from pandas import read_csv
-sparse_grid_quad_nodes = read_csv('./sparse_grid_data/points_3d.dat', sep=',', header=None).values
-sparse_grid_quad_weights = read_csv('./sparse_grid_data/weights_3d.dat', sep=',', header=None).values.flatten()
-
-
-print "Remember to set sigma_x and sigma_v"
+sparse_grid_nodes_3d = read_csv('./sparse_grid_data/points_3d.dat', sep=',', header=None).values
+sparse_grid_weights_3d = read_csv('./sparse_grid_data/weights_3d.dat', sep=',', header=None).values.flatten()
+sparse_grid_nodes_2d = read_csv('./sparse_grid_data/points_2d.dat', sep=',', header=None).values
+sparse_grid_weights_2d = read_csv('./sparse_grid_data/weights_2d.dat', sep=',', header=None).values.flatten()
 
 def memoize(f):
     memo = {}
@@ -98,7 +97,6 @@ class scene():
         return np.vstack( [ np.cos(theta), np.sin(theta) ] )
         
 
-
     def P_of_x_given_nl_class( self, x, k ):
         """ Computes the probability density of the true position, given only the class
         
@@ -113,16 +111,19 @@ class scene():
             #compute all the partition functions
             Z_ls = []
             for index in range( len( self.P_of_c )-1 ):
-                def integrand(y,x):
-                    V = np.polynomial.legendre.legval2d( x/self.V_scale[0], y/self.V_scale[1], self.alpha_arr[index] )
+                def integrand(xy):
+                    V = np.polynomial.legendre.legval2d( xy[0]/self.V_scale[0], xy[1]/self.V_scale[1], self.alpha_arr[index] )
                     return np.exp(-V)
-                x_lower = -V_scale[0]
-                x_upper = V_scale[0]
-                y_lower = lambda x: -V_scale[1]
-                y_upper = lambda x: V_scale[1]
-                from scipy.integrate import dblquad
-                Z, abs_err = dblquad( integrand, x_lower, x_upper, y_lower, y_upper )
-                Z_ls.append( Z)
+                x_lower = -self.V_scale[0]
+                x_upper = self.V_scale[0]
+                y_lower = lambda x: -self.V_scale[1]
+                y_upper = lambda x: self.V_scale[1]
+                
+                transformed_nodes = np.zeros_like( sparse_grid_nodes_2d )
+                transformed_nodes[:,0] = (sparse_grid_nodes_2d[:,0]-0.5)*2*self.V_scale[0]
+                transformed_nodes[:,1] = (sparse_grid_nodes_2d[:,1]-0.5)*2*self.V_scale[1]
+                vals_at_nodes = integrand( transformed_nodes.transpose() )
+                Z_ls.append( np.dot( vals_at_nodes , sparse_grid_weights_2d )*4*self.V_scale[0]*self.V_scale[1] )
             self.Z_x_given_c = tuple( Z_ls )
 
         V = np.polynomial.legendre.legval2d( x[0] / self.V_scale[0], x[1] / self.V_scale[1], self.alpha_arr[k] )
@@ -197,10 +198,10 @@ class scene():
         if not hasattr( self, 'Z_nl_c_given_measurements' ):
             Z = 0.0
             s_max = np.sqrt( np.dot(self.eta, self.eta) ) + np.sqrt( np.dot(self.eta,self.eta) + (7*sigma_x)**2 )
-            quad_nodes = np.zeros_like( sparse_grid_quad_nodes )
-            quad_nodes[:,0] = (sparse_grid_quad_nodes[:,0]-0.5 )*2*7*sigma_x + self.mu[0]
-            quad_nodes[:,1] = (sparse_grid_quad_nodes[:,1]-0.5 )*2*7*sigma_x + self.mu[1]
-            quad_nodes[:,2] = (sparse_grid_quad_nodes[:,2]-0.5 )*2*s_max
+            quad_nodes = np.zeros_like( sparse_grid_nodes_3d )
+            quad_nodes[:,0] = (sparse_grid_nodes_3d[:,0]-0.5 )*2*7*sigma_x + self.mu[0]
+            quad_nodes[:,1] = (sparse_grid_nodes_3d[:,1]-0.5 )*2*7*sigma_x + self.mu[1]
+            quad_nodes[:,2] = (sparse_grid_nodes_3d[:,2]-0.5 )*2*s_max
             for k in range( len( self.P_of_c) -1):
                 def Z_integrand( xys ):
                     #make this evaluate on a Nx3 array
@@ -217,8 +218,8 @@ class scene():
                 #remapping the quadrature nodes
 
                 #evaluate on nodes
-                node_vals = Z_integrand( sparse_grid_quad_nodes.transpose() ).flatten()
-                Z +=  np.dot( sparse_grid_quad_weights, node_vals )
+                node_vals = Z_integrand( sparse_grid_nodes_3d.transpose() ).flatten()
+                Z +=  np.dot( sparse_grid_weights_3d, node_vals )
             Vol = (2*s_max) * (2*7*sigma_x) * (2*7*sigma_x)
             Z *= Vol
             print "Z = %f" % Z
@@ -257,6 +258,7 @@ class scene():
             print "Warning: abserr of quadrature computation = %g" % abs_err
         return out
 
+    #TODO: THis is super slow
     def P_of_linear_given_measurements(self ):
         """ Computes the probability of the linear class given measurements
 
