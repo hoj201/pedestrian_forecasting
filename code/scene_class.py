@@ -74,8 +74,8 @@ class scene():
         from director_field import trajectories_to_director_field
         X_ls = [] 
         k_max_theta = 4 #max degree of polynomial for angle field
-        num_nonlinear_classes = len(clusters)
-        theta_coeffs = np.zeros( (num_nonlinear_classes, k_max_theta+1, k_max_theta+1) )
+        self.num_nl_classes = len(clusters)
+        theta_coeffs = np.zeros( (self.num_nl_classes, k_max_theta+1, k_max_theta+1) )
         for k,cl in enumerate(clusters):
             theta_coeffs[k] = trajectories_to_director_field( cl , V_scale, k_max = k_max_theta )
         self.theta_coeffs = theta_coeffs
@@ -131,7 +131,7 @@ class scene():
         if not hasattr( self, 'Z_x_given_c'):
             #compute all the partition functions
             Z_ls = []
-            for index in range( len( self.P_of_c )-1 ):
+            for index in range( self.num_nl_classes ):
                 def integrand(xy):
                     V = np.polynomial.legendre.legval2d( xy[0]/self.V_scale[0], xy[1]/self.V_scale[1], self.alpha_arr[index] )
                     return np.exp(-V)
@@ -156,12 +156,11 @@ class scene():
         """
         global sigma_x, sigma_v
         from scipy.integrate import dblquad
-        ss = lambda x: np.dot(x,x)
         #If measured speed is nearly zero we assume no motion
-        if np.sqrt(ss(self.eta)) <= 1e-5:
+        if np.sqrt( np.dot(self.eta, self.eta)) <= 1e-5:
             return P_of_x_given_mu( x )
 
-        eta_hat = self.eta / np.sqrt( ss(self.eta))
+        eta_hat = self.eta / np.sqrt( np.dot(self.eta, self.eta))
         def integrand_sparse(xy): #This swapping of variables is deliberate
             v = self.director_field(k, xy[0], xy[1] ) 
             out = np.exp( - (v[0]-eta_hat[0])**2 / (2*sigma_v**2) ) / np.sqrt( 2*np.pi*sigma_v**2 )
@@ -210,7 +209,7 @@ class scene():
             y_max = self.mu[1] + 7*sigma_x
             s_max = np.sqrt( np.dot(self.eta, self.eta) ) + np.sqrt( np.dot(self.eta,self.eta) + (7*sigma_x)**2 )
             s_min = -s_max
-            for k in range( len( self.P_of_c) -1):
+            for k in range( self.num_nl_classes ):
                 def Z_integrand( xys ):
                     #make this evaluate on a Nx3 array
                     x = xys[0]
@@ -278,7 +277,6 @@ class scene():
         return out
 
 
-    #TODO: FINISH CODING THIS
     def P_of_c_and_s_given_measurements( self, k, s):
         """ Computes the probability density of a class and speed given the measurements
 
@@ -291,30 +289,50 @@ class scene():
         """
         if not hasattr( self, 'Z_cs_given_meas' ):
             #COMPUTE THE NORMALIZING CONSTANT
-            print "Still need to code Z_cs_given_meas"
+            def integrand( xys, k ):
+                x = xys[0]
+                y = xys[1]
+                s = xys[2]
+                v = self.director_field(k,x,y)
+                out = np.exp( -(x-self.mu[0])**2 / (2*sigma_x**2) )
+                out *= np.exp( -(y-self.mu[1])**2 / (2*sigma_x**2) )
+                out *= np.exp( -( s*v[0] -self.eta[0])**2 / (2*sigma_v**2) )
+                out *= np.exp( -( s*v[1] -self.eta[1])**2 / (2*sigma_v**2) )
+                return out
+            x_min = self.mu[0] - 7*sigma_x
+            x_max = self.mu[0] + 7*sigma_x
+            y_min = self.mu[1] - 7*sigma_x
+            y_max = self.mu[1] + 7*sigma_x
+            #TODO: Find a reasonable s_max
+            s_min = -7*sigma_x
+            s_max = 7*sigma_x
+            total = 0.
+            for k in range( self.num_nl_classes ):
+                integrand_k = lambda xys: integrand(xys,k)
+                total += sparse_grid_quad_3d( integrand_k, x_min, x_max, y_min, y_max, s_min, s_max)
+            self.Z_cs_given_meas = total
+            
 
 
-        G = lambda x,sigma: np.exp( -np.dot(x,x)) / (2*sigma**2)
-        def integrand(y,x): #Swap is deliberate.  See scipy.integrate.dblquad docs
-            global sigma_x
-            xy = np.array([x,y])
-            out = G( xy-self.mu, sigma_x )
-            out *= G( s*self.director_field(k,x,y) - self.eta )
+        G = lambda x,sigma: np.exp( -x**2 / (2*sigma**2) ) / np.sqrt(2*np.pi*sigma**2)
+        def integrand(xy):
+            x = xy[0]
+            y = xy[1]
+            out = G( x -self.mu[0], sigma_x )
+            out *= G( y -self.mu[1], sigma_x )
+            v = s*self.director_field(k,x,y)
+            out *= G( v[0] - self.eta[0], sigma_v )
+            out *= G( v[1] - self.eta[1], sigma_v )
             return out
         
-        x_lower = self.mu[0] - 7*sigma_x
-        x_upper = self.mu[0] + 7*sigma_x
-        y_lower = lambda x: mu[1] - np.sqrt( (7*sigma_x)**2 - (self.mu[0]-x)**2 )
-        y_upper = lambda x: mu[1] + np.sqrt( (7*sigma_x)**2 - (self.mu[0]-x)**2 )
-        
-        from scipy.integrate import dblquad
-        integral, abs_err = dblquad( integrand, x_lower, x_upper, y_lower, y_upper , epsabs = 1e-5, epsrel=1e-5)
-        if abs_err > 1e-5:
-            print "Warning in P_of_c_and_s_given_measurements"
-        return integral / Z #MAKE Z A STATIC VARIABLE
+        x_min = self.mu[0] - 7*sigma_x
+        x_max = self.mu[0] + 7*sigma_x
+        y_min = self.mu[1] - 7*sigma_x
+        y_max = self.mu[1] + 7*sigma_x
+        Q = sparse_grid_quad_2d( integrand, x_min, x_max, y_min, y_max )
+        return Q / self.Z_cs_given_meas #MAKE Z A STATIC VARIABLE
 
 
-    #TODO: FINISH CODING THIS
     def P_of_x_given_measurements_and_linear_class( self, x ):
         """ Computes the probability density of the true location given measurements and a linear-class
 
@@ -324,21 +342,23 @@ class scene():
         returns:
             out : positive float.
         """
-        out = self.P_of_x_given_mu( x) / P_of_c[-1]
+        out = self.P_of_x_given_mu( x) / self.P_of_c[-1]
         #Now use the rule of total probability conditioning on class and speed
-        for k in range( len(P_of_c)-1 ):
-            Px_given_cs = self.P_of_x_given_measurement_nonlinear_class_speed( x, k, 1.0 ) #Note: Px_given_class_speed does not depend on speed in this implementation 
-            integrand = lambda s: P_of_c_and_s_given_measurements(k,s)
+        for k in range( self.num_nl_classes ):
+            Px_given_cs = self.P_of_x_given_measurements_nonlinear_class_speed( x, k, 1.0 ) #Note: Px_given_class_speed does not depend on speed in this implementation 
+            integrand = lambda s: self.P_of_c_and_s_given_measurements(k,s) * Px_given_cs
+            mag_eta = np.sqrt( np.dot(self.eta, self.eta) )
             a = mag_eta - 7*sigma_v
             b = mag_eta + 7*sigma_v
             from scipy.integrate import quad
             integral, abs_err = quad( integrand, a, b )
             if abs_err > 1e-5:
                 print "Warning in P_of_x_given_measurements_and_linear_class"
-            out -= integral / P_of_c[-1]
+            out -= integral / self.P_of_c[-1]
         return out
 
-    def P_of_x_given_mu( x):
+
+    def P_of_x_given_mu(self, x):
         """ Computes the probability of the true position given just a measurement
 
         args:
@@ -359,40 +379,9 @@ class scene():
         returns:
             out : positive float.
         """
-        #TODO: Code it
         return -1
 
-@memoize
-def partition_function( alpha, V_scale ):
-    """
-    Computes the partition function for each potential
-
-    args:
-        alpha (numpy.ndarray): coefficients for legval2d for each class, shape=(n,k_max+1,k_max+1)
-
-    returns:
-        Z (numpy.ndarray): partition function for each class, shape=(n,)
-    """
-    res = 50
-    x_grid, y_grid = np.meshgrid( np.linspace( -V_scale[0], V_scale[0],res),
-            np.linspace(-V_scale[1], V_scale[1], res ) )
-    n_classes = alpha.shape[0]
-    Area = 4*V_scale[0]*V_scale[1]
-    V = np.polynomial.legendre.legval2d( x_grid / V_scale[0], y_grid / V_scale[1], np.transpose( alpha, (1,2,0)  ) )
-    return Area*np.exp(-V).mean(axis=(1,2))
-
-
 if __name__ == "__main__":
-    """
-    print "Testing partition function"
-    k_max = 6
-    alpha = np.zeros( (2, k_max+1, k_max+1 ) )
-    alpha[0,1,0] = 1.0
-    V_scale = (1.0, 1.0 )
-    Z = partition_function( alpha, V_scale )
-    print "Z = %f" % Z[0]
-    print "Correct answer is Z=4"
-    """
     print "Testing initializer"
     
     import process_data
@@ -472,6 +461,15 @@ if __name__ == "__main__":
     coupa_scene.eta = coupa_scene.director_field(0, 0.0, 0.6 )
     t0 = time()
     res = coupa_scene.P_of_nonlinear_class_and_speed_given_measurements( 0, 1.0 )
+    print "result = "
+    print res
+    print "CPU time = %f \n" % (time()-t0)
+
+
+    print "Testing if P( x0 | mu,eta,linear) runs"
+    x = np.random.randn(2)
+    t0 = time()
+    res = coupa_scene.P_of_x_given_measurements_and_linear_class( x)
     print "result = "
     print res
     print "CPU time = %f \n" % (time()-t0)
