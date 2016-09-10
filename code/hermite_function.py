@@ -199,17 +199,14 @@ class FP_operator:
         coeffs = self.op.dot( h_series.coeffs.flatten() ).reshape( shape_tuple )
         return hermite_function_series( coeffs = coeffs, M = self.M , deg=self.deg )
 
-    def advect( self, h_series, t , rtol = None ):
+    def advect( self, h_series, t ):
         #evolves h_series by time t according to the Schrodinger equation
         assert( self.M == h_series.M )
         assert( self.deg == h_series.deg )
         x0 = h_series.coeffs.flatten()
-        from scipy.integrate import odeint
-        if rtol==None:
-            x_arr = odeint(lambda x,t: self.op.dot(x), x0 ,np.array([0,t]) )
-        else:
-            x_arr = odeint(lambda x,t: self.op.dot(x), x0, np.array([0,t]), rtol=rtol )
-        return hermite_function_series( coeffs=x_arr[1].reshape( h_series.coeffs.shape ), M=self.M, deg=self.deg)
+        from scipy.sparse.linalg import expm_multiply
+        xt = expm_multiply( self.op , x0, start=0, stop=t, num=2, endpoint=True )[1]
+        return hermite_function_series( coeffs=xt.reshape( h_series.coeffs.shape ), M=self.M, deg=self.deg)
 
     def cayley_step(self, h_series, dt ):
         from scipy.sparse.linalg import solve
