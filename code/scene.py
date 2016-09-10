@@ -1,5 +1,5 @@
 import numpy as np
-from sparse_grid_quad import sparse_grid_quad_2d, sparse_grid_quad_3d
+from sparse_grid_quad import sparse_grid_quad_2d, sparse_grid_quad_3d, sparse_grid_quad_1d
 
 sigma_x = 0.1
 sigma_v = 0.1
@@ -24,25 +24,16 @@ class scene():
         self.alpha_arr = alpha_arr
         self.P_of_c = P_of_c
         self.V_scale = V_scale 
-        from matplotlib import pyplot as plt
-        fig, ax_arr = plt.subplots( len(clusters) , figsize = (5,8) )
-        X_grid, Y_grid = np.meshgrid( np.linspace( -V_scale[0], V_scale[0], 50),
-                np.linspace( -V_scale[1], V_scale[1], 50))
-        for k,cl in enumerate(clusters):
-            Z_grid = np.polynomial.legendre.legval2d( X_grid / V_scale[0], Y_grid / V_scale[1], alpha_arr[k] )
-            ax_arr[k].contourf( X_grid, Y_grid, Z_grid, cmap='viridis' )
-            for xy in cl:
-                ax_arr[k].plot( xy[0], xy[1], 'w-' )
-        plt.show()
 
         #Learn a vector field for each class.  Presumable there are not too many.
         from director_field import trajectories_to_director_field
         X_ls = [] 
         k_max_theta = 4 #max degree of polynomial for angle field
+        self.k_max_theta = k_max_theta
         self.num_nl_classes = len(clusters)
-        theta_coeffs = np.zeros( (self.num_nl_classes, k_max_theta+1, k_max_theta+1) )
+        theta_coeffs = np.zeros( (self.num_nl_classes, self.k_max_theta+1, self.k_max_theta+1) )
         for k,cl in enumerate(clusters):
-            theta_coeffs[k] = trajectories_to_director_field( cl , V_scale, k_max = k_max_theta )
+            theta_coeffs[k] = trajectories_to_director_field( cl , V_scale, k_max = self.k_max_theta )
         self.theta_coeffs = theta_coeffs
         self.mu = None
         self.eta = None
@@ -99,46 +90,15 @@ class scene():
             for index in range( self.num_nl_classes ):
                 def integrand(xy):
                     V = np.polynomial.legendre.legval2d( xy[0]/self.V_scale[0], xy[1]/self.V_scale[1], self.alpha_arr[index] )
+                    V -= V.min()
                     return np.exp(-V)
                 Z = sparse_grid_quad_2d( integrand, -self.V_scale[0], self.V_scale[0], -self.V_scale[1], self.V_scale[1] )
                 Z_ls.append( Z )
             self.Z_x_given_c = tuple( Z_ls )
 
         V = np.polynomial.legendre.legval2d( x[0] / self.V_scale[0], x[1] / self.V_scale[1], self.alpha_arr[k] )
+        V -= V.min()
         return np.exp( -V) / self.Z_x_given_c[k]
-
-
-    def P_of_x_given_measurements_nonlinear_class_speed( self, x, k , speed ):
-        """ Computes the probability density of true position for a given class speed and measurements
-
-        args:
-            x : ndarray.  Shape = (2,N_points)
-            k : class index
-            speed : float
-
-        returns:
-            out : ndarray (N_points,).  dtype = float, positive
-        """
-        from scipy.integrate import dblquad
-        #If measured speed is nearly zero we assume no motion
-        if np.sqrt( np.dot(self.eta, self.eta)) <= 1e-5:
-            return P_of_x_given_mu( x )
-
-        eta_hat = self.eta / np.sqrt( np.dot(self.eta, self.eta))
-        def integrand_sparse(xy): #This swapping of variables is deliberate
-            v = self.director_field(k, xy[0], xy[1] ) 
-            out = np.exp( - (v[0]-eta_hat[0])**2 / (2*sigma_v**2) ) / np.sqrt( 2*np.pi*sigma_v**2 )
-            out *= np.exp( - (v[1]-eta_hat[1])**2 / (2*sigma_v**2) ) / np.sqrt( 2*np.pi*sigma_v**2 )
-            out *= np.exp( - ( xy[0] - self.mu[0] )**2 / (2*sigma_x**2) )  / np.sqrt(2*np.pi*sigma_x**2 ) 
-            out *= np.exp( - ( xy[1] - self.mu[1] )**2 / (2*sigma_x**2) )  / np.sqrt(2*np.pi*sigma_x**2 ) 
-            return out
-
-        x_min = self.mu[0] - 7*sigma_x
-        x_max = self.mu[0] + 7*sigma_x
-        y_min = self.mu[1] - 7*sigma_x
-        y_max = self.mu[1] + 7*sigma_x
-        Z_sg = sparse_grid_quad_2d( integrand_sparse, x_min, x_max, y_min, y_max )
-        return integrand_sparse(x)/ Z_sg
 
     def P_of_x_given_measurements_nl_class_speed( self, x, k, s):
         """ Computes the probability density of the true position given measurements, class, and speed
@@ -160,8 +120,11 @@ class scene():
                     s = xys[2]
                     xy = xys[0:2]
                     v = self.director_field(k,x,y)
-                    P_x_given_c = self.P_of_x_given_nl_class( xy , k )
-                    return P_x_given_c*G( s - np.dot( self.eta, v ), sigma_v)*G(x-self.mu[0], sigma_x)*G(y-self.mu[1], sigma_x)
+                    out = self.P_of_x_given_nl_class( xy , k )
+                    out *= G( s - np.dot( self.eta, v ), sigma_v)
+                    out *= G(x-self.mu[0], sigma_x)
+                    out *= G(y-self.mu[1], sigma_x)
+                    return out
                 x_min = self.mu[0] - 7*sigma_x
                 x_max = self.mu[0] + 7*sigma_x
                 y_min = self.mu[1] - 7*sigma_x
@@ -174,7 +137,7 @@ class scene():
 
         v = self.director_field(k,x[0],x[1])
         numerator = self.P_of_x_given_nl_class(x, k)
-        numerator *= G(s-np.dot(self.eta, v), sigma_v)
+        numerator *= G(s-self.eta[0]*v[0]-self.eta[1]*v[1], sigma_v)
         numerator *= G(x[0]-self.mu[0], sigma_x)
         numerator *= G(x[1]-self.mu[1], sigma_x)
         return numerator / self.Z_x_given_nl_class_speed[k] 
@@ -230,6 +193,7 @@ class scene():
             self.Z_nl_c_given_measurements = Z
         return numerator / self.Z_nl_c_given_measurements
 
+    #TODO:  THIS CANT BE TRUE.  CONSIDER DELETING THIS
     def P_of_future_position_given_linear_class_and_measurements( self, xT, T ):
         """ Computes the probability density at xT at time T under linear motion
 
@@ -331,30 +295,6 @@ class scene():
         return Q / self.Z_cs_given_meas #MAKE Z A STATIC VARIABLE
 
 
-    def P_of_x_given_measurements_and_linear_class( self, x ):
-        """ Computes the probability density of the true location given measurements and a linear-class
-
-        args:
-            x : ndarray. Shape(2,)
-        
-        returns:
-            out : positive float.
-        """
-        out = self.P_of_x_given_mu( x) / self.P_of_c[-1]
-        #Now use the rule of total probability conditioning on class and speed
-        for k in range( self.num_nl_classes ):
-            Px_given_cs = self.P_of_x_given_measurements_nonlinear_class_speed( x, k, 1.0 ) #Note: Px_given_class_speed does not depend on speed in this implementation 
-            integrand = lambda s: self.P_of_c_and_s_given_measurements(k,s) * Px_given_cs
-            mag_eta = np.sqrt( np.dot(self.eta, self.eta) )
-            a = mag_eta - 7*sigma_v
-            b = mag_eta + 7*sigma_v
-            from scipy.integrate import quad
-            integral, abs_err = quad( integrand, a, b )
-            if abs_err > 1e-5:
-                print "Warning in P_of_x_given_measurements_and_linear_class"
-            out -= integral / self.P_of_c[-1]
-        return out
-
     def P_of_xv_given_measurements_and_linear_class( self, x , v ):
         return self.P_of_x_given_measurements_and_linear_class( x) * self.P_of_v_given_eta(v)
 
@@ -402,11 +342,6 @@ if __name__ == "__main__":
     x_data = map( lambda x: x-width/2 , x_raw )
     y_data = map( lambda x: x-height/2 , y_raw )
 
-    from matplotlib import pyplot as plt
-    for k in range(len(x_data) ):
-        plt.plot( x_data[k], y_data[k], 'b-' )
-    plt.show()
-
     #resize the curves and set V_scale
     x_data = map( lambda x: 2*x/float(width) , x_data )
     y_data = map( lambda x: 2*x/float(width) , y_data ) #Note a typo.  We resize by the same factor along both directions
@@ -426,11 +361,14 @@ if __name__ == "__main__":
     x = np.zeros(2)
 
     from time import time
-    t0 = time()
-    print "Testing if P(x|mu,eta,nlc,s) runs"
-    res = coupa_scene.P_of_x_given_measurements_nonlinear_class_speed(  x, 0 , 1.5 )
-    print "result = %f" % res
-    print "CPU time = %f \n" % (time()-t0)
+
+
+
+#    t0 = time()
+#    print "Testing if P(x|mu,eta,nlc,s) runs"
+#    res = coupa_scene.P_of_x_given_measurements_nonlinear_class_speed(  x, 0 , 1.5 )
+#    print "result = %f" % res
+#    print "CPU time = %f \n" % (time()-t0)
 
 
     print "Testing if P(xT | linear, mu, eta ) runs"
@@ -471,15 +409,6 @@ if __name__ == "__main__":
     print "CPU time = %f \n" % (time()-t0)
 
 
-    print "Testing if P( x0 | mu,eta,linear) runs"
-    x = np.random.randn(2)
-    t0 = time()
-    res = coupa_scene.P_of_x_given_measurements_and_linear_class( x)
-    print "result = "
-    print res
-    print "CPU time = %f \n" % (time()-t0)
-
-
     print "Testing if P( x0 | mu,eta,nonlinear) runs"
     x = np.random.randn(2)
     t0 = time()
@@ -488,6 +417,18 @@ if __name__ == "__main__":
     print res
     print "CPU time = %f \n" % (time()-t0)
 
-    print "Testing if P( x0 | mu, eta, linear) is actually a distribution in x0"
-    print "Testing if P( x0 | mu, eta, linear) is actually a distribution in x0"
+    from matplotlib import pyplot as plt
+    alpha = coupa_scene.alpha_arr
+    V_scale = coupa_scene.V_scale
+    X_grid, Y_grid = np.meshgrid( np.linspace(-V_scale[0], V_scale[0], 50),
+            np.linspace(-V_scale[1], V_scale[1], 50) )
+    from numpy.polynomial.legendre import legval2d
+    fig, ax_arr = plt.subplots( coupa_scene.num_nl_classes)
+    for k in range( coupa_scene.num_nl_classes ):
+        Z_grid = legval2d( X_grid/V_scale[0], Y_grid/V_scale[1], alpha[k])
+        Z_grid -= Z_grid.min()
+        cs = ax_arr[k].contourf( X_grid, Y_grid, Z_grid , 50 )
+        print np.abs(Z_grid).max()
+    plt.show()
+
 
