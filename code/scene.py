@@ -304,7 +304,7 @@ if __name__ == "__main__":
     print "Sum = %f\n" % I
 
 
-    print "Testing if P( x0 | mu,eta,nonlinear) runs"
+    print "Testing if P( x0 | mu,eta,c_k,s) runs"
     x = np.random.randn(2)
     t0 = time()
     res = coupa_scene.P_of_x_given_measurements_nl_class_speed( x, 1, 1.0)
@@ -313,7 +313,7 @@ if __name__ == "__main__":
     print "CPU time = %f \n" % (time()-t0)
 
 
-    print "Testing if P(x0 | mu,eta,nonlinear) has unit integral"
+    print "Testing if P(x0 | mu,eta,c_k,s) has unit integral"
     integrand = lambda x: coupa_scene.P_of_x_given_measurements_nl_class_speed( x, 1, 1.0)
     x_min = coupa_scene.mu[0] - 7*sigma_x
     x_max = coupa_scene.mu[0] + 7*sigma_x
