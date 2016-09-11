@@ -88,20 +88,21 @@ X_grid, Y_grid = np.meshgrid(
         )
 
 rho_grid = rho_0_linear.evaluate_on_grid( [X_grid, Y_grid] )
-plt.contourf( X_grid, Y_grid, rho_grid, 50, cmap = 'viridis' )
+cs = plt.contourf( X_grid, Y_grid, rho_grid, 50, cmap = 'viridis' )
+plt.colorbar(cs)
 plt.show()
 
 # INITIALIZE out = 0  (type=h_series) FOR OUTPUT
 rho_T = h_series( M=V_scale, deg=deg )
 T = 0.005
 
-from scene import sigma_x, sigma_v
+from scene import sigma_x, sigma_v, sigma_s
 eta_mag = np.sqrt( eta_test[0]**2 + eta_test[1]**2 )
-s_ls = np.linspace( eta_mag-3*sigma_x, eta_mag+3*sigma_x , 10 )
+s_ls = np.linspace( -5*sigma_s, 5*sigma_s , 30 )
 # FOR EACH CLASS, SPEED FIND INITIAL CONDITION TO ADVECT
 from itertools import product
 for k,s in product( range( learned_scene.num_nl_classes ), s_ls):
-    P_cs = learned_scene.P_of_c_and_s_given_measurements(k,s)
+    P_cs = learned_scene.P_of_nl_class_and_speed_given_measurements(k,s)
     helper = lambda x,y: P_cs*learned_scene.P_of_x_given_measurements_nl_class_speed( np.array([x,y]) , k, s)
     rho_0 = h_series( M=V_scale, deg=deg )
     rho_0.interpolate( helper )
@@ -111,8 +112,8 @@ for k,s in product( range( learned_scene.num_nl_classes ), s_ls):
 
     #ADVECT AND ADD TO OUT, WEIGHTED BY P(c,s|mu,eta)
     rho_T += FP_ls[k].advect( rho_0,  T / s)
-    print "Complete s=%f, k=%d" %(s,k)
-    
+    print "k=%d, s=%f, P(c,s|mu,eta) = %f" % (k,s,P_cs)
+
 
 # ADD LINEAR TERM
 #... something with rho_0_linear
