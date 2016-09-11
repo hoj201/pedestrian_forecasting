@@ -102,7 +102,6 @@ def merge_small_clusters( clusters):
             new_clusters.append( cl )
     return n_discarded, new_clusters
 
-
 def learn_potential( cluster , V_scale, k_max = 4, stride=30):
     """Returns the legendre coefficients of a potential function learned from a list of point in a 2D domain.
 
@@ -203,8 +202,8 @@ def get_classes( curves, V_scale, k_max=4 ):
     #Compute P_of_c
     P_of_c = np.zeros( len(clusters) + 1 )
     n_agents = n_discarded + reduce( lambda x,y: x+y, map( len , clusters ) )
-    P_of_c[0] = n_discarded / float(n_agents )
-    P_of_c[1:] = map( lambda c: len(c)/float(n_agents) , clusters)
+    P_of_c[-1] = n_discarded / float(n_agents )
+    P_of_c[:len(clusters)] = map( lambda c: len(c)/float(n_agents) , clusters)
 
     #Compute alphas
     alpha = np.zeros( (len(clusters)+1, k_max+1, k_max+1 ))
