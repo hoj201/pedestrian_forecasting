@@ -3,6 +3,7 @@ from sparse_grid_quad import sparse_grid_quad_2d, sparse_grid_quad_3d, sparse_gr
 
 sigma_x = 0.1
 sigma_v = 0.1
+sigma_s = 0.1
 
 class scene():
     """ A class which includes routines for probabilities of a newly observed agent."""
@@ -45,258 +46,14 @@ class scene():
         self.eta = eta
 
     # METHODS
-    def director_field(self, k, x, y):
+    def director_field(self, k, x):
         theta = np.polynomial.legendre.legval2d(
-                x/self.V_scale[0],
-                y/self.V_scale[1],
+                x[0]/self.V_scale[0],
+                x[1]/self.V_scale[1],
                 self.theta_coeffs[k]
                 )
         return np.array( [ np.cos(theta), np.sin(theta) ] )
 
-
-    def director_field_vectorized( self, k, xy ):
-        """ Returns the director field at a variety of points
-
-        args:
-            k (int):
-            xy (ndarray): shape = (2,n)
-
-        returns:
-            out (ndarray): shape = (2,n)
-        """
-        x = xy[0]
-        y = xy[1]
-        theta = np.polynomial.legendre.legval2d(
-                x/self.V_scale[0],
-                y/self.V_scale[1],
-                self.theta_coeffs[k]
-                )
-        return np.vstack( [ np.cos(theta), np.sin(theta) ] )
-        
-
-    def P_of_x_given_nl_class( self, x, k ):
-        """ Computes the probability density of the true position, given only the class
-        
-        args:
-            x : ndarray. Shape = (2,)
-            k : index of nl class
-
-        returns:
-            out : non-negative float
-        """
-        if not hasattr( self, 'Z_x_given_c'):
-            #compute all the partition functions
-            Z_ls = []
-            for index in range( self.num_nl_classes ):
-                def integrand(xy):
-                    V = np.polynomial.legendre.legval2d( xy[0]/self.V_scale[0], xy[1]/self.V_scale[1], self.alpha_arr[index] )
-                    V -= V.min()
-                    return np.exp(-V)
-                Z = sparse_grid_quad_2d( integrand, -self.V_scale[0], self.V_scale[0], -self.V_scale[1], self.V_scale[1] )
-                Z_ls.append( Z )
-            self.Z_x_given_c = tuple( Z_ls )
-
-        V = np.polynomial.legendre.legval2d( x[0] / self.V_scale[0], x[1] / self.V_scale[1], self.alpha_arr[k] )
-        V -= V.min()
-        return np.exp( -V) / self.Z_x_given_c[k]
-
-    def P_of_x_given_measurements_nl_class_speed( self, x, k, s):
-        """ Computes the probability density of the true position given measurements, class, and speed
-
-        args:
-            
-
-        returns:
-
-        LaTeX: Z^{-1} exp( - V_k(x) ) G( <eta , X_k(x) > - s , sigma_v ) * G(x-mu,sigma_x) 
-        """
-        G = lambda x,s: np.exp( -x**2/(2*s**2) ) / np.sqrt( 2*np.pi*s**2)
-        if not hasattr( self , 'Z_x_given_nl_class_speed' ):
-            Z_ls = []
-            for k in range( self.num_nl_classes ):
-                def integrand( xys ):
-                    x = xys[0]
-                    y = xys[1]
-                    s = xys[2]
-                    xy = xys[0:2]
-                    v = self.director_field(k,x,y)
-                    out = self.P_of_x_given_nl_class( xy , k )
-                    out *= G( s - np.dot( self.eta, v ), sigma_v)
-                    out *= G(x-self.mu[0], sigma_x)
-                    out *= G(y-self.mu[1], sigma_x)
-                    return out
-                x_min = self.mu[0] - 7*sigma_x
-                x_max = self.mu[0] + 7*sigma_x
-                y_min = self.mu[1] - 7*sigma_x
-                y_max = self.mu[1] + 7*sigma_x
-                eta_mag = np.sqrt( self.eta[0]**2 + self.eta[1]**2 )
-                s_min = eta_mag - 7*sigma_v
-                s_max = eta_mag + 7*sigma_v
-                Z_ls.append( sparse_grid_quad_3d(integrand, x_min, x_max, y_min, y_max, s_min, s_max ) )
-            self.Z_x_given_nl_class_speed = Z_ls
-
-        v = self.director_field(k,x[0],x[1])
-        numerator = self.P_of_x_given_nl_class(x, k)
-        numerator *= G(s-self.eta[0]*v[0]-self.eta[1]*v[1], sigma_v)
-        numerator *= G(x[0]-self.mu[0], sigma_x)
-        numerator *= G(x[1]-self.mu[1], sigma_x)
-        return numerator / self.Z_x_given_nl_class_speed[k] 
-
-    #TODO: This runs and appears to behave right.  Has not been checked for accu.
-    def P_of_nonlinear_class_and_speed_given_measurements( self, class_index, speed ):
-        """ Computes the probabilities of class and speed s given measurements
-
-        args:
-            class_index: int
-            speed : float
-
-        returns:
-            out : float between 0 and 1
-        """
-        def integrand_sparse(xy):
-            v = speed * self.director_field(class_index, xy[0], xy[1])
-            out = np.exp( -(xy[0]-self.mu[0] )**2 / (2*sigma_x**2) )
-            out *= np.exp( -(xy[1]-self.mu[1] )**2 / (2*sigma_x**2) )
-            out *= np.exp( -(v[0]-self.eta[0] )**2 / (2*sigma_v**2) )
-            out *= np.exp( -(v[1]-self.eta[1] )**2 / (2*sigma_v**2) )
-            return out
-
-        x_min = self.mu[0] - 7*sigma_x
-        x_max = self.mu[0] + 7*sigma_x
-        y_min = self.mu[1] - 7*sigma_x
-        y_max = self.mu[1] + 7*sigma_x
-        numerator = sparse_grid_quad_2d( integrand_sparse, x_min, x_max, y_min, y_max )
-
-        if not hasattr( self, 'Z_nl_c_given_measurements' ):
-            Z = 0.0
-            x_min = self.mu[0] - 7*sigma_x
-            x_max = self.mu[0] + 7*sigma_x
-            y_min = self.mu[1] - 7*sigma_x
-            y_max = self.mu[1] + 7*sigma_x
-            s_max = np.sqrt( np.dot(self.eta, self.eta) ) + np.sqrt( np.dot(self.eta,self.eta) + (7*sigma_x)**2 )
-            s_min = -s_max
-            for k in range( self.num_nl_classes ):
-                def Z_integrand( xys ):
-                    #make this evaluate on a Nx3 array
-                    x = xys[0]
-                    y = xys[1]
-                    s = xys[2]
-                    v = np.einsum('j,ij->ij', s, self.director_field( k, x, y) )
-                    out = np.exp( -(x - self.mu[0])**2 / (2*sigma_x**2) )
-                    out = np.exp( -(y - self.mu[1])**2 / (2*sigma_x**2) )
-                    out = np.exp( -(v[0] - self.eta[0])**2 / (2*sigma_v**2) )
-                    out = np.exp( -(v[1] - self.eta[1])**2 / (2*sigma_v**2) )
-                    return out
-                Z += sparse_grid_quad_3d( Z_integrand, x_min, x_max, y_min, y_max, s_min, s_max )
-            #Now we divide by (1-P( Linear | measurements) ) #TODO:  Overflow error when Linear predictor is likely
-            Z /= 1.0 - self.P_of_linear_given_measurements()
-            self.Z_nl_c_given_measurements = Z
-        return numerator / self.Z_nl_c_given_measurements
-
-    #TODO:  THIS CANT BE TRUE.  CONSIDER DELETING THIS
-    def P_of_future_position_given_linear_class_and_measurements( self, xT, T ):
-        """ Computes the probability density at xT at time T under linear motion
-
-        args:
-            xT : ndarray. Shape (2,)
-            T  : float. 
-
-        returns:
-            out : positive float.
-        """
-        global sigma_x, sigma_v
-        #1/(2pi sig_x sig_v) \int G_{sig_x}( xT - Tv - mu ) + G_{sig_v}( v - eta) dv
-        from scipy.integrate import dblquad
-        G = lambda x,s: np.exp( -x**2 / (2*s**2) ) / np.sqrt(2*np.pi*s**2)
-        def integrand_sparse(uv):
-            out = G( xT[0]-T*uv[0] - self.mu[0] , sigma_x)
-            out *= G( xT[1]-T*uv[1] - self.mu[1] , sigma_x)
-            out *= G( self.eta[0] - uv[0] , sigma_v)
-            out *= G( self.eta[1] - uv[1] , sigma_v)
-            return out
-        u_min = self.eta[0]+7*sigma_v
-        u_max = self.eta[0]-7*sigma_v
-        v_min = self.eta[1]+7*sigma_v
-        v_max = self.eta[1]-7*sigma_v
-        out = sparse_grid_quad_2d( integrand_sparse, u_min, u_max, v_min, v_max )
-        return out
-
-    def P_of_linear_given_measurements(self ):
-        """ Computes the probability of the linear class given measurements
-
-        args:
-        
-        returns:
-            out : float between 0.0 and 1.0
-        """
-        eta_hat = self.eta / np.sqrt( np.dot(self.eta, self.eta) ) #TODO: This over-flows when eta is small
-        x,y = list( self.mu )
-        out = 1.0
-        gamma_x = 1.0
-        gamma_a = 1.0
-        for k in range(len(self.P_of_c)-1):
-            store = np.abs(np.cos( np.dot( eta_hat, self.director_field(k,x,y) ) ))**gamma_a
-            store *= np.tanh( gamma_x * self.P_of_x_given_nl_class( self.mu, k) )
-            out *= 1.0 - store
-        return out
-
-
-    def P_of_c_and_s_given_measurements( self, k, s):
-        """ Computes the probability density of a class and speed given the measurements
-
-        args:
-            k (int) : nonlinear class index
-            s (float) : speed
-
-        returns:
-            out (float): a non-negative float
-        """
-        if not hasattr( self, 'Z_cs_given_meas' ):
-            #COMPUTE THE NORMALIZING CONSTANT
-            def integrand( xys, k ):
-                x = xys[0]
-                y = xys[1]
-                s = xys[2]
-                v = self.director_field(k,x,y)
-                out = np.exp( -(x-self.mu[0])**2 / (2*sigma_x**2) )
-                out *= np.exp( -(y-self.mu[1])**2 / (2*sigma_x**2) )
-                out *= np.exp( -( s*v[0] -self.eta[0])**2 / (2*sigma_v**2) )
-                out *= np.exp( -( s*v[1] -self.eta[1])**2 / (2*sigma_v**2) )
-                return out
-            x_min = self.mu[0] - 7*sigma_x
-            x_max = self.mu[0] + 7*sigma_x
-            y_min = self.mu[1] - 7*sigma_x
-            y_max = self.mu[1] + 7*sigma_x
-            #TODO: Find a reasonable s_max
-            s_min = -7*sigma_x
-            s_max = 7*sigma_x
-            total = 0.
-            for k in range( self.num_nl_classes ):
-                integrand_k = lambda xys: integrand(xys,k)
-                total += sparse_grid_quad_3d( integrand_k, x_min, x_max, y_min, y_max, s_min, s_max)
-            self.Z_cs_given_meas = total
-            
-        G = lambda x,sigma: np.exp( -x**2 / (2*sigma**2) ) / np.sqrt(2*np.pi*sigma**2)
-        def integrand(xy):
-            x = xy[0]
-            y = xy[1]
-            out = G( x -self.mu[0], sigma_x )
-            out *= G( y -self.mu[1], sigma_x )
-            v = s*self.director_field(k,x,y)
-            out *= G( v[0] - self.eta[0], sigma_v )
-            out *= G( v[1] - self.eta[1], sigma_v )
-            return out
-        
-        x_min = self.mu[0] - 7*sigma_x
-        x_max = self.mu[0] + 7*sigma_x
-        y_min = self.mu[1] - 7*sigma_x
-        y_max = self.mu[1] + 7*sigma_x
-        Q = sparse_grid_quad_2d( integrand, x_min, x_max, y_min, y_max )
-        return Q / self.Z_cs_given_meas #MAKE Z A STATIC VARIABLE
-
-
-    def P_of_xv_given_measurements_and_linear_class( self, x , v ):
-        return self.P_of_x_given_measurements_and_linear_class( x) * self.P_of_v_given_eta(v)
 
     def P_of_x_given_mu(self, x):
         """ Computes the probability of the true position given just a measurement
@@ -325,6 +82,148 @@ class scene():
         out = G( v[0]-self.eta[0] , sigma_v )
         out *= G( v[1]-self.eta[1] , sigma_v )
         return out
+        
+
+    def P_of_x_given_nl_class( self, x, k ):
+        """ Computes the probability density of the true position, given only the class
+        
+        args:
+            x : ndarray. Shape = (2,)
+            k : index of nl class
+
+        returns:
+            out : non-negative float
+        """
+        if not hasattr( self, 'Z_x_given_c'):
+            #compute all the partition functions
+            Z_ls = []
+            for index in range( self.num_nl_classes ):
+                def integrand(xy):
+                    V = np.polynomial.legendre.legval2d( xy[0]/self.V_scale[0], xy[1]/self.V_scale[1], self.alpha_arr[index] )
+                    V -= V.min()
+                    return np.exp(-V)
+                Z = sparse_grid_quad_2d( integrand, -self.V_scale[0], self.V_scale[0], -self.V_scale[1], self.V_scale[1] )
+                Z_ls.append( Z )
+            self.Z_x_given_c = tuple( Z_ls )
+
+        V = np.polynomial.legendre.legval2d( x[0] / self.V_scale[0], x[1] / self.V_scale[1], self.alpha_arr[k] )
+        V -= V.min()
+        return np.exp( -V) / self.Z_x_given_c[k]
+
+
+    def P_of_x_given_measurements_nl_class_speed( self, x, k, s):
+        """ Computes the probability density of the true position given measurements, class, and speed
+
+        args:
+            x: ndarray of shape (2,N)
+            k: int
+            s: float
+
+        returns:
+            out: ndarray
+
+        """
+        G = lambda x,s: np.exp( -x**2/(2*s**2) ) / np.sqrt( 2*np.pi*s**2)
+        #Compute the normalization constant.  Must be done online.
+        def integrand(x):
+            out = self.P_of_x_given_nl_class( x, k)
+            out *= G( x[0] - self.mu[0] , sigma_x )
+            out *= G( x[1] - self.mu[1] , sigma_x )
+            v = s*self.director_field( k, x )
+            out *= G( v[0] - self.eta[0], sigma_v )
+            out *= G( v[1] - self.eta[1], sigma_v )
+            return out
+        
+        x_min = self.mu[0] - 6*sigma_x
+        x_max = self.mu[0] + 6*sigma_x
+        y_min = self.mu[1] - 6*sigma_x
+        y_max = self.mu[1] + 6*sigma_x
+        Z = sparse_grid_quad_2d( integrand, x_min, x_max, y_min, y_max )
+        return integrand(x) / Z
+
+
+    def P_of_linear_given_measurements(self ):
+        """ Computes the probability of the linear class given measurements
+
+        args:
+        
+        returns:
+            out : float between 0.0 and 1.0
+        """
+        #TODO: This over-flows when eta is small
+        eta_hat = self.eta / np.sqrt( np.dot(self.eta, self.eta) ) 
+        out = 1.0
+        gamma_x = 1.0
+        gamma_a = 1.0
+        for k in range(len(self.P_of_c)-1):
+            cos_theta = np.dot( eta_hat, self.director_field(k, self.mu ))
+            P_x_given_ck = self.P_of_x_given_nl_class( self.mu, k)
+            spatial = np.tanh( gamma_x * P_x_given_ck )
+            store = spatial*np.abs( cos_theta)**gamma_a
+            out *= 1.0 - store
+        return out
+
+
+    def P_of_nl_class_and_speed_given_measurements( self, k, s):
+        """ Computes the probability density of a class and speed given the measurements
+
+        args:
+            k (int) : nonlinear class index
+            s (float) : speed
+
+        returns:
+            out (float): a non-negative float
+        """
+        if not hasattr( self, 'Z_cs_given_meas' ):
+            #COMPUTE THE NORMALIZING CONSTANT
+            def integrand( xys, k ):
+                s = xys[2]
+                xy = xys[0:2]
+                v = self.director_field( k, xy )
+                v[0] *= s
+                v[1] *= s
+                out = self.P_of_x_given_mu( xy )
+                out *= self.P_of_v_given_eta( v )
+                out *= self.P_of_x_given_nl_class( xy , k)
+                out *= self.P_of_c[k]
+                out *= np.exp( -s**2 / (2*sigma_s**2) ) 
+                return out
+            x_min = self.mu[0] - 5*sigma_x
+            x_max = self.mu[0] + 5*sigma_x
+            y_min = self.mu[1] - 5*sigma_x
+            y_max = self.mu[1] + 5*sigma_x
+            eta_mag = np.sqrt( self.eta[0]**2 + self.eta[1]**2 )
+            s_min = - 5*sigma_s
+            s_max = + 5*sigma_s
+            total = 0.
+            for k in range( self.num_nl_classes ):
+                integrand_k = lambda xys: integrand(xys,k)
+                total += sparse_grid_quad_3d( integrand_k, x_min, x_max, y_min, y_max, s_min, s_max)
+            total /= (1.0 - self.P_of_linear_given_measurements() )
+            self.Z_cs_given_meas = total
+            
+        def integrand( xy ):
+            v = self.director_field( k, xy )
+            v[0] *= s
+            v[1] *= s
+            out = self.P_of_x_given_mu( xy )
+            out *= self.P_of_v_given_eta( v )
+            out *= self.P_of_x_given_nl_class( xy , k)
+            out *= self.P_of_c[k]
+            out *= np.exp( -s**2 / (2*sigma_s**2) ) 
+            return out
+        
+        x_min = self.mu[0] - 5*sigma_x
+        x_max = self.mu[0] + 5*sigma_x
+        y_min = self.mu[1] - 5*sigma_x
+        y_max = self.mu[1] + 5*sigma_x
+        Q = sparse_grid_quad_2d( integrand, x_min, x_max, y_min, y_max )
+        return Q / self.Z_cs_given_meas
+
+
+    def P_of_xv_given_measurements_and_linear_class( self, x , v ):
+        return self.P_of_x_given_measurements_and_linear_class( x) * self.P_of_v_given_eta(v)
+
 
 if __name__ == "__main__":
     print "Testing initializer"
@@ -363,25 +262,8 @@ if __name__ == "__main__":
     from time import time
 
 
-
-#    t0 = time()
-#    print "Testing if P(x|mu,eta,nlc,s) runs"
-#    res = coupa_scene.P_of_x_given_measurements_nonlinear_class_speed(  x, 0 , 1.5 )
-#    print "result = %f" % res
-#    print "CPU time = %f \n" % (time()-t0)
-
-
-    print "Testing if P(xT | linear, mu, eta ) runs"
-    T = np.random.rand()
-    xT = coupa_scene.mu + T*coupa_scene.eta
-    t0 = time()
-    res = coupa_scene.P_of_future_position_given_linear_class_and_measurements(xT, T )
-    print "result = %f" % res
-    print "CPU time = %f \n" % (time()-t0)
-
-
     print "Testing P( linear | mu,eta) runs"
-    coupa_scene.set_mu( [0.5, -0.5])
+    coupa_scene.set_mu( [0.8, 0.4])
     coupa_scene.set_eta( np.array( [1.0,-1.0] ) )
     t0 = time()
     res = coupa_scene.P_of_linear_given_measurements()
@@ -401,12 +283,25 @@ if __name__ == "__main__":
 
     print "Testing if P(c,s|mu,eta) runs"
     coupa_scene.mu = np.array( [0.0, 0.6] )
-    coupa_scene.eta = coupa_scene.director_field(0, 0.0, 0.6 )
+    coupa_scene.eta = coupa_scene.director_field(0, coupa_scene.mu )
     t0 = time()
-    res = coupa_scene.P_of_nonlinear_class_and_speed_given_measurements( 0, 1.0 )
+    res = coupa_scene.P_of_nl_class_and_speed_given_measurements( 0, 1.0 )
     print "result = "
     print res
     print "CPU time = %f \n" % (time()-t0)
+
+
+    print "Testing if P(linear | mu,eta) + \sum_k \int P(ck,s|mu,eta)ds = 1"
+    I = 0.
+    s_min = -5*sigma_s
+    s_max = 5*sigma_s
+    res = 100.0
+    ds = (s_max - s_min ) / (res-1)
+    for k in range( coupa_scene.num_nl_classes ):
+        integrand = lambda s: coupa_scene.P_of_nl_class_and_speed_given_measurements( k, s)
+        I += sum( [ integrand(s)*ds for s in np.linspace(s_min, s_max, res ) ] ) 
+    I += coupa_scene.P_of_linear_given_measurements()
+    print "Sum = %f\n" % I
 
 
     print "Testing if P( x0 | mu,eta,nonlinear) runs"
@@ -416,6 +311,16 @@ if __name__ == "__main__":
     print "result = "
     print res
     print "CPU time = %f \n" % (time()-t0)
+
+
+    print "Testing if P(x0 | mu,eta,nonlinear) has unit integral"
+    integrand = lambda x: coupa_scene.P_of_x_given_measurements_nl_class_speed( x, 1, 1.0)
+    x_min = coupa_scene.mu[0] - 7*sigma_x
+    x_max = coupa_scene.mu[0] + 7*sigma_x
+    y_min = coupa_scene.mu[1] - 7*sigma_x
+    y_max = coupa_scene.mu[1] + 7*sigma_x
+    I = sparse_grid_quad_2d( integrand, x_min, x_max, y_min, y_max )
+    print "Integration yields %f" % I
 
     from matplotlib import pyplot as plt
     alpha = coupa_scene.alpha_arr
@@ -428,7 +333,6 @@ if __name__ == "__main__":
         Z_grid = legval2d( X_grid/V_scale[0], Y_grid/V_scale[1], alpha[k])
         Z_grid -= Z_grid.min()
         cs = ax_arr[k].contourf( X_grid, Y_grid, Z_grid , 50 )
-        print np.abs(Z_grid).max()
     plt.show()
 
 
