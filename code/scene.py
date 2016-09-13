@@ -46,13 +46,45 @@ class scene():
         self.eta = eta
 
     # METHODS
-    def director_field(self, k, x):
-        theta = np.polynomial.legendre.legval2d(
+    def director_field(self, k, x, jac=False ):
+        """ Returns the value of the vector field for a nonlinear class at a given point.
+
+        args:
+            x: ndarray (2,)
+            k: int
+        
+        kwargs:
+            jac: If True then returns the Jacobian of the vector-field too.
+
+        returns:
+            out1: ndarray (2,)
+            out2: ndarray (2,2) if jac==True
+        """
+        from numpy.polynomial.legendre import legval2d, legder
+        theta = legval2d(
                 x[0]/self.V_scale[0],
                 x[1]/self.V_scale[1],
                 self.theta_coeffs[k]
                 )
-        return np.array( [ np.cos(theta), np.sin(theta) ] )
+        out1 = np.array( [ np.cos(theta), np.sin(theta) ] )
+        if jac:
+            dtheta_dx = legval2d(
+                        x[0]/self.V_scale[0],
+                        x[1]/self.V_scale[1],
+                        legder( self.theta_coeffs[k], axis=0)
+                        ) / self.V_scale[0]
+            dtheta_dy = legval2d(
+                        x[0]/self.V_scale[0],
+                        x[1]/self.V_scale[1],
+                        legder( self.theta_coeffs[k], axis=1)
+                        ) / self.V_scale[1]
+            out2 = np.zeros(2,2)
+            out2[0,0] = - out1[1] * dtheta_dx
+            out2[0,1] = - out1[1] * dtheta_dy
+            out2[1,0] = out1[0] * dtheta_dx
+            out2[1,1] = out1[0] * dtheta_dy
+            return out1, out2
+        return out1
 
 
     def P_of_x_given_mu(self, x):
@@ -109,37 +141,6 @@ class scene():
         V = np.polynomial.legendre.legval2d( x[0] / self.V_scale[0], x[1] / self.V_scale[1], self.alpha_arr[k] )
         V -= V.min()
         return np.exp( -V) / self.Z_x_given_c[k]
-
-
-    def P_of_x_given_measurements_nl_class_speed( self, x, k, s):
-        """ Computes the probability density of the true position given measurements, class, and speed
-
-        args:
-            x: ndarray of shape (2,N)
-            k: int
-            s: float
-
-        returns:
-            out: ndarray
-
-        """
-        G = lambda x,s: np.exp( -x**2/(2*s**2) ) / np.sqrt( 2*np.pi*s**2)
-        #Compute the normalization constant.  Must be done online.
-        def integrand(x):
-            out = self.P_of_x_given_nl_class( x, k)
-            out *= G( x[0] - self.mu[0] , sigma_x )
-            out *= G( x[1] - self.mu[1] , sigma_x )
-            v = s*self.director_field( k, x )
-            out *= G( v[0] - self.eta[0], sigma_v )
-            out *= G( v[1] - self.eta[1], sigma_v )
-            return out
-        
-        x_min = self.mu[0] - 6*sigma_x
-        x_max = self.mu[0] + 6*sigma_x
-        y_min = self.mu[1] - 6*sigma_x
-        y_max = self.mu[1] + 6*sigma_x
-        Z = sparse_grid_quad_2d( integrand, x_min, x_max, y_min, y_max )
-        return integrand(x) / Z
 
 
     def P_of_linear_given_measurements(self ):
@@ -221,10 +222,6 @@ class scene():
         return Q / self.Z_cs_given_meas
 
 
-    def P_of_xv_given_measurements_and_linear_class( self, x , v ):
-        return self.P_of_x_given_measurements_and_linear_class( x) * self.P_of_v_given_eta(v)
-
-
 if __name__ == "__main__":
     print "Testing initializer"
     
@@ -303,24 +300,6 @@ if __name__ == "__main__":
     I += coupa_scene.P_of_linear_given_measurements()
     print "Sum = %f\n" % I
 
-
-    print "Testing if P( x0 | mu,eta,c_k,s) runs"
-    x = np.random.randn(2)
-    t0 = time()
-    res = coupa_scene.P_of_x_given_measurements_nl_class_speed( x, 1, 1.0)
-    print "result = "
-    print res
-    print "CPU time = %f \n" % (time()-t0)
-
-
-    print "Testing if P(x0 | mu,eta,c_k,s) has unit integral"
-    integrand = lambda x: coupa_scene.P_of_x_given_measurements_nl_class_speed( x, 1, 1.0)
-    x_min = coupa_scene.mu[0] - 7*sigma_x
-    x_max = coupa_scene.mu[0] + 7*sigma_x
-    y_min = coupa_scene.mu[1] - 7*sigma_x
-    y_max = coupa_scene.mu[1] + 7*sigma_x
-    I = sparse_grid_quad_2d( integrand, x_min, x_max, y_min, y_max )
-    print "Integration yields %f" % I
 
     from matplotlib import pyplot as plt
     alpha = coupa_scene.alpha_arr
