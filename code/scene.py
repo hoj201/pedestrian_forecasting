@@ -18,8 +18,17 @@ class scene():
             k_max_theta : int
             k_max_vf : int
         """
-        
-        #First learn the posible agent_classes
+       
+        #Learn the top speed
+        def top_speed( curve ):
+            fd_width = 4
+            n = curve.shape[1]
+            u = ( curve[:,fd_width:] - curve[:,:n-fd_width] ) / float(fd_width)
+            return ( np.sqrt( u[0]**2 + u[1]**2 ) ).max()
+
+        self.s_max = max( map( top_speed, curve_ls ) )
+
+        #Learn the  agent_classes
         from cluster import get_classes
         alpha_arr, P_of_c, clusters = get_classes( curve_ls, V_scale )
         self.alpha_arr = alpha_arr
@@ -187,31 +196,27 @@ class scene():
                 out *= self.P_of_v_given_eta( v )
                 out *= self.P_of_x_given_nl_class( xy , k)
                 out *= self.P_of_c[k]
-                out *= np.exp( -s**2 / (2*sigma_s**2) ) 
                 return out
             x_min = self.mu[0] - 5*sigma_x
             x_max = self.mu[0] + 5*sigma_x
             y_min = self.mu[1] - 5*sigma_x
             y_max = self.mu[1] + 5*sigma_x
-            eta_mag = np.sqrt( self.eta[0]**2 + self.eta[1]**2 )
-            s_min = - 5*sigma_s
-            s_max = + 5*sigma_s
             total = 0.
             for k in range( self.num_nl_classes ):
                 integrand_k = lambda xys: integrand(xys,k)
-                total += sparse_grid_quad_3d( integrand_k, x_min, x_max, y_min, y_max, s_min, s_max)
+                total += sparse_grid_quad_3d( integrand_k, x_min, x_max, y_min, y_max, -self.s_max, self.s_max)
             total /= (1.0 - self.P_of_linear_given_measurements() )
             self.Z_cs_given_meas = total
             
         def integrand( xy ):
             v = self.director_field( k, xy )
-            v[0] *= s
-            v[1] *= s
+            s_filtered = s if np.abs(s) < self.s_max else 0.0
+            v[0] *= s_filtered
+            v[1] *= s_filtered
             out = self.P_of_x_given_mu( xy )
             out *= self.P_of_v_given_eta( v )
             out *= self.P_of_x_given_nl_class( xy , k)
             out *= self.P_of_c[k]
-            out *= np.exp( -s**2 / (2*sigma_s**2) ) 
             return out
         
         x_min = self.mu[0] - 5*sigma_x
@@ -290,8 +295,8 @@ if __name__ == "__main__":
 
     print "Testing if P(linear | mu,eta) + \sum_k \int P(ck,s|mu,eta)ds = 1"
     I = 0.
-    s_min = -5*sigma_s
-    s_max = 5*sigma_s
+    s_min = -coupa_scene.s_max
+    s_max = coupa_scene.s_max
     res = 100.0
     ds = (s_max - s_min ) / (res-1)
     for k in range( coupa_scene.num_nl_classes ):
