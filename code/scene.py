@@ -3,7 +3,6 @@ from sparse_grid_quad import sparse_grid_quad_2d, sparse_grid_quad_3d, sparse_gr
 
 sigma_x = 0.1
 sigma_v = 0.1
-sigma_s = 0.1
 
 class scene():
     """ A class which includes routines for probabilities of a newly observed agent."""
