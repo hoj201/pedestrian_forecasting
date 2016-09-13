@@ -1,7 +1,5 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from hermite_function import hermite_function_series as h_series
-from hermite_function import FP_operator
 from scene import scene
 
 #--------------------------------------------------------------------------------
@@ -34,16 +32,6 @@ print "Training"
 learned_scene = scene( train_set, V_scale )
 print "Training complete."
 
-#--------------------------------------------------------------------------------
-# LEARN FOKKER PLANCK OPERATORS
-#--------------------------------------------------------------------------------
-print "Building Fokker Planck Operators"
-deg = (50, 50)
-FP_ls = []
-from director_field import director_field_to_FP_operator as df2FP
-k_max = learned_scene.k_max_theta
-for k in range( learned_scene.num_nl_classes ):
-    FP_ls.append( df2FP( learned_scene.theta_coeffs[k], k_max, V_scale,  deg=deg, poly_deg=(5,5) ) )
 
 #--------------------------------------------------------------------------------
 # CHOOSE A TRAJECTORY
@@ -58,9 +46,9 @@ plt.show()
 # INITIALIZE MEASUREMENTS (mu,eta)
 
 #CHOOSE INITIAL CONDITIONS SO THAT THEY ARE WITHIN THE RESOLVED AREA
-x_min = V_scale[0]/5 - V_scale[0]
+x_min = V_scale[0]/float(5) - V_scale[0]
 x_max = -x_min
-y_min = V_scale[1]/5 - V_scale[1]
+y_min = V_scale[1]/float(5) - V_scale[1]
 y_max = -y_min
 in_region = lambda x,y: x > x_min and x< x_max and y>y_min and y<y_max
 
@@ -79,47 +67,49 @@ learned_scene.set_eta( eta_test )
 print "mu = (%f, %f)" % tuple(mu_test)
 print "eta = (%f, %f)" % tuple(eta_test)
 
-rho_0_linear = h_series( M=V_scale, deg=deg )
 helper = lambda x,y : learned_scene.P_of_x_given_mu( np.array([x,y]) )
-rho_0_linear.interpolate( helper )
 X_grid, Y_grid = np.meshgrid(
         np.linspace( -V_scale[0], V_scale[0], 40 ),
         np.linspace( -V_scale[1], V_scale[1], 40 )
         )
 
-rho_grid = rho_0_linear.evaluate_on_grid( [X_grid, Y_grid] )
+rho_grid = helper(X_grid, Y_grid )
 cs = plt.contourf( X_grid, Y_grid, rho_grid, 50, cmap = 'viridis' )
 plt.colorbar(cs)
 plt.show()
 
-# INITIALIZE out = 0  (type=h_series) FOR OUTPUT
-rho_T = h_series( M=V_scale, deg=deg )
 T = 0.005
-
-from scene import sigma_x, sigma_v, sigma_s
-eta_mag = np.sqrt( eta_test[0]**2 + eta_test[1]**2 )
-s_ls = np.linspace( -5*sigma_s, 5*sigma_s , 30 )
-# FOR EACH CLASS, SPEED FIND INITIAL CONDITION TO ADVECT
-from itertools import product
-for k,s in product( range( learned_scene.num_nl_classes ), s_ls):
-    P_cs = learned_scene.P_of_nl_class_and_speed_given_measurements(k,s)
-    helper = lambda x,y: P_cs*learned_scene.P_of_x_given_measurements_nl_class_speed( np.array([x,y]) , k, s)
-    rho_0 = h_series( M=V_scale, deg=deg )
-    rho_0.interpolate( helper )
+quit()
+from scene import sigma_x, sigma_v
+s_ls = np.linspace( -learned_scene.s_max, learned_scene.s_max, 30 )
+ds = s_ls[1] - s_ls[0]
+# FOR EACH CLASS ADVECT FOR TIME T/S AND ADD TO OUTPUT
+for k in range( learned_scene.num_nl_classes ):
+    P_cs = [ learned_scene.P_of_nl_class_and_speed_given_measurements(k,s) for s in s_ls ]
+    P_cs = np.array( P_cs )
+    P_c = P_cs.sum() * ds
+    tol = 1e-3
+    if P_c < tol:
+        print "Skipping computation for class c_%d.  P(c_%d | mu )=%f < %f \n" % (k,k,P_c,tol)
+        continue
+    from particle_advect import advect
+    nodes = np.vstack( [X_grid.flatten() , Y_grid.flatten()] )
+    weights_0 = learned_scene.P_of_x_given_mu( nodes )
+    dynamics = lambda x,jac=False: learned_scene.director_field( k, x, jac=jac)
+    weights_t = advect( dynamics, nodes, weights_0, t_span) #weights_t is of shape (N_t, nodes.size )
 
     #SUBTRACT FROM MASS DEDICATED TO LINEAR CLASS
-    rho_0_linear -= rho_0
+    #rho_0_linear -= rho_0
 
     #ADVECT AND ADD TO OUT, WEIGHTED BY P(c,s|mu,eta)
-    rho_T += FP_ls[k].advect( rho_0,  T / s)
-    print "k=%d, s=%f, P(c,s|mu,eta) = %f" % (k,s,P_cs)
+    rho_T += np.dot( P_cs, weights_t ) * ds
+    print "c_%d case computed.\n" % k
 
 
 # ADD LINEAR TERM
 #... something with rho_0_linear
 
 # DISPLAY RESULTS
-rho_grid = rho_0_linear.evaluate_on_grid( [X_grid, Y_grid] )
-cs = plt.contourf( X_grid, Y_grid, rho_grid, 50, cmap='viridis')
+cs = plt.contourf( X_grid, Y_grid, rho_T, 50, cmap='viridis')
 plt.colorbar(cs)
 plt.show()
