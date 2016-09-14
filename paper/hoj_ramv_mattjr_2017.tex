@@ -385,6 +385,11 @@ For the linear predictor case ($c=c_0$) we compute
 \end{align*}
 
 If $P(v_0 \mid \eta_0) \sim \mathcal{N}( \eta_0, \sigma_v )$ then the above integral is merely a Gaussian convolution with respect to the variable $v_0$.
+We can compute in closed form
+\begin{align*}
+		&= \int P(x_0 = x_T- Tv_0 \mid \mu_0 ) P( v_0 \mid \eta_0 ) dv_0 \\
+		&= \frac{1}{ 2\pi (\sigma_x^2 + T^2 \sigma_v^2 ) } \exp \left( \frac{- \| x_T - T \eta_0 - \mu_0 \|^2 }{ 2(\sigma_x^2 + T^2 \sigma_v^2 )} \right)
+\end{align*}
 
 \section*{Fokker Planck} \label{app:Fokker Planck}
 Proof = cuz math.
