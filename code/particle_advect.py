@@ -30,25 +30,26 @@ def advect( dynamics, nodes, rho_0, t_span ):
     return out
 
 
-def advect_vectorized( dynamics, nodes, t_span ):
+def advect_vectorized( dynamics, x0, y0, t_span ):
     """ Solves an advection equation
     
     args:
         dynamics (callable): dynamics( x, jac=False).  Outputs the vector field and possibly the Jacobian for x of shape (2,N)
-        nodes (numpy ndarray): shape=(2,N) where N is the number of nodes
+        x0 (numpy.array) : initial x-coordinates
+        y0 (numpy.array) : initial y-coordinates
         t_span: time for which to solve for
 
     return:
         x : ndarray (Nt, N), x-values at the requested time.
         y : ndarray (Nt, N), y-values at the requested time.
-        w : ndarray (Nt, N), w-values at the requested time.
+        w : ndarray (Nt, N), expansion at the requested time.
 
     Note:  The density at time t is given by rho_0( x[t,k] , y[t,k] )*w[t,k]
     """
-    N_nodes = nodes.shape[1]
+    N_nodes = x0.size
     out = np.zeros( (len(t_span) , N_nodes ))
     from scipy.integrate import odeint
-    state_0 =  np.hstack( [ nodes.flatten() , np.ones(N_nodes) ] )
+    state_0 =  np.hstack( [ x0, y0 , np.ones(N_nodes) ] )
     state_t = odeint( dirac_delta_ode_vectorized, state_0, t_span, args=( dynamics , ) )
     state_t = state_t.reshape( (len(t_span),3,N_nodes) )
     x = state_t[:,0]
@@ -173,7 +174,7 @@ if __name__ == '__main__':
             return dx_dt, np.tile( A, (x.shape[1], 2 , 2 ) )
         return dx_dt
     t0 = time()
-    x,y,w = advect_vectorized( dynamics_vectorized, nodes, t_span)  
+    x,y,w = advect_vectorized( dynamics_vectorized, X_grid.flatten(), Y_grid.flatten(), t_span)  
     print "CPU time = %f" % (time() - t0 )
     fig, ax_arr = plt.subplots( 1, len(t_span) , figsize = (15,5) )
     for k in range(len(t_span) ):
