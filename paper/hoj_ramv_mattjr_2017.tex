@@ -380,18 +380,11 @@ For the linear predictor case ($c=c_0$) we compute
 	&P(x_T \mid \eta_0 , \mu_0, c_0 )  \\
 	&= \int P(x_T \mid x_0, v_0, \mu_0, \eta_0, c_0) P( x_0, v_0 \mid \mu_0, \eta_0, c_0 ) dx_0 dv_0 \\
 	&= \int \delta( x_T -  (x_0 + Tv_0) ) P( x_0, v_0 \mid \mu_0, \eta_0, c_0 ) dx_0 dv_0 \\
-	&= \int P(x_0 = x_T - Tv_0 , v_0 \mid \mu_0 , \eta_0, c_0 ) dv_0
+	&= \int P(x_0 = x_T - Tv_0 , v_0 \mid \mu_0 , \eta_0, c_0 ) dv_0 \\
+	&= \int P(x_0 = x_T- Tv_0 \mid \mu_0 ) P( v_0 \mid \eta_0 ) dv_0
 \end{align*}
 
-To compute $P(x_0, v_0 \mid \mu_0 , \eta_0, c_0)$ we will assume independence.
-$P(x_0, v_0 \mid \mu_0 , \eta_0, c_0) =  P(x_0 \mid \mu_0 , \eta_0, c_0)P(v_0 \mid \mu_0 , \eta_0, c_0)$.
-The probability $P(x_0 \mid \mu_0, \eta_0 , c_0)$ can be computed from the Law of total probability
-\begin{align*}
-	& P(x_0 \mid \mu_0, \eta_0 , c_0) P(c_0) = \\
-	& P(x_0 \mid \mu_0 ,\eta_0) - \sum_{k=1}^{n} \int P(x_0 \mid \mu_0 ,\eta_0, c_k,s ) P( c_k,s \mid \mu_0, \eta_0 ) ds
-\end{align*}
-CODE THIS ONE
-
+If $P(v_0 \mid \eta_0) \sim \mathcal{N}( \eta_0, \sigma_v )$ then the above integral is merely a Gaussian convolution with respect to the variable $v_0$.
 
 \section*{Fokker Planck} \label{app:Fokker Planck}
 Proof = cuz math.
