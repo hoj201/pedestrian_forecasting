@@ -155,10 +155,12 @@ s_ls = np.linspace( -learned_scene.s_max, learned_scene.s_max, 60 )
 ds = s_ls[1] - s_ls[0]
 rho_T = np.zeros( X_grid.size )
 x0,y0 = X_grid.flatten(), Y_grid.flatten()
+P_linear = 1.0
 for k in range( learned_scene.num_nl_classes ):
     P_cs = [ learned_scene.P_of_nl_class_and_speed_given_measurements(k,s) for s in s_ls ]
     P_cs = np.array( P_cs )
     P_c = P_cs.sum() * ds
+    P_linear -= P_c
     print "P_c = %f" % P_c
     tol = 1e-3
     if P_c < tol:
@@ -185,7 +187,13 @@ for k in range( learned_scene.num_nl_classes ):
     print "c_%d case computed.\n" % k
 
 # ADD LINEAR TERM
-#... something with rho_0_linear
+print "P_linear = %f" % P_linear
+G = lambda x, sigma: np.exp( - x**2 / (2*sigma**2) ) / np.sqrt( 2*np.pi*sigma**2 )
+sigma = np.sqrt( sigma_x**2 + T**2 * sigma_v**2 )
+Linear_term = G( x0 - learned_scene.mu[0] - T*learned_scene.eta[0] , sigma)
+Linear_term *= G( y0 - learned_scene.mu[1] - T*learned_scene.eta[1] , sigma)
+rho_T += Linear_term*P_linear
+
 
 # DISPLAY RESULTS
 cs = plt.contourf( X_grid, Y_grid, rho_T.reshape( X_grid.shape) , 50, cmap='viridis')
