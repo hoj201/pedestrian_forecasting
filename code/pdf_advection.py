@@ -115,47 +115,51 @@ plt.colorbar(cs)
 plt.axis('equal')
 plt.show()
 
-T = 1e-5
-from scene import sigma_x, sigma_v
-s_ls = np.linspace( -learned_scene.s_max, learned_scene.s_max, 30 )
-ds = s_ls[1] - s_ls[0]
-rho_T = np.zeros( X_grid.size )
 
 
 # TEST ADVECTION ROUTINE ON A SINGLE VF
-dynamics = lambda x,jac=False: learned_scene.director_field_vectorized( 0, x, jac=jac)
+dynamics = lambda x,jac=False: learned_scene.director_field_vectorized( 1, x, jac=jac)
 from particle_advect import advect_vectorized as advect
 x0,y0 = X_grid.flatten(), Y_grid.flatten()
-x_t,y_t,w_t = advect( dynamics, x0, y0 , np.array([0.0, 1.0] ) )
+t_arr = np.array( [0.0, 0.5] )
+x_t,y_t,w_t = advect( dynamics, x0, y0 , t_arr )
 
 rho_0 = helper( x_t[0], y_t[0] ) * w_t[0]
 rho_0 = rho_0.reshape( X_grid.shape )
 rho_1 = helper( x_t[1], y_t[1] ) * w_t[1]
 rho_1 = rho_1.reshape( X_grid.shape )
 
-fig, ax_arr = plt.subplots( 1,3,figsize=(10,5))
+fig, ax_arr = plt.subplots( 3,1,figsize=(5,10) )
 ax_arr[0].contourf( X_grid, Y_grid, rho_0, cmap='viridis')
 ax_arr[0].axis('equal')
+ax_arr[0].set_title('t = %f' % t_arr[0] )
 ax_arr[2].contourf( X_grid, Y_grid, rho_1, cmap='viridis')
 ax_arr[2].axis('equal')
+ax_arr[2].set_title('t = %f' % t_arr[1] )
 
-UV = learned_scene.director_field_vectorized( k, np.vstack( [X_grid.flatten(), Y_grid.flatten() ] ) )
+UV = learned_scene.director_field_vectorized( 1, np.vstack( [X_grid.flatten(), Y_grid.flatten() ] ) )
 U_grid = UV[0].reshape( X_grid.shape)
 V_grid = UV[1].reshape( X_grid.shape)
 ax_arr[1].quiver( X_grid, Y_grid, U_grid, V_grid , pivot='mid', scale=50.)
 ax_arr[1].axis('equal')
 
+fig.suptitle('Advection for a single vector-field')
 plt.show()
-quit()
 
 #--------------------------------------------------------------------------------
 # FOR EACH CLASS ADVECT FOR TIME T/S AND ADD TO OUTPUT
 #--------------------------------------------------------------------------------
+T = 100.0
+from scene import sigma_x, sigma_v
+s_ls = np.linspace( -learned_scene.s_max, learned_scene.s_max, 60 )
+ds = s_ls[1] - s_ls[0]
+rho_T = np.zeros( X_grid.size )
 x0,y0 = X_grid.flatten(), Y_grid.flatten()
 for k in range( learned_scene.num_nl_classes ):
     P_cs = [ learned_scene.P_of_nl_class_and_speed_given_measurements(k,s) for s in s_ls ]
     P_cs = np.array( P_cs )
     P_c = P_cs.sum() * ds
+    print "P_c = %f" % P_c
     tol = 1e-3
     if P_c < tol:
         print "Skipping computation for class c_%d.  P(c_%d | mu )=%g < %g \n" % (k,k,P_c,tol)
@@ -165,11 +169,11 @@ for k in range( learned_scene.num_nl_classes ):
     from particle_advect import advect_vectorized as advect
     t_positive = T * s_ls[ s_ls >= 0 ]
     x_t,y_t,w_t = advect( dynamics, x0, y0 , t_positive )
-    rho_positive = learned_scene.P_of_x_given_mu( np.vstack([x_t, y_t]) ) * w_t
+    rho_positive = helper( x_t, y_t ) * w_t
     t_negative = T * s_ls[ s_ls <= 0 ]
     t_negative = t_negative[::-1]
     x_t,y_t,w_t = advect( dynamics, x0, y0 , t_negative )
-    rho_negative = learned_scene.P_of_x_given_mu( np.vstack([x_t, y_t]) ) * w_t
+    rho_negative = helper( x_t, y_t ) * w_t
     rho_negative = rho_negative[::-1]
     rho = np.concatenate( [ rho_negative, rho_positive], axis=0 )
 
@@ -179,7 +183,6 @@ for k in range( learned_scene.num_nl_classes ):
     #ADVECT AND ADD TO OUT, WEIGHTED BY P(c,s|mu,eta)
     rho_T += np.dot( P_cs, rho ) * ds
     print "c_%d case computed.\n" % k
-
 
 # ADD LINEAR TERM
 #... something with rho_0_linear
