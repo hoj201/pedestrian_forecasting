@@ -105,7 +105,7 @@ def dirac_delta_ode( xw, t , dynamics ):
 
 if __name__ == '__main__':
     print "Testing dirac_delta_ode routine"
-    A = np.array( [ [1.0, -1.0], [1.0, 1.0] ] )
+    A = np.array( [ [1.0, -0.0], [1.1, -1.0] ] )
     def dynamics( x, jac=False ):
         dx_dt = np.dot( A , x )
         if jac:
@@ -139,7 +139,7 @@ if __name__ == '__main__':
     rho_0_callable = lambda X_grid, Y_grid: np.exp( -((X_grid-0.5)**2 + Y_grid**2 ) / (2*sigma**2) ) / np.sqrt( 2*np.pi*sigma**2 )
     weights_0_grid = rho_0_callable( X_grid, Y_grid )
     from matplotlib import pyplot as plt
-    plt.contourf( X_grid, Y_grid, weights_0_grid , cmap = 'viridis' )
+    plt.contourf( X_grid, Y_grid, weights_0_grid ,40, cmap = 'viridis' )
     plt.show()
 
     weights_0 = weights_0_grid.flatten()
@@ -148,7 +148,8 @@ if __name__ == '__main__':
     fig, ax_arr = plt.subplots( 1, len(t_span) , figsize = (15,5) )
     for k in range(len(t_span) ):
         weights = weights_t[k].reshape( X_grid.shape) 
-        ax_arr[k].contourf( X_grid, Y_grid, weights , cmap = 'viridis' )
+        ax_arr[k].contourf( X_grid, Y_grid, weights ,40, cmap = 'viridis' )
+        ax_arr[k].axis('equal')
         ax_arr[k].set_title( "t= %f" % t_span[k] )
     plt.show()
 
@@ -162,7 +163,8 @@ if __name__ == '__main__':
     fig, ax_arr = plt.subplots( 1, len(t_span) , figsize = (15,5) )
     for k in range(len(t_span) ):
         weights = weights_t[k].reshape( X_grid.shape) 
-        ax_arr[k].contourf( X_grid, Y_grid, weights , cmap = 'viridis' )
+        ax_arr[k].contourf( X_grid, Y_grid, weights ,40, cmap = 'viridis' )
+        ax_arr[k].axis('equal')
         ax_arr[k].set_title( "t= %f" % t_span[k] )
     plt.show()
 
@@ -180,6 +182,7 @@ if __name__ == '__main__':
     for k in range(len(t_span) ):
         rho_grid = rho_0_callable( x[k], y[k] )*w[k]
         rho_grid = rho_grid.reshape( X_grid.shape )
-        ax_arr[k].contourf( X_grid, Y_grid, rho_grid , cmap = 'viridis' )
+        ax_arr[k].contourf( X_grid, Y_grid, rho_grid , 40,cmap = 'viridis' )
+        ax_arr[k].axis('equal')
         ax_arr[k].set_title( "t= %f" % t_span[k] )
     plt.show()

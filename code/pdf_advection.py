@@ -50,6 +50,28 @@ else:
     file_out1.close()
     file_out2.close()
 
+
+
+#--------------------------------------------------------------------------------
+# DISPLAY VECTOR FIELD 
+#--------------------------------------------------------------------------------
+X_grid, Y_grid = np.meshgrid(
+        np.linspace( -V_scale[0], V_scale[0], 40 ),
+        np.linspace( -V_scale[1], V_scale[1], 40 )
+        )
+
+fig, ax_arr = plt.subplots( 1 , learned_scene.num_nl_classes, figsize = (15,5) )
+for k in range( learned_scene.num_nl_classes ):
+    UV = learned_scene.director_field_vectorized( k, np.vstack( [X_grid.flatten(), Y_grid.flatten() ] ) )
+    U_grid = UV[0].reshape( X_grid.shape)
+    V_grid = UV[1].reshape( X_grid.shape)
+    P_grid = learned_scene.P_of_x_given_nl_class(np.vstack( [X_grid.flatten() , Y_grid.flatten() ] ) , k).reshape( X_grid.shape )
+    ax_arr[k].contourf( X_grid, Y_grid, P_grid, cmap='gray' )
+    ax_arr[k].quiver( X_grid, Y_grid, U_grid, V_grid )
+    ax_arr[k].axis('equal')
+plt.show()
+
+
 #--------------------------------------------------------------------------------
 # CHOOSE A TRAJECTORY
 #--------------------------------------------------------------------------------
@@ -86,14 +108,11 @@ print "eta = (%f, %f)" % tuple(eta_test)
 print "s_max = %f" % learned_scene.s_max
 
 helper = lambda x,y : learned_scene.P_of_x_given_mu( np.array([x,y]) )
-X_grid, Y_grid = np.meshgrid(
-        np.linspace( -V_scale[0], V_scale[0], 40 ),
-        np.linspace( -V_scale[1], V_scale[1], 40 )
-        )
 
 rho_grid = helper(X_grid, Y_grid )
 cs = plt.contourf( X_grid, Y_grid, rho_grid, 50, cmap = 'viridis' )
 plt.colorbar(cs)
+plt.axis('equal')
 plt.show()
 
 T = 1e-5
@@ -101,7 +120,37 @@ from scene import sigma_x, sigma_v
 s_ls = np.linspace( -learned_scene.s_max, learned_scene.s_max, 30 )
 ds = s_ls[1] - s_ls[0]
 rho_T = np.zeros( X_grid.size )
+
+
+# TEST ADVECTION ROUTINE ON A SINGLE VF
+dynamics = lambda x,jac=False: learned_scene.director_field_vectorized( 0, x, jac=jac)
+from particle_advect import advect_vectorized as advect
+x0,y0 = X_grid.flatten(), Y_grid.flatten()
+x_t,y_t,w_t = advect( dynamics, x0, y0 , np.array([0.0, 1.0] ) )
+
+rho_0 = helper( x_t[0], y_t[0] ) * w_t[0]
+rho_0 = rho_0.reshape( X_grid.shape )
+rho_1 = helper( x_t[1], y_t[1] ) * w_t[1]
+rho_1 = rho_1.reshape( X_grid.shape )
+
+fig, ax_arr = plt.subplots( 1,3,figsize=(10,5))
+ax_arr[0].contourf( X_grid, Y_grid, rho_0, cmap='viridis')
+ax_arr[0].axis('equal')
+ax_arr[2].contourf( X_grid, Y_grid, rho_1, cmap='viridis')
+ax_arr[2].axis('equal')
+
+UV = learned_scene.director_field_vectorized( k, np.vstack( [X_grid.flatten(), Y_grid.flatten() ] ) )
+U_grid = UV[0].reshape( X_grid.shape)
+V_grid = UV[1].reshape( X_grid.shape)
+ax_arr[1].quiver( X_grid, Y_grid, U_grid, V_grid , pivot='mid', scale=50.)
+ax_arr[1].axis('equal')
+
+plt.show()
+quit()
+
+#--------------------------------------------------------------------------------
 # FOR EACH CLASS ADVECT FOR TIME T/S AND ADD TO OUTPUT
+#--------------------------------------------------------------------------------
 x0,y0 = X_grid.flatten(), Y_grid.flatten()
 for k in range( learned_scene.num_nl_classes ):
     P_cs = [ learned_scene.P_of_nl_class_and_speed_given_measurements(k,s) for s in s_ls ]
@@ -138,4 +187,5 @@ for k in range( learned_scene.num_nl_classes ):
 # DISPLAY RESULTS
 cs = plt.contourf( X_grid, Y_grid, rho_T.reshape( X_grid.shape) , 50, cmap='viridis')
 plt.colorbar(cs)
+plt.axis('equal')
 plt.show()
