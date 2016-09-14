@@ -86,7 +86,7 @@ class scene():
                         x[1]/self.V_scale[1],
                         legder( self.theta_coeffs[k], axis=1)
                         ) / self.V_scale[1]
-            out2 = np.zeros(2,2)
+            out2 = np.zeros( (2,2) )
             out2[0,0] = - out1[1] * dtheta_dx
             out2[0,1] = - out1[1] * dtheta_dy
             out2[1,0] = out1[0] * dtheta_dx
@@ -94,6 +94,46 @@ class scene():
             return out1, out2
         return out1
 
+    def director_field_vectorized(self, k, x, jac=False):
+        """ Returns the value of the vector field for a nonlinear class at a given point.
+
+        args:
+            k (int) : indexes which nonlinear class
+            x (numpy.array) :  (2,N)
+        
+        kwargs:
+            jac: If True then returns the Jacobian of the vector-field too.
+
+        returns:
+            out1: ndarray (2,N)
+            out2: ndarray (2,2,N) if jac==True
+        """
+        from numpy.polynomial.legendre import legval2d, legder
+        theta = legval2d(
+                x[0]/self.V_scale[0],
+                x[1]/self.V_scale[1],
+                self.theta_coeffs[k]
+                )
+        out1 = np.array( [ np.cos(theta), np.sin(theta) ] )
+        if jac:
+            dtheta_dx = legval2d(
+                        x[0]/self.V_scale[0],
+                        x[1]/self.V_scale[1],
+                        legder( self.theta_coeffs[k], axis=0)
+                        ) / self.V_scale[0]
+            dtheta_dy = legval2d(
+                        x[0]/self.V_scale[0],
+                        x[1]/self.V_scale[1],
+                        legder( self.theta_coeffs[k], axis=1)
+                        ) / self.V_scale[1]
+            N = x.shape[1]
+            out2 = np.zeros( (2,2,N) )
+            out2[0,0,:] = - out1[1] * dtheta_dx
+            out2[0,1,:] = - out1[1] * dtheta_dy
+            out2[1,0,:] = out1[0] * dtheta_dx
+            out2[1,1,:] = out1[0] * dtheta_dy
+            return out1, out2
+        return out1
 
     def P_of_x_given_mu(self, x):
         """ Computes the probability of the true position given just a measurement

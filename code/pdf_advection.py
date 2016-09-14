@@ -24,14 +24,31 @@ V_scale = (1.0, height / float(width) )
 
 #Aggregate the data into a training and a test set
 curve_ls = [ np.vstack([x,y]) for (x,y) in zip( x_data, y_data ) ]
-from sklearn.cross_validation import train_test_split
-train_set, test_set = train_test_split( curve_ls, random_state = 0 )
 
-#Train a scene
-print "Training"
-learned_scene = scene( train_set, V_scale )
-print "Training complete."
+from os.path import isfile
+import pickle
+if isfile('learned_scene.pkl'):
+    file_in1 = open('learned_scene.pkl','rb')
+    file_in2 = open('test_set.pkl','rb')
+    learned_scene = pickle.load( file_in1 )
+    test_set = pickle.load( file_in2 )
+    file_in1.close()
+    file_in2.close()
+    print "Loaded learned scene"
+else:
+    file_out1 = open('learned_scene.pkl','wb')
+    file_out2 = open('test_set.pkl','wb')
+    from sklearn.cross_validation import train_test_split
+    train_set, test_set = train_test_split( curve_ls, random_state = 0 )
 
+    #Train a scene
+    print "Training"
+    learned_scene = scene( train_set, V_scale )
+    print "Training complete."
+    pickle.dump( learned_scene, file_out1,-1) 
+    pickle.dump( test_set, file_out2,-1) 
+    file_out1.close()
+    file_out2.close()
 
 #--------------------------------------------------------------------------------
 # CHOOSE A TRAJECTORY
@@ -66,6 +83,7 @@ learned_scene.set_eta( eta_test )
 
 print "mu = (%f, %f)" % tuple(mu_test)
 print "eta = (%f, %f)" % tuple(eta_test)
+print "s_max = %f" % learned_scene.s_max
 
 helper = lambda x,y : learned_scene.P_of_x_given_mu( np.array([x,y]) )
 X_grid, Y_grid = np.meshgrid(
@@ -78,31 +96,39 @@ cs = plt.contourf( X_grid, Y_grid, rho_grid, 50, cmap = 'viridis' )
 plt.colorbar(cs)
 plt.show()
 
-T = 0.005
-quit()
+T = 1e-5
 from scene import sigma_x, sigma_v
 s_ls = np.linspace( -learned_scene.s_max, learned_scene.s_max, 30 )
 ds = s_ls[1] - s_ls[0]
+rho_T = np.zeros( X_grid.size )
 # FOR EACH CLASS ADVECT FOR TIME T/S AND ADD TO OUTPUT
+x0,y0 = X_grid.flatten(), Y_grid.flatten()
 for k in range( learned_scene.num_nl_classes ):
     P_cs = [ learned_scene.P_of_nl_class_and_speed_given_measurements(k,s) for s in s_ls ]
     P_cs = np.array( P_cs )
     P_c = P_cs.sum() * ds
     tol = 1e-3
     if P_c < tol:
-        print "Skipping computation for class c_%d.  P(c_%d | mu )=%f < %f \n" % (k,k,P_c,tol)
+        print "Skipping computation for class c_%d.  P(c_%d | mu )=%g < %g \n" % (k,k,P_c,tol)
         continue
     from particle_advect import advect
-    nodes = np.vstack( [X_grid.flatten() , Y_grid.flatten()] )
-    weights_0 = learned_scene.P_of_x_given_mu( nodes )
-    dynamics = lambda x,jac=False: learned_scene.director_field( k, x, jac=jac)
-    weights_t = advect( dynamics, nodes, weights_0, t_span) #weights_t is of shape (N_t, nodes.size )
+    dynamics = lambda x,jac=False: learned_scene.director_field_vectorized( k, x, jac=jac)
+    from particle_advect import advect_vectorized as advect
+    t_positive = T * s_ls[ s_ls >= 0 ]
+    x_t,y_t,w_t = advect( dynamics, x0, y0 , t_positive )
+    rho_positive = learned_scene.P_of_x_given_mu( np.vstack([x_t, y_t]) ) * w_t
+    t_negative = T * s_ls[ s_ls <= 0 ]
+    t_negative = t_negative[::-1]
+    x_t,y_t,w_t = advect( dynamics, x0, y0 , t_negative )
+    rho_negative = learned_scene.P_of_x_given_mu( np.vstack([x_t, y_t]) ) * w_t
+    rho_negative = rho_negative[::-1]
+    rho = np.concatenate( [ rho_negative, rho_positive], axis=0 )
 
     #SUBTRACT FROM MASS DEDICATED TO LINEAR CLASS
     #rho_0_linear -= rho_0
 
     #ADVECT AND ADD TO OUT, WEIGHTED BY P(c,s|mu,eta)
-    rho_T += np.dot( P_cs, weights_t ) * ds
+    rho_T += np.dot( P_cs, rho ) * ds
     print "c_%d case computed.\n" % k
 
 
@@ -110,6 +136,6 @@ for k in range( learned_scene.num_nl_classes ):
 #... something with rho_0_linear
 
 # DISPLAY RESULTS
-cs = plt.contourf( X_grid, Y_grid, rho_T, 50, cmap='viridis')
+cs = plt.contourf( X_grid, Y_grid, rho_T.reshape( X_grid.shape) , 50, cmap='viridis')
 plt.colorbar(cs)
 plt.show()

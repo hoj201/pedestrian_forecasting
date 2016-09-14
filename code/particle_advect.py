@@ -78,7 +78,7 @@ def dirac_delta_ode_vectorized( state, t, dynamics ):
     X,DX = dynamics( np.vstack([x,y]), jac=True )
     dx = -X[0]
     dy = -X[1]
-    dw = -np.einsum('ijj->i', DX)
+    dw = -np.einsum('jji->i', DX)
     dstate = np.vstack( [dx,dy,dw] ).flatten()
     return dstate
 
@@ -171,7 +171,7 @@ if __name__ == '__main__':
     def dynamics_vectorized( x, jac=False):
         dx_dt = np.dot(A,x)
         if jac:
-            return dx_dt, np.tile( A, (x.shape[1], 2 , 2 ) )
+            return dx_dt, np.tile( A.reshape( (2,2,1)) , (1 , 1, x.shape[1] ) )
         return dx_dt
     t0 = time()
     x,y,w = advect_vectorized( dynamics_vectorized, X_grid.flatten(), Y_grid.flatten(), t_span)  
