@@ -199,8 +199,8 @@ class scene():
         returns:
             out : float between 0.0 and 1.0
         """
-        #TODO: This over-flows when eta is small
-        eta_hat = self.eta / np.sqrt( np.dot(self.eta, self.eta) ) 
+        epsilon = np.sqrt(self.V_scale[0]*self.V_scale[1]) / 1000.0
+        eta_hat = self.eta / ( epsilon + np.sqrt( np.dot(self.eta, self.eta) ) )
         out = 1.0
         gamma_x = 1.0
         gamma_a = 1.0
@@ -357,5 +357,3 @@ if __name__ == "__main__":
         Z_grid -= Z_grid.min()
         cs = ax_arr[k].contourf( X_grid, Y_grid, Z_grid , 50 )
     plt.show()
-
-
