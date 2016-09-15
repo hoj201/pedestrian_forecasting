@@ -50,6 +50,27 @@ def cluster_trajectories( curves ):
         out.append( cluster )
     return map( align_cluster, out)
 
+#NOTE:  THIS IS NOT USED
+def mhd_cluster_trajectories( curves ):
+    """Returns clusters based upon the modified Hausdorff distance."""
+    n_curves = len(curves)
+    from sklearn.cluster import AffinityPropagation
+    clusterer = AffinityPropagation(affinity='precomputed', convergence_iter=100)
+    aff = np.zeros((n_curves, n_curves))
+    for i in range(n_curves):
+        for j in range(i+1,n_curves):
+            from modified_Hausdorff_distance import modified_Hausdorff_distance as mhd
+            aff[i,j] = mhd( curves[i].transpose(), curves[j].transpose() )
+            aff[j,i] = aff[i,j]
+
+    #clusterer.Affinity = aff
+    cluster_labels = clusterer.fit_predict(aff)
+    out = []
+    for label in set( cluster_labels):
+        cluster = map( lambda k: curves[k] , filter( lambda k: cluster_labels[k] == label , range( n_curves) ) )
+        out.append( cluster )
+    return map( align_cluster, out)
+
 
 def prune_cluster( cluster ):
     """ Removes the abnormally long/short trajectories from a cluster
@@ -180,7 +201,6 @@ def get_classes( curves, V_scale, k_max=4 ):
 
     NOTE: alpha[k] and clusters_pruned[k] have probabilitiy P_of_c[k].  k=-1 corresponds to a linear predictor
     """
-    #TODO: Test this.  Note, alpha[k] corresponds to P_of_c[k].  alpha[-1] corresponds to the linear predictor.
     clusters = cluster_trajectories( curves )
     
     #Prune the clusters and keep track of how many agents you discard
@@ -237,6 +257,7 @@ if __name__ == "__main__":
     curves = map( np.vstack , zip(x_data, y_data) )
     clusters = cluster_trajectories( curves )
     n_cluster = len(clusters)
+    print "n_cluster = %d \n" % n_cluster
     fig, ax_arr = plt.subplots( n_cluster , 1 , figsize = (5,10))
     for k,cl in enumerate(clusters):
         for curve in cl:
@@ -248,7 +269,8 @@ if __name__ == "__main__":
     print "Testing cluster merging routine"
     new_clusters = merge_small_clusters( clusters )
     n_cluster = len(new_clusters)
-    fig, ax_arr = plt.subplots( n_cluster-1 , 1 , figsize = (5,10))
+    print "n_cluster after merging = %d" % n_cluster
+    fig, ax_arr = plt.subplots( n_cluster , 1 , figsize = (5,10))
     for k,cl in enumerate(new_clusters[1:]):
         for curve in cl:
             ax_arr[k].plot( curve[0] , curve[1] , 'b-')

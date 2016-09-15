@@ -47,13 +47,19 @@ class scene():
         self.mu = None
         self.eta = None
 
+    # SETTERS
     def set_mu(self, mu ):
         self.mu = mu
 
     def set_eta(self, eta):
         self.eta = eta
-
+    #--------------------------------------------------------------------------------
     # METHODS
+    #--------------------------------------------------------------------------------
+
+
+    #-------------------- VECTOR FIELD ROUTINES -------------------------------------
+
     def director_field(self, k, x, jac=False ):
         """ Returns the value of the vector field for a nonlinear class at a given point.
 
@@ -135,6 +141,76 @@ class scene():
             return out1, out2
         return out1
 
+    #-------------------- PROBABILITY DENSITY PREDICTORS -----------------------
+    def predict_pdf( self, X_grid, Y_grid, T):
+        """ returns the values of a probability density function at time T at given positions
+
+        args:
+            X_grid:
+            Y_grid:
+            T
+        returns:
+            rho_T
+        """
+        s_ls = np.linspace( -self.s_max, self.s_max, 60 )
+        ds = s_ls[1] - s_ls[0]
+        rho_T = np.zeros( X_grid.size )
+        x0,y0 = X_grid.flatten(), Y_grid.flatten()
+        P_linear = 1.0
+        helper = lambda x,y : self.P_of_x_given_mu( np.array([x,y]) )
+        for k in range( self.num_nl_classes ):
+            P_cs = [ self.P_of_nl_class_and_speed_given_measurements(k,s) for s in s_ls ]
+            P_cs = np.array( P_cs )
+            P_c = P_cs.sum() * ds
+            P_linear -= P_c
+            print "P_c = %f" % P_c
+            tol = 1e-3
+            if P_c < tol:
+                print "Skipping computation for class c_%d.  P(c_%d | mu )=%g < %g \n" % (k,k,P_c,tol)
+                continue
+            from particle_advect import advect
+            dynamics = lambda x,jac=False: self.director_field_vectorized( k, x, jac=jac)
+            from particle_advect import advect_vectorized as advect
+            t_positive = T * s_ls[ s_ls >= 0 ]
+            x_t,y_t,w_t = advect( dynamics, x0, y0 , t_positive )
+            rho_positive = helper( x_t, y_t ) * w_t
+            t_negative = T * s_ls[ s_ls <= 0 ]
+            t_negative = t_negative[::-1]
+            x_t,y_t,w_t = advect( dynamics, x0, y0 , t_negative )
+            rho_negative = helper( x_t, y_t ) * w_t
+            rho_negative = rho_negative[::-1]
+            rho = np.concatenate( [ rho_negative, rho_positive], axis=0 )
+
+            #ADVECT AND ADD TO OUT, WEIGHTED BY P(c,s|mu,eta)
+            rho_T += np.dot( P_cs, rho ) * ds
+            print "c_%d case computed.\n" % k
+
+        # ADD LINEAR TERM
+        print "P_linear = %f" % P_linear
+        rho_linear = self.predict_pdf_linear( X_grid, Y_grid, T )
+        rho_T = rho_T.reshape( X_grid.shape )
+        rho_T += rho_linear*P_linear
+        return rho_T
+
+    def predict_pdf_linear( self, X_grid, Y_grid, T):
+        """ returns the predicted pdf under the a Linear predictor.
+
+        args:
+            X_grid:
+            Y_grid:
+            T:
+
+        returns:
+            rho_linear:
+        """
+        x0, y0 = X_grid.flatten(), Y_grid.flatten()
+        G = lambda x, sigma: np.exp( - x**2 / (2*sigma**2) ) / np.sqrt( 2*np.pi*sigma**2 )
+        sigma = np.sqrt( sigma_x**2 + T**2 * sigma_v**2 )
+        rho_linear = G( x0 - self.mu[0] - T*self.eta[0] , sigma)
+        rho_linear *= G( y0 - self.mu[1] - T*self.eta[1] , sigma)
+        return rho_linear.reshape( X_grid.shape)
+
+    #-------------------- POSTERIOR ROUTINES ----------------------------------------
     def P_of_x_given_mu(self, x):
         """ Computes the probability of the true position given just a measurement
 
@@ -356,4 +432,11 @@ if __name__ == "__main__":
         Z_grid = legval2d( X_grid/V_scale[0], Y_grid/V_scale[1], alpha[k])
         Z_grid -= Z_grid.min()
         cs = ax_arr[k].contourf( X_grid, Y_grid, Z_grid , 50 )
+    plt.show()
+
+
+    print "Testing prediction routines"
+    rho_grid = coupa_scene.predict_pdf( X_grid, Y_grid, 50 )
+    cs = plt.contourf( X_grid, Y_grid, rho_grid , 50, cmap='viridis')
+    plt.axis( 'equal' )
     plt.show()
