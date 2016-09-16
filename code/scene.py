@@ -33,6 +33,7 @@ class scene():
         self.alpha_arr = alpha_arr
         self.P_of_c = P_of_c
         self.V_scale = V_scale 
+        self.clusters = clusters
 
         #Learn a vector field for each class.  Presumable there are not too many.
         from director_field import trajectories_to_director_field
@@ -168,7 +169,6 @@ class scene():
             if P_c < tol:
                 print "Skipping computation for class c_%d.  P(c_%d | mu )=%g < %g \n" % (k,k,P_c,tol)
                 continue
-            from particle_advect import advect
             dynamics = lambda x,jac=False: self.director_field_vectorized( k, x, jac=jac)
             from particle_advect import advect_vectorized as advect
             t_positive = T * s_ls[ s_ls >= 0 ]
@@ -275,7 +275,7 @@ class scene():
         returns:
             out : float between 0.0 and 1.0
         """
-        epsilon = np.sqrt(self.V_scale[0]*self.V_scale[1]) / 1000.0
+        epsilon = np.sqrt(self.V_scale[0]*self.V_scale[1]) / 1e4
         eta_hat = self.eta / ( epsilon + np.sqrt( np.dot(self.eta, self.eta) ) )
         out = 1.0
         gamma_x = 1.0
@@ -346,27 +346,19 @@ if __name__ == "__main__":
     print "Testing initializer"
     
     import process_data
-    process_data = reload(process_data)
     folder = '../annotations/coupa/video2/'
-    fname = folder + 'annotations.txt'
-    x_raw,y_raw = process_data.get_trajectories(fname,label="Biker")
-    from PIL import Image
-    fname = folder + 'reference.jpg'
-    im = Image.open(fname)
-    width,height = im.size
-    print "width = %f, height = %f" % (width,height)
-    x_data = map( lambda x: x-width/2 , x_raw )
-    y_data = map( lambda x: x-height/2 , y_raw )
+    x_data, y_data, V_scale = process_data.get_trajectories(folder,label="Biker")
 
-    #resize the curves and set V_scale
-    x_data = map( lambda x: 2*x/float(width) , x_data )
-    y_data = map( lambda x: 2*x/float(width) , y_data ) #Note a typo.  We resize by the same factor along both directions
-    V_scale = (1.0, height / float(width) )
     curve_ls = [ np.vstack([x,y]) for (x,y) in zip( x_data, y_data ) ]
     from sklearn.cross_validation import train_test_split
     train_set, test_set = train_test_split( curve_ls, random_state = 0 )
 
     coupa_scene = scene( train_set, V_scale )
+    print "Display clusters"
+    for k in range( coupa_scene.num_nl_classes ):
+        from visualization_routines import visualize_cluster
+        visualize_cluster( coupa_scene, k )
+    
     coupa_scene.set_mu( np.zeros(2) )
     coupa_scene.set_eta( np.ones(2) )
     print "mu = "
@@ -374,11 +366,7 @@ if __name__ == "__main__":
     print "eta = "
     print coupa_scene.eta
 
-    x = np.zeros(2)
-
     from time import time
-
-
     print "Testing P( linear | mu,eta) runs"
     coupa_scene.set_mu( [0.8, 0.4])
     coupa_scene.set_eta( np.array( [1.0,-1.0] ) )
@@ -421,22 +409,14 @@ if __name__ == "__main__":
     print "Sum = %f\n" % I
 
 
-    from matplotlib import pyplot as plt
-    alpha = coupa_scene.alpha_arr
-    V_scale = coupa_scene.V_scale
-    X_grid, Y_grid = np.meshgrid( np.linspace(-V_scale[0], V_scale[0], 50),
-            np.linspace(-V_scale[1], V_scale[1], 50) )
-    from numpy.polynomial.legendre import legval2d
-    fig, ax_arr = plt.subplots( coupa_scene.num_nl_classes)
-    for k in range( coupa_scene.num_nl_classes ):
-        Z_grid = legval2d( X_grid/V_scale[0], Y_grid/V_scale[1], alpha[k])
-        Z_grid -= Z_grid.min()
-        cs = ax_arr[k].contourf( X_grid, Y_grid, Z_grid , 50 )
-    plt.show()
-
 
     print "Testing prediction routines"
-    rho_grid = coupa_scene.predict_pdf( X_grid, Y_grid, 50 )
-    cs = plt.contourf( X_grid, Y_grid, rho_grid , 50, cmap='viridis')
-    plt.axis( 'equal' )
+    rho_grid_0 = coupa_scene.P_of_x_given_mu( [X_grid, Y_grid] )
+    rho_grid = coupa_scene.predict_pdf( X_grid, Y_grid, 1.0 )
+    fig, ax_arr = plt.subplots(2,1, figsize=(10,5))
+    cs = ax_arr[0].contourf( X_grid, Y_grid, rho_grid_0, 50, cmap = 'viridis' )
+    ax_arr[0].axis( 'equal' )
+
+    cs = ax_arr[1].contourf( X_grid, Y_grid, rho_grid , 50, cmap='viridis')
+    ax_arr[1].axis( 'equal' )
     plt.show()

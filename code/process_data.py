@@ -1,10 +1,18 @@
-def get_trajectories( fname , label='Pedestrian' ):
-    #a function to load trajectories from annotation data.
-    # LOAD DATA
-    # Labels can be Pedestrian or Biker
+def get_trajectories( folder , label='Pedestrian' ):
+    """ Returns trajectories and height and width of a domain
+
+    args:
+        folder: string of folder name
+    
+    kwargs:
+        label: string of label name.  Options are "Pedestrian" and "Biker"
+
+    returns:
+        x_data, y_data, width, height
+    """
     import pandas as pd
 
-    data = pd.read_csv( fname, sep=" ")
+    data = pd.read_csv( folder + 'annotations.txt', sep=" ")
     data.columns = ['id',
             'x1','y1','x2','y2',
             'frame',
@@ -13,18 +21,48 @@ def get_trajectories( fname , label='Pedestrian' ):
     # GET POSITIONS
     data = data[ data.lost != 1]
 
-    x=[]
-    y=[]
+    x_raw=[]
+    y_raw=[]
     relevant_indices = set( data[ data['label']==label ]['id'])
     import numpy as np
     for pid in relevant_indices:
         x1 = np.array(data[data['id']==pid]['x1'])
         x2 = np.array(data[data['id']==pid]['x2'])
-        x.append(  0.5*(x1+x2)  )
+        x_raw.append(  0.5*(x1+x2)  )
         y1 = np.array(data[data['id']==pid]['y1'])
         y2 = np.array(data[data['id']==pid]['y2'])
-        y.append( 0.5*(y1+y2)  )
-    return [x,y]
+        y_raw.append( 0.5*(y1+y2)  )
+    from PIL import Image
+    fname = folder + 'reference.jpg'
+    im = Image.open(fname)
+    width,height = im.size
+    x_data = map( lambda x: 2*x/width-1.0 , x_raw )
+    y_data = map( lambda y: 2*y/width-height/float(width) , y_raw )
+    V_scale = (1.0 , height/float(width) )
+    x_data, y_data = filter_trajectories( x_data, y_data, V_scale )
+    return x_data, y_data, V_scale
+
+def filter_trajectories( x_raw, y_raw, V_scale ):
+    """ Removes any trajectories that do not leave the scene or are small.
+
+    args:
+        x_raw:
+        y_raw:
+        V_scale: iterable, length 2.
+
+    returns:
+        x_out:
+        y_out:
+    """
+    inside = lambda x,y : np.abs(x) < 0.9*V_scale[0] and np.abs(y) < 0.9*V_scale[1]
+    small = lambda x,y : np.sqrt( (x[0]-x[-1])**2 + (y[0] - y[-1])**2 ) < np.sqrt(V_scale[1]*V_scale[0])*0.20
+    x_out, y_out = [], []
+    for x,y in zip( x_raw, y_raw):
+        if inside( x[0], y[0] ) or inside( x[-1], y[-1] ) or small(x,y):
+            continue
+        x_out.append(x)
+        y_out.append(y)
+    return x_out, y_out
 
 def smooth_trajectories( x_raw , y_raw ):
     #Smooths and extracts positions, velocities, and accelerations
@@ -78,6 +116,9 @@ def get_transformation_to_reference( reference_points, target_points ):
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
-    x,y = get_trajectories("../annotations/coupa/video0/annotations.txt", label="Biker")
-    plt.plot(x[3])
+    x_data, y_data, V_scale = get_trajectories("../annotations/coupa/video2/", label="Biker")
+    from matplotlib import pyplot as plt
+    for x,y in zip(x_data, y_data):
+        plt.plot( x, y, 'b-' )
+    plt.axis('equal')
     plt.show()

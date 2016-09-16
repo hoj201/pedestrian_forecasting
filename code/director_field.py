@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.polynomial.legendre import legval2d, legder
 
-regularization_coefficient = 0.1
+regularization_coefficient = 1.0
 
 def get_angle( points, alpha, k_max, V_scale):
     """ Return angle at points given Legendre coefficients

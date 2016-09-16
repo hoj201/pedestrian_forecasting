@@ -237,16 +237,8 @@ if __name__ == "__main__":
     import process_data
     process_data = reload(process_data)
     folder = '../annotations/coupa/video2/'
-    fname = folder + 'annotations.txt'
-    x_raw,y_raw = process_data.get_trajectories(fname,label="Biker")
+    x_data, y_data, width, height = process_data.get_trajectories(folder, label="Biker")
 
-    from PIL import Image
-    fname = folder + 'reference.jpg'
-    im = Image.open(fname)
-    width,height = im.size
-    print "width = %f, height = %f" % (width,height)
-    x_data = map( lambda x: x-width/2 , x_raw )
-    y_data = map( lambda x: x-height/2 , y_raw )
     import matplotlib.pyplot as plt
     for k in range(len(x_data)):
         plt.plot(x_data[k], y_data[k],'b-')
@@ -255,7 +247,8 @@ if __name__ == "__main__":
     plt.show()
 
     curves = map( np.vstack , zip(x_data, y_data) )
-    clusters = cluster_trajectories( curves )
+    V_scale = (width/2, height/2)
+    alpha, P_of_c, clusters = get_classes( curves, V_scale )
     n_cluster = len(clusters)
     print "n_cluster = %d \n" % n_cluster
     fig, ax_arr = plt.subplots( n_cluster , 1 , figsize = (5,10))
@@ -266,21 +259,8 @@ if __name__ == "__main__":
     plt.title("Clusters")
     plt.show()
 
-    print "Testing cluster merging routine"
-    new_clusters = merge_small_clusters( clusters )
-    n_cluster = len(new_clusters)
-    print "n_cluster after merging = %d" % n_cluster
-    fig, ax_arr = plt.subplots( n_cluster , 1 , figsize = (5,10))
-    for k,cl in enumerate(new_clusters[1:]):
-        for curve in cl:
-            ax_arr[k].plot( curve[0] , curve[1] , 'b-')
-            ax_arr[k].axis( [-width/2, width/2, -height/2, height/2])
-    plt.show()
-    plt.title("Just the large clusters")
-
 
     print "Testing computation of prior"
-    P_of_c = compute_prior( new_clusters )
     print "P(c) = " 
     print P_of_c
     print "Sum = %f" % P_of_c.sum()
