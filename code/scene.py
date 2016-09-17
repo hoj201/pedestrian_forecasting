@@ -153,7 +153,8 @@ class scene():
         returns:
             rho_T
         """
-        s_ls = np.linspace( -self.s_max, self.s_max, 60 )
+        N_steps = 30
+        s_ls = np.linspace( -self.s_max, self.s_max, 2*N_steps-1 )
         ds = s_ls[1] - s_ls[0]
         rho_T = np.zeros( X_grid.size )
         x0,y0 = X_grid.flatten(), Y_grid.flatten()
@@ -171,15 +172,11 @@ class scene():
                 continue
             dynamics = lambda x,jac=False: self.director_field_vectorized( k, x, jac=jac)
             from particle_advect import advect_vectorized as advect
-            t_positive = T * s_ls[ s_ls >= 0 ]
-            x_t,y_t,w_t = advect( dynamics, x0, y0 , t_positive )
+            x_t,y_t,w_t = advect( dynamics, x0, y0 , T*self.s_max, N_steps )
             rho_positive = helper( x_t, y_t ) * w_t
-            t_negative = T * s_ls[ s_ls <= 0 ]
-            t_negative = t_negative[::-1]
-            x_t,y_t,w_t = advect( dynamics, x0, y0 , t_negative )
+            x_t,y_t,w_t = advect( dynamics, x0, y0 , -T*self.s_max, N_steps )
             rho_negative = helper( x_t, y_t ) * w_t
-            rho_negative = rho_negative[::-1]
-            rho = np.concatenate( [ rho_negative, rho_positive], axis=0 )
+            rho = np.concatenate( [ rho_negative, rho_positive[1:] ], axis=0 ) #we exclude one point so as not to double count t=0
 
             #ADVECT AND ADD TO OUT, WEIGHTED BY P(c,s|mu,eta)
             rho_T += np.dot( P_cs, rho ) * ds
@@ -408,11 +405,17 @@ if __name__ == "__main__":
     I += coupa_scene.P_of_linear_given_measurements()
     print "Sum = %f\n" % I
 
-
+    X_grid, Y_grid = np.meshgrid(
+            np.linspace( -coupa_scene.V_scale[0] , coupa_scene.V_scale[0], 40),
+            np.linspace( -coupa_scene.V_scale[1] , coupa_scene.V_scale[1], 40)
+            )
 
     print "Testing prediction routines"
     rho_grid_0 = coupa_scene.P_of_x_given_mu( [X_grid, Y_grid] )
-    rho_grid = coupa_scene.predict_pdf( X_grid, Y_grid, 1.0 )
+    t0 = time()
+    rho_grid = coupa_scene.predict_pdf( X_grid, Y_grid, 30.0 )
+    print "CPU time = %f \n" % (time() - t0 )
+    from matplotlib import pyplot as plt
     fig, ax_arr = plt.subplots(2,1, figsize=(10,5))
     cs = ax_arr[0].contourf( X_grid, Y_grid, rho_grid_0, 50, cmap = 'viridis' )
     ax_arr[0].axis( 'equal' )

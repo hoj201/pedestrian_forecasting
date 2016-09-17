@@ -104,7 +104,7 @@ dynamics = lambda x,jac=False: learned_scene.director_field_vectorized( 1, x, ja
 from particle_advect import advect_vectorized as advect
 x0,y0 = X_grid.flatten(), Y_grid.flatten()
 t_arr = np.array( [0.0, -0.5] )
-x_t,y_t,w_t = advect( dynamics, x0, y0 , t_arr )
+x_t,y_t,w_t = advect( dynamics, x0, y0 , -0.5, 2 )
 
 rho_0 = helper( x_t[0], y_t[0] ) * w_t[0]
 rho_0 = rho_0.reshape( X_grid.shape )

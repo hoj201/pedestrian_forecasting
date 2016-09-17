@@ -15,10 +15,10 @@ def rk4( f , x0 , t_final , N_steps ):
     """
     if t_final < 0:
         t_arr = np.linspace( t_final, 0.0, N_steps)
-        t_arr = t_arr[::-1]
+        dt = t_arr[0] - t_arr[1]
     else:
         t_arr = np.linspace( 0.0, t_final, N_steps)
-    dt = t_arr[1] - t_arr[0]
+        dt = t_arr[1] - t_arr[0]
     x_arr = np.zeros( (N_steps , x0.size ) )
     x_arr[0] = x0
     for k in range(1, N_steps ):
@@ -28,6 +28,8 @@ def rk4( f , x0 , t_final , N_steps ):
         k3 = f(x + k2*dt / 2.0 )
         k4 = f(x + k3*dt )
         x_arr[k] = x_arr[k-1] + (k1 + 2*k2 + 2*k3 + k4) * dt / 6.0
+    if t_final < 0:
+        x_arr = x_arr[::-1]
     return x_arr, t_arr
 
 

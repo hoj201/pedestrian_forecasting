@@ -30,7 +30,7 @@ def advect( dynamics, nodes, rho_0, t_span ):
     return out
 
 
-def advect_vectorized( dynamics, x0, y0, t_span ):
+def advect_vectorized( dynamics, x0, y0, t_final, N_steps ):
     """ Solves an advection equation
     
     args:
@@ -47,11 +47,12 @@ def advect_vectorized( dynamics, x0, y0, t_span ):
     Note:  The density at time t is given by rho_0( x[t,k] , y[t,k] )*w[t,k]
     """
     N_nodes = x0.size
-    out = np.zeros( (len(t_span) , N_nodes ))
-    from scipy.integrate import odeint
+    out = np.zeros( (N_steps , N_nodes ))
     state_0 =  np.hstack( [ x0, y0 , np.ones(N_nodes) ] )
-    state_t = odeint( dirac_delta_ode_vectorized, state_0, t_span, args=( dynamics , ) )
-    state_t = state_t.reshape( (len(t_span),3,N_nodes) )
+    from hoj_odeint import rk4
+    f = lambda x: dirac_delta_ode_vectorized( x, 0.0, dynamics )
+    state_t, t_arr = rk4( f, state_0, t_final , N_steps )
+    state_t = state_t.reshape( (N_steps,3,N_nodes) )
     x = state_t[:,0]
     y = state_t[:,1]
     w = state_t[:,2]
