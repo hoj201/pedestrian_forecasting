@@ -63,9 +63,9 @@ plt.show()
 # INITIALIZE MEASUREMENTS (mu,eta)
 
 #CHOOSE INITIAL CONDITIONS SO THAT THEY ARE WITHIN THE RESOLVED AREA
-x_min = V_scale[0]/float(3) - V_scale[0]
+x_min = V_scale[0]/float(6) - V_scale[0]
 x_max = -x_min
-y_min = V_scale[1]/float(3) - V_scale[1]
+y_min = V_scale[1]/float(6) - V_scale[1]
 y_max = -y_min
 in_region = lambda x,y: x > x_min and x< x_max and y>y_min and y<y_max
 
