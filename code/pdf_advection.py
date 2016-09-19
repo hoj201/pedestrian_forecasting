@@ -1,6 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from scene import scene
+from scene import Scene
 
 #--------------------------------------------------------------------------------
 # CHOOSE A VIDEO, LEARN CLASSES
@@ -37,7 +37,7 @@ else:
 
     #Train a scene
     print "Training"
-    learned_scene = scene( train_set, V_scale )
+    learned_scene = Scene( train_set, V_scale )
     print "Training complete."
     pickle.dump( learned_scene, file_out1,-1) 
     pickle.dump( test_set, file_out2,-1) 

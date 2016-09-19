@@ -255,35 +255,6 @@ def polyfit2d(x, y, f, deg):
     return c.reshape(deg+1)
 
 
-import hermite_function
-def director_field_to_FP_operator( alpha, deg = [50,50], poly_deg = [5,5] ):
-    """ Exports a Fokker-Planck operator
-
-    args:
-        alpha (numpy.ndarray) : Legendre coeffcients for the angles of the director field
-
-    kwargs:
-        deg (list(int)) : resolution of output
-        poly_deg (list(int)) : degree of polynomial approximation of vector-field
-
-    returns:
-        FP_op (hermite.FP_operator)
-
-     NOTES:
-        The hermite_funtion routines do not work well when the domain is large.
-        Therefore we re-scale the vector-field down to the [-1 , 1] x [-1, 1] square.
-    """
-    global V_scale
-    M = [1.0, 1.0]
-    X_grid, Y_grid = np.meshgrid( np.linspace( -M[0], M[0], 50 ),
-            np.linspace( -M[0], M[1], 50) )
-    points = np.vstack( [ V_scale[0]*X_grid.flatten() / M[0], V_scale[1]*Y_grid.flatten() / M[1] ] )
-    theta = get_angle( points, alpha )
-    X_poly = polyfit2d( X_grid, Y_grid, np.cos(theta), poly_deg) / V_scale[0] 
-    Y_poly = polyfit2d( X_grid, Y_grid, np.sin(theta), poly_deg) / V_scale[1]
-    FP_op = hermite_function.FP_operator( polynomials = [X_poly, Y_poly], M=M, deg = deg )
-    return FP_op
-
 
 if __name__ == "__main__":
     t_span = np.linspace( 0 , np.pi , 40)
@@ -311,40 +282,3 @@ if __name__ == "__main__":
     print "  finite difference = %g" % fd
     print "  computed          = %g" % computed
     print "  error             = %g" % np.abs(fd - computed) 
-
-
-    print "Testing director_field_to_FP_operator( alpha )"
-    alpha = np.zeros( (k_max+1,k_max+1) )
-    FP_op = director_field_to_FP_operator( alpha ) #this should be the vector-field ddx
-    #Lay down a Gaussian at the origin
-    sigma = 0.5
-    mu_x = 0.0
-    mu_y = 0.0
-    f = lambda x,y: np.exp( -((x-mu_x)**2 + (y-mu_y)**2 ) / (2*sigma**2) )
-    h_series = hermite_function.hermite_function_series( M=[1.0, 1.0], deg=[50, 50] )
-    h_series.interpolate( f )
-
-    #Advect the gaussian for time 1 and plot begin and end pdfs
-    from scipy.integrate import odeint
-    x0 = h_series.coeffs.flatten()
-    ode_func = lambda x,t : FP_op.op.dot(x)
-    t = np.linspace(0,0.1,10)
-    x = odeint( ode_func, x0, t )
-
-    from matplotlib import pyplot as plt
-    X_grid, Y_grid = np.meshgrid( np.linspace(-1,1,50), np.linspace(-1,1,50) )
-    xf = x[-1]
-    fig,ax = plt.subplots( 2, figsize = (10,5) )
-    Z_grid0 = h_series.evaluate_on_grid( [X_grid, Y_grid] )
-    shape = h_series.coeffs.shape
-    new_h_series = hermite_function.hermite_function_series( coeffs=xf.reshape( shape ), M=[1.0,1.0], deg=[50,50] ) 
-    Z_grid0 = h_series.evaluate_on_grid( [X_grid, Y_grid] )
-    Z_gridf = new_h_series.evaluate_on_grid( [X_grid, Y_grid] )
-
-    ax[0].imshow( Z_grid0, extent=[-1,1,-1,1], cmap = 'viridis' )
-    ax[0].scatter( 0,0)
-    ax[1].imshow( Z_gridf, extent=[-1,1,-1,1], cmap = 'viridis' )
-    ax[1].scatter( 0.1, 0 )
-    plt.show()
-
-
