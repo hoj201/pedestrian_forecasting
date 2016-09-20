@@ -167,17 +167,14 @@ def learn_potential( cluster , V_scale, k_max = 4, stride=30):
 
     # CALLBACK FUNCTIONS
     def cb_function( theta_flat ):
-        global k_max,curves
-        cb_function.iteration += 1
-        from progress_bar import update_progress
-        update_progress( cb_function.iteration / float(cb_function.max_iteration) )
+        cb_function.bar.next()
         return 0
-    cb_function.iteration = 0
-    cb_function.max_iteration = 1000
+    import progress.bar
+    cb_function.bar = progress.bar.Bar('Iteration', max=1000 )
 
     # MINIMIZE COST
     from scipy.optimize import minimize
-    res = minimize( cost_function, initial_guess, constraints=constraint_list, callback = cb_function, options={'maxiter':cb_function.max_iteration})
+    res = minimize( cost_function, initial_guess, constraints=constraint_list, callback = cb_function, options={'maxiter':cb_function.bar.max})
 
     # RETURN RESULT
     print res.message

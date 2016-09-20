@@ -1,5 +1,5 @@
 import numpy as np
-from sparse_grid_quad import sparse_grid_quad_2d, sparse_grid_quad_3d, sparse_grid_quad_1d
+from sparse_grid_quad import sparse_grid_quad_2d, sparse_grid_quad_3d
 
 sigma_x = 0.1
 sigma_v = 0.1
