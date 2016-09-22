@@ -4,7 +4,7 @@ from sparse_grid_quad import sparse_grid_quad_2d, sparse_grid_quad_3d
 sigma_x = 0.1
 sigma_v = 0.1
 
-class scene():
+class Scene():
     """ A class which includes routines for probabilities of a newly observed agent."""
     def __init__( self, curve_ls, V_scale, k_max_theta=6, k_max_vf=10 ):
         """ Initializer
@@ -207,6 +207,33 @@ class scene():
         rho_linear *= G( y0 - self.mu[1] - T*self.eta[1] , sigma)
         return rho_linear.reshape( X_grid.shape)
 
+
+    #-------------------- SINGLE TRAJECTORY PREDICTOR --------------------------
+    def predict_trajectory(self, t_final, N_steps):
+        """ returns a trajectory based upon the most likely class
+
+        args:
+            t_final: float, final time
+            N_steps: int, number of time-steps to integrate
+
+        returns:
+            x_arr: np array, shape (2,N_steps)
+        """
+        # FIND MOST LIKELY CLASS.
+        s_span = np.linspace( -self.s_max, self.s_max, 30 )
+        from itertools import product
+        k,s = max( product( range( self.num_nl_classes), s_span ), key = lambda x: self.P_of_nl_class_and_speed_given_measurements( *x ) )
+
+        P_lin = self.P_of_linear_given_measurements()
+        if P_lin > self.P_of_nl_class_and_speed_given_measurements(k,s):
+            t_span = np.linspace( 0.0, t_final, N_steps )
+            return self.mu + np.outer( t_span, self.eta )
+        import hoj_odeint
+        f = lambda x: self.director_field(k,x) * s
+        return hoj_odeint.rk4( f, self.mu, t_final, N_steps )[0]
+
+
+
     #-------------------- POSTERIOR ROUTINES ----------------------------------------
     def P_of_x_given_mu(self, x):
         """ Computes the probability of the true position given just a measurement
@@ -350,7 +377,7 @@ if __name__ == "__main__":
     from sklearn.cross_validation import train_test_split
     train_set, test_set = train_test_split( curve_ls, random_state = 0 )
 
-    coupa_scene = scene( train_set, V_scale )
+    coupa_scene = Scene( train_set, V_scale )
     print "Display clusters"
     for k in range( coupa_scene.num_nl_classes ):
         from visualization_routines import visualize_cluster
@@ -392,7 +419,6 @@ if __name__ == "__main__":
     print res
     print "CPU time = %f \n" % (time()-t0)
 
-
     print "Testing if P(linear | mu,eta) + \sum_k \int P(ck,s|mu,eta)ds = 1"
     I = 0.
     s_min = -coupa_scene.s_max
@@ -423,3 +449,10 @@ if __name__ == "__main__":
     cs = ax_arr[1].contourf( X_grid, Y_grid, rho_grid , 50, cmap='viridis')
     ax_arr[1].axis( 'equal' )
     plt.show()
+
+
+    print "Testing prediction for a single class."
+    t_final = 3.0
+    N_steps = 100
+    x_arr = coupa_scene.predict_trajectory( t_final, N_steps )
+    print x_arr
