@@ -78,12 +78,12 @@ We can use these observations to simplify our analysis of the data and build our
 	Changes is speed occur abruptly, shifting from one constant to another.
 	A typical plot of speed is displayed in figure \ref{fig:speed}.
 
-\begin{figure}[b] %  figure placement: here, top, bottom, or page
-   \centering
-   \includegraphics[width=0.5\textwidth]{./figures/speed_plot.pdf} 
-   \caption{We observe that speed appears to be a sum of step functions with widths lasting a few seconds}
-   \label{fig:speed}
-\end{figure}
+%\begin{figure}[b] %  figure placement: here, top, bottom, or page
+%   \centering
+%   \includegraphics[width=0.5\textwidth]{./figures/speed_plot.pdf} 
+%   \caption{We observe that speed appears to be a sum of step functions with widths lasting a few seconds}
+%   \label{fig:speed}
+%\end{figure}
 
 \subsection{There is substantial spatial structure}
 We see that the vast majority of trajectories appear to fall under a small number of clusters.
@@ -91,12 +91,12 @@ A plot of all trajectories from one video is depicted in figure \ref{fig:traject
 Later, we will exploit this structure by using affinity propagation to cluster the trajectories and produce a
 finite set of classes of motion for each scene.
 
-\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
-   \centering
-   \includegraphics[width=3in]{./figures/trajectories.pdf} 
-   \caption{A plot of trajectories from one scene in the Stanford drone data-set}
-   \label{fig:trajectories}
-\end{figure}
+%\begin{figure}[htbp] %  figure placement: here, top, bottom, or page
+%   \centering
+%   \includegraphics[width=3in]{./figures/trajectories.pdf} 
+%   \caption{A plot of trajectories from one scene in the Stanford drone data-set}
+%   \label{fig:trajectories}
+%\end{figure}
 
 \section{MODEL DESCRIPTION}
 We consider a model where each agent belongs to an unobserved class from the set $C = \{c_0,c_1,\dots,c_n\}$.
@@ -148,12 +148,12 @@ Physically, $V_k(x)$ is the most likely potential function given observations $\
 Again, the advantage to this approach is that we may restrict $V_c$ to a class of quickly computable functions which will not slow down performance at runtime.
 In this paper we restrict $V_c$ to be a sum of tensor products of low order Legendre polynomials.
 
-\begin{figure}[t] %  figure placement: here, top, bottom, or page
-   \centering
-   \includegraphics[width=2in]{./figures/learned_potentials.pdf} 
-   \caption{Some learned potentials for computing $P(x|c_k)$}
-   \label{fig:learned potentials}
-\end{figure}
+%\begin{figure}[t] %  figure placement: here, top, bottom, or page
+%   \centering
+%   \includegraphics[width=2in]{./figures/learned_potentials.pdf} 
+%   \caption{Some learned potentials for computing $P(x|c_k)$}
+%   \label{fig:learned potentials}
+%\end{figure}
 
 \subsubsection{Learning vector fields}
 Given trajectories, we may fit a director field of the form $X(x,y) = ( \cos( \theta_\alpha(x,y) ) , \sin( \theta_\alpha(x,y) ) )$
@@ -172,12 +172,12 @@ $$
 In words, this reward function measures the alignment of the director-field with an observation (i.e. the dot product), and takes sum over all observations.
 An example of a learned director field is depicted in figure \ref{fig:director field}
 
-\begin{figure}[b] %  figure placement: here, top, bottom, or page
-   \centering
-   \includegraphics[width=3in]{./figures/director_field.pdf} 
-   \caption{A director field learned from the trajectories (blue)}
-   \label{fig:director field}
-\end{figure}
+%\begin{figure}[b] %  figure placement: here, top, bottom, or page
+%   \centering
+%   \includegraphics[width=3in]{./figures/director_field.pdf} 
+%   \caption{A director field learned from the trajectories (blue)}
+%   \label{fig:director field}
+%\end{figure}
 
 \subsection{Online computations}
 At run time, our goal is to compute a probability density, $P_T$ at time $T>0$ which correspond to the positions of the agents, given a measurement of position and velocity,  $\mu_0$ and $\eta_0$, at time $t=0$.
@@ -226,6 +226,38 @@ The reason for this is.
 
 
 \section{EXPIREMENTS}
+Evaluating the performance of a density estimator is more complex than evaluating the performance of a point predictor because we do not have direct access to a ground truth.
+In this case, we have the locations of agents at times $t \in [0,T]$, but our method outputs a (smooth) probability density at times $t \in [0,T]$ given a probability density $P(x_0 \mid \mu_0 )$ at time $t=0$ (in our case, a Gaussian).
+However, we can interpret the agent locations at time $t=0$ as samples from a Gaussian by assigning a weight to each location.
+In particular, given trajectories $x_1(t),\dots, x_N(t)$ 
+we can assume there exists an unknown distribution, $f$,
+which produces the initial conditions $x_1(0), \dots, x_N(0)$.
+We can define the weights
+\begin{align*}
+	w_i(\mu_0) := \frac{ P( x_i(0)  \mid \mu_0 ) }{ f_N (x_i(0)) }.
+\end{align*}
+where $f_N$ is an estimate of $f$ (e.g. obtained from kernel density estimation).
+If $f_N$ converges weakly to $f$ as $N \to \infty$,
+then the distribution
+\begin{align*}
+	q_0(x) := \sum_{i=1}^N w_i K_h( x - x_i(0) )
+\end{align*}
+converges (weakly) to $P(x \mid \mu_0)$ on the support of $f$
+as $h \to 0$ and $N \to \infty$.
+\todo[inline]{Still need to do this}
+
+We can then consider the density
+\begin{align*}
+	q_t(x) := \sum_{i=1}^N w_i K_h( x - x_i(t) ).
+\end{align*}
+which can be compared with our predictor.
+This induces the error estimate
+\begin{align*}
+	 e = \int_{0}^T \| q_t - p_{pred,t} \|_{L^1} dt
+\end{align*}
+We define the accuracy as $e^{-1}$ and the precision as the reciprocal of the total observed variation in $e$.
+Because a single error estimate uses the entire test-set, we must use $k$-fold cross validation in order to get $k > 1$ error estimates.
+We will restrict ourselves to scenes with more than 100 trajectories and let $k=10$.
 
 \begin{enumerate}
 	\item Accuracy = expected value of prediction error
@@ -292,7 +324,7 @@ By Bayes' theorem
 \begin{equation}
 \begin{split}
 	&P(x_T \mid \eta_0, \mu_0, c_k, s) = \\
-	&\quad \int P(x_T \mid x_0, \eta_0, \mu_0, c_k, s) P( x_0 \mid \eta_0, \mu_0, c_k, x) dx_0.
+	&\quad \int P(x_T \mid x_0, \eta_0, \mu_0, c_k, s) P( x_0 \mid \eta_0, \mu_0, c_k, x_0) dx_0.
 \end{split}
 \end{equation}
 As $c_k$ and $s$ determine the dynamics completely and $\mu_0$ and $\eta_0$ contribute no new information when $x_0$ is given, we can write this as.

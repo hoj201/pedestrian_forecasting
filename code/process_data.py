@@ -64,6 +64,38 @@ def filter_trajectories( x_raw, y_raw, V_scale ):
         y_out.append(y)
     return x_out, y_out
 
+def prune( x_data, y_data ):
+    """ Removes the abnormally long/short trajectories
+
+    args:
+        x_data:
+        y_data:
+
+    returns:
+        n_discarded:
+        x_data_pruned:
+        y_data_pruned:
+    """
+    def length_of_traj( x, y ):
+        n = len(x)
+        u = x[1:] - x[:n-1]
+        v = y[1:] - y[:n-1]
+        return np.sqrt(u**2+v**2).sum()
+    n = len(x_data)
+    lengths = map( length_of_traj , x_data, y_data )
+    lengths.sort()
+    #Compute IQR
+    Q1 = lengths[n/4]
+    Q3 = lengths[3*n/4]
+    IQR = Q3-Q1
+
+    #Compute which to discard and count hoe many agents you discard
+    keep_it = lambda x,y: length_of_traj(x,y) < Q3+1.5*IQR and length_of_traj(x,y) > Q1-1.5*IQR
+    bool2int = lambda b: 1 if b else 0
+    n_keep = reduce( lambda x,y:x+y, map( bool2int, map( keep_it, x_data, y_data ) ) )
+    n_discarded = len(x_data) - n_keep
+    return n_discarded, zip( *filter( keep_it , zip(x_data, y_data) ))
+
 def smooth_trajectories( x_raw , y_raw ):
     #Smooths and extracts positions, velocities, and accelerations
     x_list = []
@@ -85,34 +117,6 @@ def smooth_trajectories( x_raw , y_raw ):
         vy_list.append( 0.5*(-y_smooth[0:(N-2)] + y_smooth[2:N]) )
     return x_list, vx_list, y_list, vy_list
 
-import numpy as np
-def display_trajectories(x_list,y_list,scene):
-    from matplotlib import pyplot as plt
-    directory_name = "../annotations/" + scene + "/video0/"
-    im = plt.imread(directory_name+"reference.png")
-    implot = plt.imshow(im, extent=[-1,1,-1,1])
-    for x,y in zip(x_list,y_list):
-        plt.plot(x,y,'b-')
-    plt.show()
-    return 0
-
-def get_transformation_to_reference( reference_points, target_points ):
-    #returns parameters to an transformation
-    M = np.zeros( (6,6) )
-    M[0,0:2] = target_points[0,:]
-    M[1,0:2] = target_points[1,:]
-    M[2,0:2] = target_points[2,:]
-    M[3,2:4] = target_points[0,:]
-    M[4,2:4] = target_points[1,:]
-    M[5,2:4] = target_points[2,:]
-    M[0,4] = 1.
-    M[1,4] = 1.
-    M[2,4] = 1.
-    M[3,5] = 1.
-    M[4,5] = 1.
-    M[5,5] = 1.
-    from scipy.linalg import solve
-    return list( solve( M , reference_points.flatten() ) )
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
