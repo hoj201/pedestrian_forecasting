@@ -79,7 +79,7 @@ def dirac_delta_ode_vectorized( state, t, dynamics ):
     X,DX = dynamics( np.vstack([x,y]), jac=True )
     dx = -X[0]
     dy = -X[1]
-    dw = -np.einsum('jji->i', DX)
+    dw = -np.einsum('jji->i', DX)*w
     dstate = np.vstack( [dx,dy,dw] ).flatten()
     return dstate
 
@@ -177,7 +177,7 @@ if __name__ == '__main__':
             return dx_dt, np.tile( A.reshape( (2,2,1)) , (1 , 1, x.shape[1] ) )
         return dx_dt
     t0 = time()
-    x,y,w = advect_vectorized( dynamics_vectorized, X_grid.flatten(), Y_grid.flatten(), t_span)  
+    x,y,w = advect_vectorized( dynamics_vectorized, X_grid.flatten(), Y_grid.flatten(), -1, 5)  
     print "CPU time = %f" % (time() - t0 )
     fig, ax_arr = plt.subplots( 1, len(t_span) , figsize = (15,5) )
     for k in range(len(t_span) ):

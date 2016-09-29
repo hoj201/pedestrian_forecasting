@@ -1,8 +1,8 @@
 import numpy as np
 from sparse_grid_quad import sparse_grid_quad_2d, sparse_grid_quad_3d
 
-sigma_x = 0.1
-sigma_v = 0.1
+sigma_x = 0.05
+sigma_v = 2*sigma_x
 
 class Scene():
     """ A class which includes routines for probabilities of a newly observed agent."""
@@ -26,12 +26,14 @@ class Scene():
             return ( np.sqrt( u[0]**2 + u[1]**2 ) ).max()
 
         self.s_max = max( map( top_speed, curve_ls ) )
+        print "Top speed = %f" % self.s_max
 
         #Learn the  agent_classes
         from cluster import get_classes
         alpha_arr, P_of_c, clusters = get_classes( curve_ls, V_scale )
         self.alpha_arr = alpha_arr
         self.P_of_c = P_of_c
+        print P_of_c
         self.V_scale = V_scale 
         self.clusters = clusters
 
@@ -153,7 +155,7 @@ class Scene():
         returns:
             rho_T
         """
-        N_steps = 30
+        N_steps = 100
         s_ls = np.linspace( -self.s_max, self.s_max, 2*N_steps-1 )
         ds = s_ls[1] - s_ls[0]
         rho_T = np.zeros( X_grid.size )
@@ -184,9 +186,10 @@ class Scene():
 
         # ADD LINEAR TERM
         print "P_linear = %f" % P_linear
-        rho_linear = self.predict_pdf_linear( X_grid, Y_grid, T )
         rho_T = rho_T.reshape( X_grid.shape )
-        rho_T += rho_linear*P_linear
+        if P_linear > 1e-3:
+            rho_linear = self.predict_pdf_linear( X_grid, Y_grid, T )
+            rho_T += rho_linear*P_linear
         return rho_T
 
     def predict_pdf_linear( self, X_grid, Y_grid, T):
@@ -323,6 +326,9 @@ class Scene():
         returns:
             out (float): a non-negative float
         """
+        if np.abs(s) > self.s_max:
+            return 0.0
+
         if not hasattr( self, 'Z_cs_given_meas' ):
             #COMPUTE THE NORMALIZING CONSTANT
             def integrand( xys, k ):
@@ -348,10 +354,7 @@ class Scene():
             self.Z_cs_given_meas = total
             
         def integrand( xy ):
-            v = self.director_field( k, xy )
-            s_filtered = s if np.abs(s) < self.s_max else 0.0
-            v[0] *= s_filtered
-            v[1] *= s_filtered
+            v = s*self.director_field( k, xy )
             out = self.P_of_x_given_mu( xy )
             out *= self.P_of_v_given_eta( v )
             out *= self.P_of_x_given_nl_class( xy , k)
@@ -414,16 +417,17 @@ if __name__ == "__main__":
     coupa_scene.mu = np.array( [0.0, 0.6] )
     coupa_scene.eta = coupa_scene.director_field(0, coupa_scene.mu )
     t0 = time()
-    res = coupa_scene.P_of_nl_class_and_speed_given_measurements( 0, 1.0 )
-    print "result = "
-    print res
+    res = coupa_scene.P_of_nl_class_and_speed_given_measurements( 0, 0.0 )
+    print "result = %f" % res
     print "CPU time = %f \n" % (time()-t0)
+    res = coupa_scene.P_of_nl_class_and_speed_given_measurements( 0, 1.0 )
+    print "result2 = %f" % res
 
     print "Testing if P(linear | mu,eta) + \sum_k \int P(ck,s|mu,eta)ds = 1"
     I = 0.
     s_min = -coupa_scene.s_max
     s_max = coupa_scene.s_max
-    res = 100.0
+    res = 200.0
     ds = (s_max - s_min ) / (res-1)
     for k in range( coupa_scene.num_nl_classes ):
         integrand = lambda s: coupa_scene.P_of_nl_class_and_speed_given_measurements( k, s)
@@ -455,4 +459,4 @@ if __name__ == "__main__":
     t_final = 3.0
     N_steps = 100
     x_arr = coupa_scene.predict_trajectory( t_final, N_steps )
-    print x_arr
+    #print x_arr

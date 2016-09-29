@@ -1,3 +1,5 @@
+import numpy as np
+
 def get_trajectories( folder , label='Pedestrian' ):
     """ Returns trajectories and height and width of a domain
 
