@@ -145,7 +145,7 @@ class Scene():
         return out1
 
     #-------------------- PROBABILITY DENSITY PREDICTORS -----------------------
-    def predict_pdf( self, X_grid, Y_grid, T):
+    def predict_pdf( self, X_grid, Y_grid, T, show_output = False):
         """ returns the values of a probability density function at time T at given positions
 
         args:
@@ -167,10 +167,12 @@ class Scene():
             P_cs = np.array( P_cs )
             P_c = P_cs.sum() * ds
             P_linear -= P_c
-            print "P_c = %f" % P_c
+            if show_output:
+                print "P_c = %f" % P_c
             tol = 1e-3
             if P_c < tol:
-                print "Skipping computation for class c_%d.  P(c_%d | mu )=%g < %g \n" % (k,k,P_c,tol)
+                if show_output:
+                    print "Skipping computation for class c_%d.  P(c_%d | mu )=%g < %g \n" % (k,k,P_c,tol)
                 continue
             dynamics = lambda x,jac=False: self.director_field_vectorized( k, x, jac=jac)
             from particle_advect import advect_vectorized as advect
@@ -182,10 +184,12 @@ class Scene():
 
             #ADVECT AND ADD TO OUT, WEIGHTED BY P(c,s|mu,eta)
             rho_T += np.dot( P_cs, rho ) * ds
-            print "c_%d case computed.\n" % k
+            if show_output:
+                print "c_%d case computed.\n" % k
 
         # ADD LINEAR TERM
-        print "P_linear = %f" % P_linear
+        if show_output:
+            print "P_linear = %f" % P_linear
         rho_T = rho_T.reshape( X_grid.shape )
         if P_linear > 1e-3:
             rho_linear = self.predict_pdf_linear( X_grid, Y_grid, T )
@@ -330,6 +334,7 @@ class Scene():
             return 0.0
 
         if not hasattr( self, 'Z_cs_given_meas' ):
+            print "Computing normalizing constant for P_of_nl_class_and_speed_given_measurements"
             #COMPUTE THE NORMALIZING CONSTANT
             def integrand( xys, k ):
                 s = xys[2]
@@ -374,9 +379,9 @@ if __name__ == "__main__":
     
     import process_data
     folder = '../annotations/coupa/video2/'
-    x_data, y_data, V_scale = process_data.get_trajectories(folder,label="Biker")
+    BB_ts_list, V_scale = process_data.get_BB_ts_list(folder,label="Biker")
 
-    curve_ls = [ np.vstack([x,y]) for (x,y) in zip( x_data, y_data ) ]
+    curve_ls = map( process_data.BB_ts_to_curve, BB_ts_list )
     from sklearn.cross_validation import train_test_split
     train_set, test_set = train_test_split( curve_ls, random_state = 0 )
 

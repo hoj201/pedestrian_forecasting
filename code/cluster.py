@@ -117,7 +117,7 @@ def merge_small_clusters( clusters):
     N_curves = reduce( lambda x,y: x+y, map( len, clusters ) )
     portion = [ len(c) / float(N_curves) for c in clusters]
     for k,cl in enumerate(clusters):
-        if len(cl) < 3 or portion[k] < 0.1:
+        if len(cl) < 3 or portion[k] < 0.03:
             n_discarded += len(cl)
         else:
             new_clusters.append( cl )
