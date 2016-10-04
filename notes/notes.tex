@@ -8,7 +8,7 @@
 %  POSSIBLY USEFULE PACKAGES
 %\usepackage{graphicx}
 %\usepackage{tensor}
-%\usepackage{todonotes}
+\usepackage{todonotes}
 
 %  NEW COMMANDS
 \newcommand{\pder}[2]{\ensuremath{\frac{ \partial #1}{\partial #2}}}
@@ -40,10 +40,6 @@
 
 \maketitle
 
-\begin{abstract}
-  blah blah blah.
-\end{abstract}
-
 \section{Problem Description}
 Given a finite set of time-series of bounding boxes, representing the location of previously observed agents, and
 two successive bounding boxes of a newly observed agent, can we generate a time-dependent probability density, $\rho$, which represents the
@@ -73,26 +69,10 @@ We find
 \begin{align*}
 	\rho(t,x ) &:= \int \Pr( x = x(t) \mid x(0) = x_0, \mu ) \cdot \Pr(x_0 \mid \mu ) dx_0 \\
 	&= \sum_{k=1}^{n} \int \Pr( x = x(t) \mid k,s, x(0) = x_0, \mu ) \cdot P( k,s,x_0 \mid \mu) ds \, dx_0 \\
-	&\quad + \int \Pr(x = x(t) \mid \Lin, x(0) = x_0, v_0 , \mu ) P( \Lin, x_0, v_0  \mid \mu ) dx_0
-\end{align*}
-Each of the probability densities appearing in the above line can be computed or chosen (under a Bayesian interpretation)
-in terms of the densities
-\begin{align*}
-	\Pr(k) , \Pr(s), \Pr( x_0 \mid \hat{x}_0 ), \Pr( x_0 \mid k ).
+	&\quad + \int \Pr(x = x(t) \mid \Lin, x(0) = x_0, v_0 , \mu ) P( \Lin, x_0, v_0  \mid \mu ) dx_0 dv_0
 \end{align*}
 
-assuming the probabilistic graphical model (pgm)
-\begin{equation}
-\begin{tikzcd}
-	k \arrow[r] \arrow[rd] & x_0 \arrow[d] \arrow[r] \ar[dr] & \hat{x}_0 \\
-	s \arrow[r] & v_0 \ar[r] & \hat{v}_0 \\
-\end{tikzcd}
-\label{eq:pgm}
-\end{equation}
-
-The posteriors of this pgm are described in the appendix.
-
-\subsection{Time dependent densities}
+There are a lot of terms to deal with here.
 Let us first deal with $\Pr( x = x(t) \mid k,s, x(0) = x_0, \mu )$.
 Given \eqref{eq:nonlin} determines $x(t)$ precisely given and agent's flavor, $k$, speed, $s$, and initial condition,
 we should expect a Dirac-delta type distribution which is independent of $\mu$.
@@ -107,38 +87,86 @@ Similarly,
 	\Pr( x = x(t) \mid \Lin, x(0) = x_0, v_0 , \mu ) = \delta \left( x - (x_0 + t \cdot v_0 ) \right)
 \end{align*}
 
+Substitution, and the change of variables formula tells us that
+\begin{align*}
+	\rho(t,x) &= \sum_{k=1}^n \int \det \left[ (D\Phi_{k}^{st})^{-1}(x)  \right] \cdot \Pr( k, s, x_0 = (\Phi_{k}^{st})^{-1} (x) \mid \mu) ds \\
+		&\quad + \int \Pr( x_0 = x- t v_0 ,v_0, \Lin \mid \mu) \Pr( \Lin, x_0 =x- t v_0, v_0 \mid \mu )dv_0
+\end{align*}
 
-\subsection{Static densities}
-To calculate $\Pr(k,s,x_0 \mid \mu )$ we use the pgm \eqref{eq:pgm} to find
+So if we can compute the flow $\Phi_k^{t}$ efficiently, and we can compute $\Pr( k,s,x_0 \mid \mu)$ and $\Pr( x_0, v_0, \Lin \mid \mu)$ efficiently, then we are good to go.
+Computing the flow can be done using standard ode integration schemes, so the main obstacle is computing the posteriors $\Pr( k,s,x_0 \mid \mu)$ and $\Pr( x_0, v_0, \Lin \mid \mu)$.
+
+\section{Expressions for $\Pr( k,s,x_0 \mid \mu)$ and $\Pr( x_0, v_0, \Lin \mid \mu)$}
+In order to compute $\Pr( k,s,x_0 \mid \mu)$ and $\Pr( x_0, v_0, \Lin \mid \mu)$ we use a probabilistic graphical model.
+To begin, define the set
 \begin{align*}
-	\Pr( k,s,x_0 \mid \mu ) = \Pr( x_0 \mid \hat{x}_0 ) \Pr( k ,s \mid \mu )
+	Type = \{ \Lin \} \cup \{ (k,s) \mid s \in [-\bar{s}, \bar{s}] , k = 1,\dots,n\}.
 \end{align*}
-Using the pgm we further decompose
+Each agent is associated with one and only one type.
+The type of a given agents provides information about his true position $x_0$ based on how often we've see an agent of such a type at location $x_0$.
+Moreover, given an agents true position, and his type, we know something about his/her velocity.
+For example, if an agent is of type $(k,s)$ and is known to be at position $x_0$, then we know with certainty that his velocity is $v_0 = sX_k(x_0)$.
+Lastly, we assume our measurements of position are independent of Type, given the true position.
+This yields the probabilistic graphical model
+\begin{equation}
+\begin{tikzcd}
+	Type \arrow[r] \arrow[rd] & x_0 \arrow[d] \arrow[r] & \hat{x}_0 \\
+	 & v_0 \ar[r] & \hat{v}_0 \\
+\end{tikzcd}
+\label{eq:pgm}
+\end{equation}
+Under this model, the posteriors $\Pr( k,s,x_0 \mid \mu)$ and $\Pr( x_0, v_0, \Lin \mid \mu)$ can be computed in terms of the \emph{atomic densities}
+\begin{itemize}
+	\item $\Pr( x_0 \mid Type )$
+	\item $\Pr( v_0 \mid Type,x_0)$
+	\item $\Pr( \hat{x}_0 \mid x_0)$
+	\item $\Pr( \hat{v}_0 \mid v_0)$
+	\item $\Pr(Type)$
+\end{itemize}
+In the remainder of this section, we will assume that these atomic densities are known, and easily computable, expressions.
+We list precise choices for the atomic densities in the appendix.
+
+To calculate $\Pr(k,s,x_0 \mid \mu )$ in terms of the atomic densities we use \eqref{eq:pgm} to find
 \begin{align*}
-	\Pr( k,s \mid \mu ) &\propto \Pr( \mu \mid k,s ) \Pr( k,s) \\
-		&= \Pr( \hat{x}_0, \hat{v}_0 \mid k,s ) \Pr(k) \Pr(s) \\
-		&= \Pr( \hat{x}_0 \mid k ) \Pr( \hat{v}_0 \mid \hat{x}_0 , k , s ) \\
-		&= \left( \int \Pr( \hat{x}_0 \mid x_0) \Pr( x_0 \mid k ) dx_0 \right) \cdot \left(  \int \Pr( \hat{v}_0 \mid x_0 , \hat{x}_0,  k , s ) P( \hat{x}_0 \mid x_0) dx_0 \right) \\
-		&=  \left( \int \Pr( \hat{x}_0 \mid x_0) \Pr( x_0 \mid k ) dx_0 \right) \cdot \left(  \int \Pr( \hat{v}_0 \mid x_0 , k , s ) P( \hat{x}_0 \mid x_0) dx_0 \right). \\
+	\Pr( k,s,x_0 \mid \mu ) &\propto \Pr( \mu \mid k,s,x_0) \Pr( k,s,x_0) \\
+		&= \Pr( \hat{x}_0 \mid x_0) \left(  \int \Pr( \hat{v}_0 \mid v_0 ) \Pr( v_0 \mid k,s,x_0) dv_0 \right) \Pr(k,s,x_0) \\
+		&=  \Pr( \hat{x}_0 \mid x_0) \left(  \int \Pr( \hat{v}_0 \mid v_0 ) \Pr( v_0 \mid k,s,x_0) dv_0 \right) \Pr(x_0 \mid k) \Pr(k) \Pr(s) \\
 \end{align*}
-Finally,
+Each of the posteriors in the last line is assumed known. \todo{Computing the normalizing constant might be expensive.  Can it be avoided?}
+
+Similarly, in the linear case
 \begin{align*}
-	\Pr( \Lin , x_0, v_0 \mid \hat{x}_0, \hat{v}_0 ) &= \Pr( \Lin \mid x_0, v_0, \hat{x}_0, \hat{v}_0) \, \Pr( x_0, v_0 \mid \hat{x}_0, \hat{v}_0 ) \\
-	&= \Pr(\Lin \mid x_0, v_0) \Pr(x_0 \mid \hat{x}_0) \Pr( v_0 \mid \hat{v}_0 )
+	\Pr( \Lin , x_0, v_0 \mid \hat{x}_0, \hat{v}_0 ) &\propto \Pr( \hat{x}_0, \hat{v}_0 \mid \Lin, x_0, v_0 ) \Pr( \Lin, x_0, v_0 ) \\
+	&= \Pr( \hat{x}_0, \hat{v}_0 \mid \Lin, x_0, v_0 ) \Pr( x_0, v_0 \mid \Lin ) \Pr(\Lin) \\
+	&= \Pr( \hat{x}_0 \mid x_0 ) \Pr( \hat{v}_0 \mid v_0 ) \Pr( x_0 \mid \Lin ) \Pr( v_0 \mid x_0, \Lin ) \Pr(\Lin).
 \end{align*}
+Again, each of the above posteriors is assumed known.
 
 \appendix
 
-\section{Relevant Posteriors}
+\section{Atomic Posteriors}
 Let $w_x, w_v  > 0$ be a bound for the width of the bounding boxes and bounding box velocities we observe in the data.
 Similarly, let $V_k: \mathbb{R}^2 \to \mathbb{R}$ be an energy function and $X_k \in \mathfrak{X}( \mathbb{R}^2)$ a director field we learn from the data. (see Appendix \ref{app:learning} )
 Here are posteriors:
 \begin{align*}
-	\Pr( \hat{x} \mid x ) &\sim \mathcal{U}( x ; w_x ) \\
-	\Pr( \hat{v} \mid v ) &\sim \mathcal{U}( v ; w_v ) \\
-	\Pr( x \mid k ) &= \frac{1}{Z_k} \exp \left( -V_k(x) \right) \\
-	\Pr( v \mid k,s,x) &= \delta( v - s X_k(x) )
+	\Pr( \hat{x}_0 \mid x_0 ) &\sim \mathcal{U}( x_0 ; w_x ) \\
+	\Pr( \hat{v}_0 \mid v_0 ) &\sim \mathcal{U}( v_0 ; w_v ) \\
+	\Pr( x_0 \mid k,s ) &= \Pr(x \mid k) = \frac{1}{Z_k} \exp \left( -V_k(x) \right) \\
+	\Pr( v_0 \mid k,s,x_0) &= \delta( v_0 - s X_k(x_0) ) \\
 \end{align*}
+The only remaining posterior to provide is $\Pr( x \mid \Lin )$ and $\Pr( v \mid x,\Lin )$.
+We let $\Pr( x_0 \mid \Lin)$ be a uniform distribution over our domain.
+The choice for $\Pr( v_0 \mid x_0,\Lin)$ is more subtle.
+We want $\Pr(v \mid x, \Lin )$ to be small when there exists a $k$ such that $\Pr(x \mid k)$ is high and $v$ is aligned with $X_k(x)$.
+So we consider 
+\begin{align}
+	\Pr( v_0 \mid x_0 , \Lin ) = \prod_{k=1}^n \left[ 1 - \left\| \frac{ v_0 \cdot X_{k}(x_0) }{ \epsilon + \| v_0 \|^2} \right\|^{\gamma_a} \tanh \left( \gamma_x e^{ - V_{k}(x_0) } \right)  \right] \label{eq:v given x and Linear}
+\end{align}
+where $\gamma_x, \gamma_a, \epsilon > 0$ are a tunable hyper-parameters.\todo{hoj:  Not so sure about \eqref{eq:v given x and Linear}.}
+When $\gamma_x$ is large or when $\gamma_a$ is small we will tend to rely on the linear predictor more often.
+$\gamma_a$ pertains to how much we care about alignment between the measured velocity, and the velocity of the given class, while $\gamma_x$ pertains to how close we like to be to the test set when using a one of the classes we've learned.
+The hyper-parameter, $\epsilon$, is a regularization term.  The alignment between $X_{k}$ and $\eta_0$ is given by $\eta_0 \cdot X_{k}(\mu_0) / \| \eta_0 \|$.  This alignment measure is undefined when $\eta_0 = 0$ so the parameter $\epsilon > 0$ is included to regularize this singularity.  What this means in practice is that when the measured velocity is small, the predictor will default to a linear predictor.
+
 
 \section{Objects learned from the data}
 \label{app:learning}
@@ -190,8 +218,6 @@ $$
 	R(\alpha ) = \sum_{k} \frac{x_{k+1} + x_k}{2} \cos( \theta_\alpha(\vec{x}_k) ) + \frac{y_{k+1} + y_k}{2}  \sin( \theta_\alpha( \vec{x}_k ) ).
 $$
 In words, this reward function measures the alignment of the director-field with an observation (i.e. the dot product), and takes sum over all observations.
-An example of a learned director field is depicted in figure \ref{fig:director field}
-
 
 
 \bibliographystyle{amsalpha}
