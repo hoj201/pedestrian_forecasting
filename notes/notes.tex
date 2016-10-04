@@ -138,9 +138,9 @@ Similarly, in the linear case
 \begin{align*}
 	\Pr( \Lin , x_0, v_0 \mid \hat{x}_0, \hat{v}_0 ) &\propto \Pr( \hat{x}_0, \hat{v}_0 \mid \Lin, x_0, v_0 ) \Pr( \Lin, x_0, v_0 ) \\
 	&= \Pr( \hat{x}_0, \hat{v}_0 \mid \Lin, x_0, v_0 ) \Pr( x_0, v_0 \mid \Lin ) \Pr(\Lin) \\
-	&= \Pr( \hat{x}_0 \mid x_0 ) \Pr( \hat{v}_0 \mid v_0 ) \Pr( x_0 \mid \Lin ) \Pr( v_0 \mid x_0, \Lin ) \Pr(\Lin).
+	&= \Pr( \hat{x}_0 \mid x_0 ) \Pr( \hat{v}_0 \mid v_0 ) \Pr( x_0 \mid \Lin ) \Pr( v_0 \mid x_0, \Lin ) \Pr(\Lin)
 \end{align*}
-Again, each of the above posteriors is assumed known.
+Each of the above posteriors is assumed known.
 
 \appendix
 
@@ -152,7 +152,7 @@ Here are posteriors:
 	\Pr( \hat{x}_0 \mid x_0 ) &\sim \mathcal{U}( x_0 ; w_x ) \\
 	\Pr( \hat{v}_0 \mid v_0 ) &\sim \mathcal{U}( v_0 ; w_v ) \\
 	\Pr( x_0 \mid k,s ) &= \Pr(x \mid k) = \frac{1}{Z_k} \exp \left( -V_k(x) \right) \\
-	\Pr( v_0 \mid k,s,x_0) &= \delta( v_0 - s X_k(x_0) ) \\
+	\Pr( v_0 \mid k,s,x_0) &= \delta( v_0 - s X_k(x_0) )
 \end{align*}
 The only remaining posterior to provide is $\Pr( x \mid \Lin )$ and $\Pr( v \mid x,\Lin )$.
 We let $\Pr( x_0 \mid \Lin)$ be a uniform distribution over our domain.
