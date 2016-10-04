@@ -1,0 +1,199 @@
+\documentclass[12pt]{amsart}
+\usepackage{amsmath,amssymb}
+\usepackage{geometry} % see geometry.pdf on how to lay out the page. There's lots.
+\geometry{a4paper} % or letter or a5paper or ... etc
+% \geometry{landscape} % rotated page geometry
+
+\usepackage{tikz-cd}
+%  POSSIBLY USEFULE PACKAGES
+%\usepackage{graphicx}
+%\usepackage{tensor}
+%\usepackage{todonotes}
+
+%  NEW COMMANDS
+\newcommand{\pder}[2]{\ensuremath{\frac{ \partial #1}{\partial #2}}}
+\newcommand{\ppder}[3]{\ensuremath{\frac{\partial^2 #1}{\partial
+      #2 \partial #3} } }
+
+%  NEW THEOREM ENVIRONMENTS
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{defn}[thm]{Definition}
+
+
+%  MATH OPERATORS
+\DeclareMathOperator{\Diff}{Diff}
+\DeclareMathOperator{\GL}{GL}
+\DeclareMathOperator{\SO}{SO}
+\DeclareMathOperator{\Lin}{Lin}
+\DeclareMathOperator{\Prob}{Prob}
+
+%  TITLE, AUTHOR, DATE
+\title{Notes}
+\author{Henry O. Jacobs}
+\date{\today}
+
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  blah blah blah.
+\end{abstract}
+
+\section{Problem Description}
+Given a finite set of time-series of bounding boxes, representing the location of previously observed agents, and
+two successive bounding boxes of a newly observed agent, can we generate a time-dependent probability density, $\rho$, which represents the
+newly observed agent's location at times $t \in [0, T]$?
+
+\section{Our model}
+We will assume that agents are of two types, linear or nonlinear.  Linear agents have dynamics specified by
+\begin{align}
+	\dot{x} (t)= x_0 + t \cdot v_0 \label{eq:lin}
+\end{align}
+where $v_0, x_0 \in \mathbb{R}^2$ are the position and velocity at time $t=0$.
+Nonlinear agents come in flavors $\{1,\dots,n\}$ have dynamics given by
+\begin{align}
+	\dot{x} = s X_k(x) \label{eq:nonlin}
+\end{align}
+for some $k \in \{1,\dots,n\}$, a predetermined director-field, $X_k$, and some constant $s \in \mathbb{R}$.
+This motion model allows us to decompose the computation of $\rho(t)$ into tractable components.
+In particular $\rho(t,x)$ is defined as the probability density of finding the agent at position $x$ at time $t$ given measurements of position and velocity $\mu = (\hat{x}_0, \hat{v}_0)$ at time $t=0$.
+In terms of the density at time $t=0$, $\rho$ is given by
+\begin{align*}
+	\rho(t,x ) := \Pr( x = x(t)\mid \mu )
+\end{align*}
+If we know the agent is linear and we know the velocity, then we know the position $x(t)$ by \eqref{eq:lin}.
+If we know the agent is nonlinear, and we know the variables $k$ and $s$, then we know the position $x(t)$ by integrating \eqref{eq:nonlin}.
+These observations suggest that we decompose the computation of $\rho$ using Baye's theorem, as
+We find
+\begin{align*}
+	\rho(t,x ) &:= \int \Pr( x = x(t) \mid x(0) = x_0, \mu ) \cdot \Pr(x_0 \mid \mu ) dx_0 \\
+	&= \sum_{k=1}^{n} \int \Pr( x = x(t) \mid k,s, x(0) = x_0, \mu ) \cdot P( k,s,x_0 \mid \mu) ds \, dx_0 \\
+	&\quad + \int \Pr(x = x(t) \mid \Lin, x(0) = x_0, v_0 , \mu ) P( \Lin, x_0, v_0  \mid \mu ) dx_0
+\end{align*}
+Each of the probability densities appearing in the above line can be computed or chosen (under a Bayesian interpretation)
+in terms of the densities
+\begin{align*}
+	\Pr(k) , \Pr(s), \Pr( x_0 \mid \hat{x}_0 ), \Pr( x_0 \mid k ).
+\end{align*}
+
+assuming the probabilistic graphical model (pgm)
+\begin{equation}
+\begin{tikzcd}
+	k \arrow[r] \arrow[rd] & x_0 \arrow[d] \arrow[r] \ar[dr] & \hat{x}_0 \\
+	s \arrow[r] & v_0 \ar[r] & \hat{v}_0 \\
+\end{tikzcd}
+\label{eq:pgm}
+\end{equation}
+
+The posteriors of this pgm are described in the appendix.
+
+\subsection{Time dependent densities}
+Let us first deal with $\Pr( x = x(t) \mid k,s, x(0) = x_0, \mu )$.
+Given \eqref{eq:nonlin} determines $x(t)$ precisely given and agent's flavor, $k$, speed, $s$, and initial condition,
+we should expect a Dirac-delta type distribution which is independent of $\mu$.
+Moreover, if $\Phi_k^t$ is the time-$t$ flow of $X_k$, then $\Phi_k^{st}$ is the time $t$ flow of $s X_k$. 
+This means
+\begin{align*}
+	\Pr( x  = x(t) \mid k,s, x_0 = x_0 , \mu ) = \delta( x - \Phi_k^{st}( x_0) ).
+\end{align*}
+
+Similarly,
+\begin{align*}
+	\Pr( x = x(t) \mid \Lin, x(0) = x_0, v_0 , \mu ) = \delta \left( x - (x_0 + t \cdot v_0 ) \right)
+\end{align*}
+
+
+\subsection{Static densities}
+To calculate $\Pr(k,s,x_0 \mid \mu )$ we use the pgm \eqref{eq:pgm} to find
+\begin{align*}
+	\Pr( k,s,x_0 \mid \mu ) = \Pr( x_0 \mid \hat{x}_0 ) \Pr( k ,s \mid \mu )
+\end{align*}
+Using the pgm we further decompose
+\begin{align*}
+	\Pr( k,s \mid \mu ) &\propto \Pr( \mu \mid k,s ) \Pr( k,s) \\
+		&= \Pr( \hat{x}_0, \hat{v}_0 \mid k,s ) \Pr(k) \Pr(s) \\
+		&= \Pr( \hat{x}_0 \mid k ) \Pr( \hat{v}_0 \mid \hat{x}_0 , k , s ) \\
+		&= \left( \int \Pr( \hat{x}_0 \mid x_0) \Pr( x_0 \mid k ) dx_0 \right) \cdot \left(  \int \Pr( \hat{v}_0 \mid x_0 , \hat{x}_0,  k , s ) P( \hat{x}_0 \mid x_0) dx_0 \right) \\
+		&=  \left( \int \Pr( \hat{x}_0 \mid x_0) \Pr( x_0 \mid k ) dx_0 \right) \cdot \left(  \int \Pr( \hat{v}_0 \mid x_0 , k , s ) P( \hat{x}_0 \mid x_0) dx_0 \right). \\
+\end{align*}
+Finally,
+\begin{align*}
+	\Pr( \Lin , x_0, v_0 \mid \hat{x}_0, \hat{v}_0 ) &= \Pr( \Lin \mid x_0, v_0, \hat{x}_0, \hat{v}_0) \, \Pr( x_0, v_0 \mid \hat{x}_0, \hat{v}_0 ) \\
+	&= \Pr(\Lin \mid x_0, v_0) \Pr(x_0 \mid \hat{x}_0) \Pr( v_0 \mid \hat{v}_0 )
+\end{align*}
+
+\appendix
+
+\section{Relevant Posteriors}
+Let $w_x, w_v  > 0$ be a bound for the width of the bounding boxes and bounding box velocities we observe in the data.
+Similarly, let $V_k: \mathbb{R}^2 \to \mathbb{R}$ be an energy function and $X_k \in \mathfrak{X}( \mathbb{R}^2)$ a director field we learn from the data. (see Appendix \ref{app:learning} )
+Here are posteriors:
+\begin{align*}
+	\Pr( \hat{x} \mid x ) &\sim \mathcal{U}( x ; w_x ) \\
+	\Pr( \hat{v} \mid v ) &\sim \mathcal{U}( v ; w_v ) \\
+	\Pr( x \mid k ) &= \frac{1}{Z_k} \exp \left( -V_k(x) \right) \\
+	\Pr( v \mid k,s,x) &= \delta( v - s X_k(x) )
+\end{align*}
+
+\section{Objects learned from the data}
+\label{app:learning}
+
+\subsubsection{Learning clusters}
+For a fixed scene with a database of agent trajectories we cluster the trajectories by applying the Affinity propagation algorithm to the end-points.
+We then prune the clusters by discarding trajectories which are outliers with respect to total length (we define an outlier using the standard inter-quartile range criterion with a IQR coefficient of $1.5$).
+We then throw out clusters which contain less than $10\%$ of the trajectories.
+We associate class labels, $1,\dots,n$,  to the remaining clusters, and we will develop a model for each of these classes in the next section.
+We also add an additional class, ``$\Lin$'', where the underlying model will be a linear predictor.
+Finally, we define a prior, $P(c)$ to compute the probability that a given agent falls within one of these classes.
+We set 
+\begin{align*}
+	P(\Lin) &= \frac{ \text{\# discarded trajectories} }{ \text{ \# trajectories } } \\
+	P(k) &= \frac{ \text{\# trajectories in cluster $k$} }{ \text{ \# trajectories } } \text{ for } k=1,\dots,n.
+\end{align*}
+
+\subsubsection{Learning $P(x \mid k)$ }
+During runtime we will need this computation to be fast, and to scale with the size of the data-set.
+This rules out standard probabilistic classification schemes such kernel density methods.
+Instead we discretize the space of energy functions, and compute on a subspace of fixed dimension.
+For the linear-predictor class, $\Lin$, we assume $P(x \mid \Lin )$ is a uniform distribution over our domain.
+For $k = 1, \dots, n$ we use the data to learn $P(x \mid k)$.
+Given data points $x_{1,k},\dots,x_{N,k}$ associated to class $k$ we define
+\begin{align}
+	P(x \mid k) := \frac{1}{Z_k } e^{-V_k(x) } \label{eq:x given c}
+\end{align}
+where
+$$
+	V_k =  \text{argmin}_{V \in H_n}  \left( \log \left( \int e^{ - V(x) } dx \right) + \sum_{i=1}^N V(x_{i,k} ) \right).
+$$
+over some finite-dimensional subspace, $H_n \subset C^0( \mathbb{R}^2)$ (perhaps a space of low order polynomials).
+This is a justifiable choice, since $V_k(x)$ is the most likely potential function in $H_n$, if the observations $\{ x_{i,k}\}_{k=1}^N$ are drawn from \eqref{eq:x given c}.
+Again, the advantage to this approach is that we may restrict $V_k$ to a class of quickly computable functions which will not slow down performance at runtime.
+In my current implementation, $H_n$ is a sum of tensor products of low order Legendre polynomials.
+
+\subsubsection{Learning vector fields}
+Given trajectories, we may fit a director field of the form $X(x,y) = ( \cos( \theta_\alpha(x,y) ) , \sin( \theta_\alpha(x,y) ) )$
+where 
+$$
+	\theta_\alpha(x,y) = \sum_{ij} \alpha_{ij} L_i(x / w) L_j(y / h).
+$$
+
+
+Given observations $\vec{x}_0,  \dots, \vec{x}_n \in \mathbb{R}^2$ we may compute a series of unit vectors, $\vec{u}_k = \Delta \vec{x}_k / \| \Delta \vec{x}_k  \|$,
+where $\Delta \vec{x}_k = \vec{x}_{k+1} - \vec{x}_k$.
+A director-field may be learned from these directions by maximizing
+$$
+	R(\alpha ) = \sum_{k} \frac{x_{k+1} + x_k}{2} \cos( \theta_\alpha(\vec{x}_k) ) + \frac{y_{k+1} + y_k}{2}  \sin( \theta_\alpha( \vec{x}_k ) ).
+$$
+In words, this reward function measures the alignment of the director-field with an observation (i.e. the dot product), and takes sum over all observations.
+An example of a learned director field is depicted in figure \ref{fig:director field}
+
+
+
+\bibliographystyle{amsalpha}
+\bibliography{hoj.bib}
+\end{document}
