@@ -40,10 +40,6 @@
 
 \maketitle
 
-\begin{abstract}
-  blah blah blah.
-\end{abstract}
-
 \section{Problem Description}
 Given a finite set of time-series of bounding boxes, representing the location of previously observed agents, and
 two successive bounding boxes of a newly observed agent, can we generate a time-dependent probability density, $\rho$, which represents the
@@ -73,26 +69,10 @@ We find
 \begin{align*}
 	\rho(t,x ) &:= \int \Pr( x = x(t) \mid x(0) = x_0, \mu ) \cdot \Pr(x_0 \mid \mu ) dx_0 \\
 	&= \sum_{k=1}^{n} \int \Pr( x = x(t) \mid k,s, x(0) = x_0, \mu ) \cdot P( k,s,x_0 \mid \mu) ds \, dx_0 \\
-	&\quad + \int \Pr(x = x(t) \mid \Lin, x(0) = x_0, v_0 , \mu ) P( \Lin, x_0, v_0  \mid \mu ) dx_0
-\end{align*}
-Each of the probability densities appearing in the above line can be computed or chosen (under a Bayesian interpretation)
-in terms of the densities
-\begin{align*}
-	\Pr(k) , \Pr(s), \Pr( x_0 \mid \hat{x}_0 ), \Pr( x_0 \mid k ).
+	&\quad + \int \Pr(x = x(t) \mid \Lin, x(0) = x_0, v_0 , \mu ) P( \Lin, x_0, v_0  \mid \mu ) dx_0 dv_0
 \end{align*}
 
-assuming the probabilistic graphical model (pgm)
-\begin{equation}
-\begin{tikzcd}
-	k \arrow[r] \arrow[rd] & x_0 \arrow[d] \arrow[r] \ar[dr] & \hat{x}_0 \\
-	s \arrow[r] & v_0 \ar[r] & \hat{v}_0 \\
-\end{tikzcd}
-\label{eq:pgm}
-\end{equation}
-
-The posteriors of this pgm are described in the appendix.
-
-\subsection{Time dependent densities}
+There are a lot of terms to deal with here.
 Let us first deal with $\Pr( x = x(t) \mid k,s, x(0) = x_0, \mu )$.
 Given \eqref{eq:nonlin} determines $x(t)$ precisely given and agent's flavor, $k$, speed, $s$, and initial condition,
 we should expect a Dirac-delta type distribution which is independent of $\mu$.
@@ -107,37 +87,72 @@ Similarly,
 	\Pr( x = x(t) \mid \Lin, x(0) = x_0, v_0 , \mu ) = \delta \left( x - (x_0 + t \cdot v_0 ) \right)
 \end{align*}
 
+Substitution, and the change of variables formula tells us that
+\begin{align*}
+	\rho(t,x) &= \sum_{k=1}^n \int \det \left[ (D\Phi_{k}^{st})^{-1}(x)  \right] \cdot \Pr( k, s, x_0 = (\Phi_{k}^{st})^{-1} (x) \mid \mu) ds \\
+		&\quad + \Pr( x_0 = x- t v_0 ,v_0, \Lin \mid \mu)
+\end{align*}
 
-\subsection{Static densities}
+So if we can compute the flow $\Phi_k^{t}$ efficiently, and we can compute $\Pr( k,s,x_0 \mid \mu)$ and $\Pr( x_0, v_0, \Lin \mid \mu)$ efficiently, then we are good to go.
+Computing the flow can be done using standard ode integration schemes, so the main obstacle is computing the posteriors.
+
+Each of the posteriors of concern can be computed in terms of the posteriors
+\begin{enumerate}
+	\item $\Pr( x_0 \mid k,s)$
+	\item $\Pr( v_0 \mid k,s,x_0)$
+	\item $\Pr( \hat{x}_0 \mid x_0)$
+	\item $\Pr( \hat{v}_0 \mid v_0)$
+	\item $\Pr( x_0 \mid \Lin)$
+	\item $\Pr( v_0 \mid x_0, \Lin )$
+\end{enumerate}
+if we assume probabilistic graphical model
+\begin{equation}
+\begin{tikzcd}
+	Type \arrow[r] \arrow[rd] & x_0 \arrow[d] \arrow[r] & \hat{x}_0 \\
+	 & v_0 \ar[r] & \hat{v}_0 \\
+\end{tikzcd}
+\label{eq:pgm}
+\end{equation}
+Where $Type = \{ \Lin \} \cup \{ (k,s) \mid s \in [-\bar{s}, \bar{s}] , k = 1,\dots,n\}$.
+We will derive $\Pr( k,s,x_0 \mid \mu)$ and $\Pr( x_0, v_0, \Lin \mid \mu)$ in terms of these simpler posteriors in the next section.
+We list choices for posteriors for this pgm in the appendix.
+
+\section{Expressions for $\Pr( k,s,x_0 \mid \mu)$ and $\Pr( x_0, v_0, \Lin \mid \mu)$}
 To calculate $\Pr(k,s,x_0 \mid \mu )$ we use the pgm \eqref{eq:pgm} to find
 \begin{align*}
-	\Pr( k,s,x_0 \mid \mu ) = \Pr( x_0 \mid \hat{x}_0 ) \Pr( k ,s \mid \mu )
+	\Pr( k,s,x_0 \mid \mu ) &\propto \Pr( \mu \mid k,s,x_0) \Pr( k,s,x_0) \\
+		&= \Pr( \hat{x}_0 \mid x_0) \left(  \int \Pr( \hat{v}_0 \mid v_0 ) \Pr( v_0 \mid k,s,x_0) dv_0 \right) \Pr(k,s,x_0) \\
+		&=  \Pr( \hat{x}_0 \mid x_0) \left(  \int \Pr( \hat{v}_0 \mid v_0 ) \Pr( v_0 \mid k,s,x_0) dv_0 \right) \Pr(x_0 \mid k) \Pr(k) \Pr(s) \\
 \end{align*}
-Using the pgm we further decompose
+Each of the posteriors in the last line is assumed known.
+
+Similarly, in the linear case
 \begin{align*}
-	\Pr( k,s \mid \mu ) &\propto \Pr( \mu \mid k,s ) \Pr( k,s) \\
-		&= \Pr( \hat{x}_0, \hat{v}_0 \mid k,s ) \Pr(k) \Pr(s) \\
-		&= \Pr( \hat{x}_0 \mid k ) \Pr( \hat{v}_0 \mid \hat{x}_0 , k , s ) \\
-		&= \left( \int \Pr( \hat{x}_0 \mid x_0) \Pr( x_0 \mid k ) dx_0 \right) \cdot \left(  \int \Pr( \hat{v}_0 \mid x_0 , \hat{x}_0,  k , s ) P( \hat{x}_0 \mid x_0) dx_0 \right) \\
-		&=  \left( \int \Pr( \hat{x}_0 \mid x_0) \Pr( x_0 \mid k ) dx_0 \right) \cdot \left(  \int \Pr( \hat{v}_0 \mid x_0 , k , s ) P( \hat{x}_0 \mid x_0) dx_0 \right). \\
+	\Pr( \Lin , x_0, v_0 \mid \hat{x}_0, \hat{v}_0 ) &\propto \Pr( \hat{x}_0, \hat{v}_0 \mid \Lin, x_0, v_0 ) \Pr( \Lin, x_0, v_0 ) \\
+	&= \Pr( \hat{x}_0, \hat{v}_0 \mid \Lin, x_0, v_0 ) \Pr( x_0, v_0 \mid \Lin ) \Pr(\Lin) \\
+	&= \Pr( \hat{x}_0 \mid x_0 ) \Pr( \hat{v}_0 \mid v_0 ) \Pr( x_0 \mid \Lin ) \Pr( v_0 \mid x_0, \Lin ) \Pr(\Lin)
 \end{align*}
-Finally,
-\begin{align*}
-	\Pr( \Lin , x_0, v_0 \mid \hat{x}_0, \hat{v}_0 ) &= \Pr( \Lin \mid x_0, v_0, \hat{x}_0, \hat{v}_0) \, \Pr( x_0, v_0 \mid \hat{x}_0, \hat{v}_0 ) \\
-	&= \Pr(\Lin \mid x_0, v_0) \Pr(x_0 \mid \hat{x}_0) \Pr( v_0 \mid \hat{v}_0 )
-\end{align*}
+Each of the above posteriors is assumed known.
 
 \appendix
 
-\section{Relevant Posteriors}
+\section{Atomic Posteriors}
 Let $w_x, w_v  > 0$ be a bound for the width of the bounding boxes and bounding box velocities we observe in the data.
 Similarly, let $V_k: \mathbb{R}^2 \to \mathbb{R}$ be an energy function and $X_k \in \mathfrak{X}( \mathbb{R}^2)$ a director field we learn from the data. (see Appendix \ref{app:learning} )
 Here are posteriors:
 \begin{align*}
-	\Pr( \hat{x} \mid x ) &\sim \mathcal{U}( x ; w_x ) \\
-	\Pr( \hat{v} \mid v ) &\sim \mathcal{U}( v ; w_v ) \\
-	\Pr( x \mid k ) &= \frac{1}{Z_k} \exp \left( -V_k(x) \right) \\
-	\Pr( v \mid k,s,x) &= \delta( v - s X_k(x) )
+	\Pr( \hat{x}_0 \mid x_0 ) &\sim \mathcal{U}( x_0 ; w_x ) \\
+	\Pr( \hat{v}_0 \mid v_0 ) &\sim \mathcal{U}( v_0 ; w_v ) \\
+	\Pr( x_0 \mid k,s ) &= \Pr(x \mid k) = \frac{1}{Z_k} \exp \left( -V_k(x) \right) \\
+	\Pr( v_0 \mid k,s,x_0) &= \delta( v_0 - s X_k(x_0) ) \\
+\end{align*}
+The only remaining posterior to provide is $\Pr( x \mid \Lin )$ and $\Pr( v \mid x,\Lin )$.
+We let $\Pr( x_0 \mid \Lin)$ be a uniform distribution over our domain.
+The choice for $\Pr( v_0 \mid x_0,\Lin)$ is more subtle.
+We want $\Pr(v \mid x, \Lin )$ to be small when there exists a $k$ such that $\Pr(x \mid k)$ is high and $v$ is aligned with $X_k(x)$.
+So we consider 
+\begin{align*}
+	\Pr( v \mid x , \Lin ) = ???
 \end{align*}
 
 \section{Objects learned from the data}
@@ -190,8 +205,6 @@ $$
 	R(\alpha ) = \sum_{k} \frac{x_{k+1} + x_k}{2} \cos( \theta_\alpha(\vec{x}_k) ) + \frac{y_{k+1} + y_k}{2}  \sin( \theta_\alpha( \vec{x}_k ) ).
 $$
 In words, this reward function measures the alignment of the director-field with an observation (i.e. the dot product), and takes sum over all observations.
-An example of a learned director field is depicted in figure \ref{fig:director field}
-
 
 
 \bibliographystyle{amsalpha}
