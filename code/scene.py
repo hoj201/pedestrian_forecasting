@@ -1,11 +1,30 @@
 import numpy as np
-from sparse_grid_quad import sparse_grid_quad_2d, sparse_grid_quad_3d
 
 sigma_x = 0.05
 sigma_v = 2*sigma_x
 
 class Scene():
-    """ A class which includes routines for probabilities of a newly observed agent."""
+    """ A class which learns stuff from a list of trajectories.
+    
+    attributes:
+        num_nl_classes: This is the number of classes to consider (not counting the linear class)
+        P_of_c: 1d numpy array of length = num_nl_classes +1.  P_of_c[-1] = probability of linear class
+        width: width of the domain
+        height: height of the domain
+        alpha_arr:  A coefficient array for the potential function V_k.
+        theta_arr:  A coefficient arrary for the angle-field associated to the vector-field X_k.
+    
+    methods:
+       director_field_vectorized:  A routine for computing a vector field at numerous points.
+       ...  A bunch of shit which we wont use.
+
+    Notes:
+        1)  V_k(x,y) = \sum_{ij} alpha_arr[k,i,j] L_i( x / width ) L_j( y / height )
+        2)  X_k(x,y) = ( cos(theta_k(x,y), \sin( \theta_k(x,y) ) )
+            where theta = \sum_{ij} theta_arr[k,i,j] L_i( x / width ) L_j( y / height )
+ 
+
+    """
     def __init__( self, curve_ls, V_scale, k_max_theta=6, k_max_vf=10 ):
         """ Initializer
 
@@ -34,7 +53,9 @@ class Scene():
         self.alpha_arr = alpha_arr
         self.P_of_c = P_of_c
         print P_of_c
-        self.V_scale = V_scale 
+        self.V_scale = V_scale #TODO:  Phase out V_scale, it's stupidly named.
+        self.width = V_scale[0]
+        self.height = V_scale[1]
         self.clusters = clusters
 
         #Learn a vector field for each class.  Presumable there are not too many.
