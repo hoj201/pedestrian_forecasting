@@ -54,23 +54,27 @@ def trap_quad( integrand, bounds, res = None ):
     if len(res) == 3:
         weights = np.ones( res )
         # FACES (there are 6)
-        weights[0,:,:], weights[-1,:,:] = 0.5
-        weights[:,0,:], weights[:,-1,:] = 0.5
-        weights[:,:,0], weights[:,:,-1] = 0.5
+        weights[0,:,:] = 0.5
+        weights[-1,:,:] = 0.5
+        weights[:,0,:] = 0.5
+        weights[:,-1,:] = 0.5
+        weights[:,:,0] = 0.5
+        weights[:,:,-1] = 0.5
 
         # EDGES (there are 12)
-        weights[0,0,:], weights[0,-1,:] = 0.25
-        weights[-1,0,:], weights[-1,-1,:] = 0.25
-        weights[0,:,0], weights[0,:,-1] = 0.25
-        weights[-1,:,0], weights[-1,:,-1] = 0.25
-        weights[:,0,0], weights[:,-1,0] = 0.25
-        weights[:,-1,0], weights[:,-1,-1] = 0.25
+        weights[0,0,:] = 0.25
+        weights[0,-1,:] = 0.25
+        weights[-1,0,:], weights[-1,-1,:] = 0.25, 0.25
+        weights[0,:,0], weights[0,:,-1] = 0.25, 0.25
+        weights[-1,:,0], weights[-1,:,-1] = 0.25, 0.25
+        weights[:,0,0], weights[:,-1,0] = 0.25, 0.25
+        weights[:,-1,0], weights[:,-1,-1] = 0.25, 0.25
 
         # CORNERS (there are 8)
-        weights[0,0,0], weights[0,0,-1] = 0.125
-        weights[0,-1,0], weights[-1,0,0] = 0.125
-        weights[0,-1,-1], weights[-1,0,-1] = 0.125
-        weights[-1,-1,0], weights[-1,-1,-1] = 0.125
+        weights[0,0,0], weights[0,0,-1] = 0.125, 0.125
+        weights[0,-1,0], weights[-1,0,0] = 0.125, 0.125
+        weights[0,-1,-1], weights[-1,0,-1] = 0.125, 0.125
+        weights[-1,-1,0], weights[-1,-1,-1] = 0.125, 0.125
 
         x_span = np.linspace( bounds[0], bounds[1], res[0] )
         y_span = np.linspace( bounds[2], bounds[3], res[1] )
@@ -95,13 +99,25 @@ if __name__ == '__main__':
     print "error = {error}".format(error=q-1.0/3.0)
 
     print "\nTesting 2 dimensional quadrature."
-    print "Integrand = y(1+x^2)"
-    print "Domain = [0.0, 1.0]x[-0.5, 1.0]"
-    integrand = lambda x,y: x**2 * y + y
-    bounds = (0, 1, -0.5, 1)
-    res = (64, 128)
+    print "Integrand = ( f(x,y)= exp(-x) )"
+    integrand = lambda x,y: np.exp( - x)
+    bounds = (-1, 1, -1, 1)
+    print "Domain = [{}, {}] x [{}, {}]".format( *bounds)
+    res = (100, 100)
     q = trap_quad( integrand, bounds, res )
-    a = (1.0/3.0) * 0.5*( 1.0 - 0.5**2 ) + 0.5*( 1.0 - 0.5**2 )
+    a = 2*( np.exp(1) - np.exp(-1) )
     print "result         = {q}".format(q=q)
     print "correct answer = {a}".format(a=a)
     print "error = {error}".format(error=q-a)
+
+    print "\n Testing 3 dimensional quadrature."
+    integrand = lambda x,y,z: x+y*z
+    bounds = (0,1,0,1,0,1)
+    res = (100,100,101)
+    q = trap_quad( integrand, bounds, res)
+    a = 0.75
+    print "result         = {q}".format(q=q)
+    print "correct answer = {a}".format(a=a)
+    print "error = {error}".format(error=q-a)
+
+
