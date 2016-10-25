@@ -123,7 +123,7 @@ def merge_small_clusters( clusters):
             new_clusters.append( cl )
     return n_discarded, new_clusters
 
-def learn_potential( cluster , V_scale, k_max = 4, stride=30):
+def learn_potential( cluster , width, height, k_max = 4, stride=30):
     """Returns the legendre coefficients of a potential function learned from a list of point in a 2D domain.
 
     args:
@@ -145,15 +145,15 @@ def learn_potential( cluster , V_scale, k_max = 4, stride=30):
         N = 0
         theta = theta_flat.reshape( (k_max+1, k_max+1))
         from numpy.polynomial.legendre import legval2d,leggauss
-        V_mean = legval2d( x_arr/V_scale[0], y_arr/V_scale[1], theta).mean()
+        V_mean = legval2d( 2*x_arr/width, 2*y_arr/height, theta).mean()
         k_span = np.arange( k_max+1)
         res = 2*(k_max+10)
-        x_span = np.linspace(-V_scale[0], V_scale[0], res)
-        y_span = np.linspace(-V_scale[1], V_scale[1], res)
+        x_span = np.linspace(-width/2, width/2, res)
+        y_span = np.linspace(-height/2, height/2, res)
         x_grid,y_grid = np.meshgrid(x_span, y_span)
-        Area = V_scale[0]*V_scale[1]*4
+        Area = width*height
         #TODO: Consider using scipy.dblquad to compute I
-        I = Area*np.exp( - legval2d( x_grid/V_scale[0], y_grid/V_scale[1] , theta)).mean()
+        I = Area*np.exp( - legval2d( 2*x_grid/width, 2*y_grid/height , theta)).mean()
         regularization = np.sqrt( np.einsum( 'ij,i,j', theta**2 , k_span**2 , k_span**2 ) )
         lambda_0 = 1e-4
         return V_mean + np.log(I) + lambda_0 * regularization
@@ -182,7 +182,7 @@ def learn_potential( cluster , V_scale, k_max = 4, stride=30):
     return res.x.reshape( (k_max+1, k_max+1) )
 
 
-def get_classes( curves, V_scale, k_max=4 ):
+def get_classes( curves, width, height, k_max=4 ):
     """ Given curves returns coefficients and probabilities and clusters
 
     args:
@@ -225,7 +225,7 @@ def get_classes( curves, V_scale, k_max=4 ):
     #Compute alphas
     alpha = np.zeros( (len(clusters)+1, k_max+1, k_max+1 ))
     for k in range(len(clusters)):
-        alpha[k] = learn_potential( clusters[k] , V_scale, k_max=k_max)
+        alpha[k] = learn_potential( clusters[k] , width, height, k_max=k_max)
     return alpha, P_of_c, clusters
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ from numpy.polynomial.legendre import legval2d, legder
 
 regularization_coefficient = 1.0
 
-def get_angle( points, alpha, k_max, V_scale):
+def get_angle( points, alpha, k_max, width, height):
     """ Return angle at points given Legendre coefficients
 
     args:
@@ -15,9 +15,9 @@ def get_angle( points, alpha, k_max, V_scale):
     """
     alpha = alpha.reshape( (k_max+1, k_max+1) )
     from numpy.polynomial.legendre import legval2d
-    return legval2d( points[0] / V_scale[0] , points[1] / V_scale[1], alpha ) 
+    return legval2d( points[0] / width , points[1] / height, alpha ) 
 
-def jac_get_angle( points, alpha, k_max, V_scale ):
+def jac_get_angle( points, alpha, k_max, width, height ):
     """ Return sensitivity of angle at points with respec to Legendre coefficients
 
     args:
@@ -33,15 +33,15 @@ def jac_get_angle( points, alpha, k_max, V_scale ):
     x = points[0]
     y = points[1]
     Leg = np.ones( (N_points, k_max + 1, k_max + 1) )
-    Leg[:,1,0] = x/ V_scale[0]
+    Leg[:,1,0] = x/ width
     for i in range(1,k_max):
-        Leg[:,i+1,0] = ( (2*i+1)*x*Leg[:,i,0]/V_scale[0] -i*Leg[:,i-1,0]) / float(i+1)
-    Leg[:,:,1] = np.einsum('pj,p->pj', Leg[:,:,0], y/ V_scale[1] )
+        Leg[:,i+1,0] = ( (2*i+1)*x*Leg[:,i,0]/width -i*Leg[:,i-1,0]) / float(i+1)
+    Leg[:,:,1] = np.einsum('pj,p->pj', Leg[:,:,0], y/ height )
     for j in range(1,k_max):
-        Leg[:,:,j+1] = ( (2*j+1)*np.einsum('pj,p->pj',Leg[:,:,j], y/V_scale[1]) - j*Leg[:,:,j-1] ) / float(j+1)
+        Leg[:,:,j+1] = ( (2*j+1)*np.einsum('pj,p->pj',Leg[:,:,j], y/height) - j*Leg[:,:,j-1] ) / float(j+1)
     return Leg
 
-def cost( alpha, points, directions, k_max, V_scale ):
+def cost( alpha, points, directions, k_max, width, height ):
     """ Returns the cost of a director field
 
     args:
@@ -49,17 +49,18 @@ def cost( alpha, points, directions, k_max, V_scale ):
         points (numpy.ndarray): shape=(2, N_points)
         directions (numpy.ndarray): shape=(2,N_points)
         k_max (int): max degree of polynomial for angle-field
-        V_scale (tuple<int>) : describes the size of the domain
+        width (float):
+        height (float):
 
     return:
         total_cost (float)
     """
-    theta = get_angle( points , alpha, k_max, V_scale )
+    theta = get_angle( points , alpha, k_max, width, height )
     out = -( directions[0]*np.cos( theta)+directions[1]*np.sin(theta) ).sum() 
     out += regularization_coefficient*regularization( alpha, k_max )
     return out
 
-def jac_cost( alpha, points, directions, k_max, V_scale ):
+def jac_cost( alpha, points, directions, k_max, width, height):
     """ Returns the sensitivity of cost wrt alpha
 
     args:
@@ -67,13 +68,14 @@ def jac_cost( alpha, points, directions, k_max, V_scale ):
         points (numpy.ndarray): shape=(2, N_points)
         directions (numpy.ndarray): shape=(2,N_points)
         k_max (int): max degree of polynomial for angle-field
-        V_scale (tuple<int>) : describes the size of the domain
+        width (float):
+        height (float):
 
     return:
         out (numpy.ndarray): size=(k_max+1)**2
     """
-    theta = get_angle( points, alpha, k_max, V_scale )
-    jac_theta = jac_get_angle( points, alpha, k_max, V_scale )
+    theta = get_angle(points, alpha, k_max, width, height)
+    jac_theta = jac_get_angle(points, alpha, k_max, width, height)
     out = np.einsum('k,kij', directions[0]*np.sin(theta)-directions[1]*np.cos(theta) , jac_theta).flatten()
     out += regularization_coefficient * jac_regularization( alpha, k_max ).flatten()
     return out
@@ -136,7 +138,7 @@ def trajectory_to_directors( trajectory, step = 5 ):
     speed = remove_baddies(speed)
     return np.vstack([x,y]), np.vstack([u,v])/speed 
 
-def ode_function( xy, t, alpha, speed ):
+def ode_function( xy, t, alpha, width, height, speed=1.0):
     """ returns velocity feild for input into odeint
 
     args:
@@ -147,15 +149,14 @@ def ode_function( xy, t, alpha, speed ):
     returns:
         out (np.ndarray) : velocity
     """
-    global V_scale
     x = xy[0]
     y = xy[1]
-    theta = legval2d( x / V_scale[0], y / V_scale[1], alpha )
+    theta = legval2d( x / width, y / height, alpha )
     out = speed*np.array( [np.cos(theta), np.sin(theta) ] )
     return out
 
 
-def jac_ode_function( xy, t, alpha, speed ):
+def jac_ode_function( xy, t, alpha, width, height, speed=1.0 ):
     """ returns velocity feild for input into odeint
 
     args:
@@ -166,12 +167,11 @@ def jac_ode_function( xy, t, alpha, speed ):
     returns:
         out (np.ndarray) : jacobian of velocity field, shape = (2,2)
     """
-    global V_scale
     x = xy[0]
     y = xy[1]
-    theta = legval2d( x / V_scale[0], y / V_scale[1], alpha )
-    theta_x = legval2d( x / V_scale[0], y / V_scale[1], legder( alpha, axis=0) ) / V_scale[0]
-    theta_y = legval2d( x / V_scale[0], y / V_scale[1], legder( alpha, axis=1) ) / V_scale[1]
+    theta = legval2d( x / width, y / height, alpha )
+    theta_x = legval2d( x / width, y / height, legder( alpha, axis=0) ) / width
+    theta_y = legval2d( x / width, y / height, legder( alpha, axis=1) ) / height
     out = np.zeros( (2,2) )
     out[0,0] = - np.sin(theta)*theta_x
     out[0,1] = - np.sin(theta)*theta_y
@@ -180,18 +180,17 @@ def jac_ode_function( xy, t, alpha, speed ):
     out *= speed
     return out
 
-def rk4_predict( x0, y0, alpha, speed ):
-    global V_scale
+def rk4_predict( x0, y0, alpha, width, height, speed = 1.0 ):
     def rk4_step( xy , h ):
-        k1 = ode_function( xy, 0.0, alpha, speed)
-        k2 = ode_function( xy + h*k1/2, 0.0, alpha, speed)
-        k3 = ode_function( xy + h*k2/2, 0.0, alpha, speed)
-        k4 = ode_function( xy + h*k3, 0.0, alpha, speed)
+        k1 = ode_function( xy, 0.0, alpha, width, height, speed)
+        k2 = ode_function( xy + h*k1/2, 0.0, alpha, width, height, speed)
+        k3 = ode_function( xy + h*k2/2, 0.0, alpha, width, height, speed)
+        k4 = ode_function( xy + h*k3, 0.0, alpha, width, height, speed)
         return xy + h*(k1+2*k2+2*k3+k4)/6.0
 
     def in_view( xy):
         x,y = xy[0],xy[1]
-        if np.abs(x) < V_scale[0] and np.abs(y) < V_scale[1]:
+        if np.abs(x) < width and np.abs(y) < height:
             return True
         return False
 
@@ -202,7 +201,7 @@ def rk4_predict( x0, y0, alpha, speed ):
     return xy_arr[:,0], xy_arr[:,1]
 
 
-def trajectories_to_director_field( trajectories, V_scale, step = 10, k_max = 6 ):
+def trajectories_to_director_field( trajectories, width, height, step = 10, k_max = 6 ):
     """ Converts a collection of trajectories into a director field
 
     args:
@@ -221,7 +220,9 @@ def trajectories_to_director_field( trajectories, V_scale, step = 10, k_max = 6 
     av_dir = np.power( reduce( lambda x,y: x*y, directions[0]+1j*directions[1]), 1.0 / directions.shape[1])
     alpha_guess[0,0] = np.log( av_dir ).imag
     from scipy.optimize import minimize
-    res = minimize( cost, alpha_guess, jac = jac_cost, args = (points, directions,k_max,V_scale), method ='Newton-CG')
+    res = minimize( cost, alpha_guess, jac = jac_cost, 
+            args = (points, directions, k_max, width, height),
+            method ='Newton-CG')
     if not res.success:
         print res.message
     alpha = res.x.reshape( (k_max+1, k_max+1) )
@@ -262,23 +263,28 @@ if __name__ == "__main__":
     points, directions = trajectory_to_directors( trajectory, step=2 )
 
     print "Testing jac_get_angle"
+    k_max = 6
+    width = 1.0
+    height = 0.5
     k_span = np.arange(k_max+1)
     alpha = np.zeros((k_max+1,k_max+1))
     pert = 1e-6*np.random.rand( *alpha.shape )
-    theta1 = get_angle( points, alpha + 0.5*pert )
-    theta0 = get_angle( points, alpha - 0.5*pert )
+    theta1 = get_angle( points, alpha + 0.5*pert, k_max, width, height )
+    theta0 = get_angle( points, alpha - 0.5*pert, k_max, width, height )
     fd = theta1 - theta0
-    computed = np.einsum('iab,ab', jac_get_angle( points, alpha ) , pert )
+    computed = np.einsum('iab,ab', jac_get_angle( points, alpha , k_max, width, height) , pert )
 
     print "  finite difference = %g" % fd[3]
     print "  computed          = %g" % computed[3]
     print "  error             = %g" % np.abs(fd[3] - computed[3]) 
 
     print "Testing jac cost"
-    C1 = cost( alpha + 0.5*pert, points, directions )
-    C0 = cost( alpha - 0.5*pert, points, directions )
+    C1 = cost( alpha + 0.5*pert, points, directions , k_max, width, height)
+    C0 = cost( alpha - 0.5*pert, points, directions , k_max, width, height)
     fd = C1 - C0
-    computed = np.dot( jac_cost( alpha.flatten() , points, directions ), pert.flatten() )
+    computed = np.dot(
+            jac_cost( alpha.flatten() , points, directions, k_max, width, height ),
+            pert.flatten() )
     print "  finite difference = %g" % fd
     print "  computed          = %g" % computed
     print "  error             = %g" % np.abs(fd - computed) 

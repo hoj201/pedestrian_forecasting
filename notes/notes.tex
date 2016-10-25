@@ -6,6 +6,7 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows,positioning}
 \usepackage{tikz-cd}
+\usepackage{algorithm2e}
 %  POSSIBLY USEFULE PACKAGES
 %\usepackage{graphicx}
 %\usepackage{tensor}
@@ -90,13 +91,13 @@ Similarly,
 Substitution, and the change of variables formula tells us that
 \begin{align*}
 	\rho(t,x) &= \sum_{k=1}^n \int \det \left[ (D\Phi_{k}^{st})^{-1}(x)  \right] \cdot \Pr( k, s, x_0 = (\Phi_{k}^{st})^{-1} (x) \mid \mu) ds \\
-		&\quad + \int \Pr( x_0 = x- t v_0 ,v_0, \Lin \mid \mu) \Pr( \Lin, x_0 =x- t v_0, v_0 \mid \mu )dv_0
+		&\quad + \int \Pr( x_0 = x- t v_0 ,v_0, \Lin \mid \mu)dv_0
 \end{align*}
 
 So if we can compute the flow $\Phi_k^{t}$ efficiently, and we can compute $\Pr( k,s,x_0 \mid \mu)$ and $\Pr( x_0, v_0, \Lin \mid \mu)$ efficiently, then we are good to go.
 Computing the flow can be done using standard ode integration schemes, so the main obstacle is computing the posteriors $\Pr( k,s,x_0 \mid \mu)$ and $\Pr( x_0, v_0, \Lin \mid \mu)$.
 
-\section{Expressions for $\Pr( k,s,x_0 \mid \mu)$ and $\Pr( x_0, v_0, \Lin \mid \mu)$}
+\section{Choice of atomic distributions, and expressions for composite distributions}
 In order to compute $\Pr( k,s,x_0 \mid \mu)$ and $\Pr( x_0, v_0, \Lin \mid \mu)$ we use a probabilistic graphical model to organize our computations.
 To begin, define the set
 \begin{align*}
@@ -115,7 +116,7 @@ This yields the probabilistic graphical model
 \end{tikzcd}
 \label{eq:pgm}
 \end{equation}
-Under this model, the posteriors $\Pr( k,s,x_0 \mid \mu)$ and $\Pr( x_0, v_0, \Lin \mid \mu)$ can be computed in terms of the \emph{atomic densities}
+Under this model, the posteriors $\Pr( k,s,x_0 \mid \mu)$ and $\Pr( x_0, v_0, \Lin \mid \mu)$ can be computed in terms of the \emph{atomic distributions}
 \begin{itemize}
 	\item $\Pr( x_0 \mid Type )$
 	\item $\Pr( v_0 \mid Type,x_0)$
@@ -123,17 +124,18 @@ Under this model, the posteriors $\Pr( k,s,x_0 \mid \mu)$ and $\Pr( x_0, v_0, \L
 	\item $\Pr( \hat{v}_0 \mid v_0)$
 	\item $\Pr(Type)$
 \end{itemize}
+These atomic distributions are chosen, and represent a set of parameters for our model.
 In the remainder of this section, we will assume that these atomic densities are known, and easily computable, expressions.
 We list precise choices for the atomic densities in the appendix.
 
-To calculate $\Pr(k,s,x_0 \mid \mu )$ in terms of the atomic densities we use \eqref{eq:pgm} to find
+To calculate $\Pr(k,s,x_0 \mid \mu )$ in terms of the atomic distribution we use \eqref{eq:pgm} to find
 \begin{align*}
 	\Pr( k,s,x_0 \mid \mu ) &\propto \Pr( \mu \mid k,s,x_0) \Pr( k,s,x_0) \\
 		&= \Pr( \hat{x}_0 \mid x_0) \left(  \int \Pr( \hat{v}_0 \mid v_0 ) \Pr( v_0 \mid k,s,x_0) dv_0 \right) \Pr(k,s,x_0) \\
 		&=  \Pr( \hat{x}_0 \mid x_0) \left(  \int \Pr( \hat{v}_0 \mid v_0 ) \Pr( v_0 \mid k,s,x_0) dv_0 \right) \Pr(x_0 \mid k) \Pr(k) \Pr(s) \\
 		&=  \Pr( \hat{x}_0 \mid x_0) \Pr( \hat{v}_0 \mid v_0 = sX_k(x_0) ) \Pr(x_0 \mid k) \Pr(k) \Pr(s)
 \end{align*}
-Each of the posteriors in the last line is assumed known.
+Each of the posteriors in the last line is assumed known.  We refer to $\Pr(k,s,x_0 \mid \mu)$ as a composite distribution, since it is written as a function of our atomic distributions.
 
 Similarly, in the linear case
 \begin{align*}
@@ -152,22 +154,26 @@ To do this we can consider the following diagram of modules
 \begin{tikzpicture}[thick, module/.style={rectangle,draw,thin,rounded corners,shade,top color=blue!50,minimum size = 4mm}]
 	\node[module] (Atomic) {Atomic distributions};
 	\node[module] (ML) [above=of Atomic]{Machine Learning};
-	\node[module] (IC) [right=of Atomic] { $\Pr( x_0,k,s \mid \mu)$ and $\Pr( x_0, v_0 , \Lin \mid \mu)$ };
+	\node[module] (IC) [right=of Atomic] { Composite distributions };
 	\node[module] (rho) [right=of IC] {$\rho(x,t)$};
 	\node[module] (quad) [below=of IC] {Quadrature};
 	\node[module] (ode) [above=of IC] {Ode integration};
 	
 	\draw[->] (Atomic.east) to (IC.west);
-	\draw[->] (ML.south) to (Atomic.north);
+	\draw[->] (ML.south) to node[auto]{scene object} (Atomic.north);
 	\draw[->] (IC.east) to (rho.west);
 	\draw[->] (quad.north) to (IC.south);
 	\draw[->] (ode.east) to [out=0,in=90] (rho.north);
 	\draw[->] (quad.east) to [out=0,in=270] (rho.south);
 \end{tikzpicture}
 
-Each arrow in the above diagram corresponds to an import command.
+Each arrow in the above diagram corresponds to an import or a load command.
 The names of each module should convey what sort of computations the module is responsible for.
-For example, the Machine learning module processes the data from the Stanford drone data set, and outputs data that are needed in order to compute the atomic posteriors.
+For example, the Machine learning module processes the data from the Stanford drone data set, and outputs a scene object.
+This scene object includes variables $\theta, \alpha, P(k), P(s), P(\Lin)$ and the max bounding box width.
+where $\theta$ is a 3d array which allows one to compute the director field for each class
+and $\alpha$ is a 3d array which allows one to compute the potential function involved in the atomic distribution $\Pr( x_0 \mid k)$.
+The usage of $\theta$ and $\alpha$ is described in appendix \ref{app:learning}.
 
 \appendix
 
@@ -240,6 +246,85 @@ $$
 	R(\alpha ) = \sum_{k} \frac{x_{k+1} + x_k}{2} \cos( \theta_\alpha(\vec{x}_k) ) + \frac{y_{k+1} + y_k}{2}  \sin( \theta_\alpha( \vec{x}_k ) ).
 $$
 In words, this reward function measures the alignment of the director-field with an observation (i.e. the dot product), and takes sum over all observations.
+
+\section{Computation of $\rho(x,t)$}
+Assuming we have reliable quadrature and ode integration routines, we should be able to compute $\rho(x,t)$ efficiently.
+In particular,
+\begin{align*}
+	\rho(x,t) = \rho_{\Lin}(x,t) +  \sum_{k} \rho_k(x,t)
+\end{align*}
+where
+\begin{align*}
+	\rho_k(x,t) &= \int_{-s_{\max}}^{s_{\max}} \Pr( x_0 = (\Phi_k^{st})^{-1}(x) , k , s \mid \mu ) \det( D\Phi_k^{st}(x)^{-1} ) ds \\
+		&= \int_{-s_{\max}}^{ s_{\max}} (\Phi_{k}^{st})_* \rho_{k,s}(x) ds.
+\end{align*}
+where $\rho_{k,s}(x) =  \Pr( x_0 =x , k , s \mid \mu )$.
+For $t = j \cdot \Delta t$ we can use a Riemann sum to approximate the above quadrature as
+\begin{align*}
+	\rho_k(x, j \Delta t) = \sum_{\ell = -j}^{j} (\Phi_{k}^{ t_\ell } )_* \rho_{k,s_\ell}(x) \Delta s + \mathcal{O}( \Delta s ).
+\end{align*}
+where
+\begin{align*}
+	t_\ell &= s_{\max}\, \ell \, \Delta t \\
+	\Delta s &= s_{\max} \, \Delta t \\
+	s_\ell &= \ell \, s_{\max} / j.
+\end{align*}
+
+Of course, we can use higher order quadrature rule if we desire greater orders of accuracy in $s$.
+The advantage of the above formula is that we may recycle our computation of the flow, $\Phi_k^{t_\ell}$, as $j$ increases.
+The push-forward distributions cab be approximated using Riemann quadrature, as sums of Dirac delta distributions.
+In particular
+\begin{align*}
+	\Phi_* \rho_{k,s} = \| \Delta \vec{x} \| \cdot \sum_{x \in \Gamma} \rho_{k,s}( x ) \delta_{ \Phi(x) } + \mathcal{O}( \| \Delta \vec{x} \| ).
+\end{align*}
+where $\Gamma$ is a regular grid, overlaid on the support of $\rho_{k,s}$ with a volume element $\| \Delta \vec{x} \|$.
+
+This gives us the following pipeline for plotting $\rho_k(x,t)$ for $t \in 0, \Delta t, \dots, j \cdot \Delta t$.
+\begin{algorithm}[H]
+	\KwData{ scene, $\mu, N_t , \Delta t$ }
+	\KwResult{ $\rho_k(t)$ for $t = 0, \Delta t, \dots, N_t \, \Delta t$ }
+	Initialize $\Gamma_0$ and $V_0 = 1$ \;
+	\For{$j=1,\dots, N_t$}{
+		Compute $\Gamma_j^{+} , V_j^{+} = F_{k}( \Gamma_{j-1}^+, V_{j-1}^+ ; \Delta t )$ \;
+		Compute $\Gamma_j^{- } , V_j^{- } = F_{k}( \Gamma_{j-1}^- , V_{j-1}^-  ; -\Delta t )$ \;
+		Let $\rho_k =  \sum_{ x\in \Gamma_0} \Pr( x_0=x_\alpha , k , s=0 \mid \mu) \delta_{x}$ \;
+		\For{$\ell = 1,\dots, j$}{
+			Compute $p_\alpha^+ = \Pr( x_0=x_\alpha , k , s_\ell \mid \mu) \Delta s$ for $x_\alpha \in \Gamma_0$ \;
+			$\rho_k += \sum_{\alpha} p_\alpha^+ \delta_{ x_{\alpha,\ell} }$ for $x_{\alpha,\ell} \in \Gamma_\ell^+$ \;
+			Compute $p_\alpha^- = \Pr( x_0=x_\alpha , k , -s_\ell \mid \mu) \Delta s$ for $x_\alpha \in \Gamma_0$ \;
+			$\rho_k += \sum_{\alpha} p_\alpha^- \delta_{ x_{\alpha,\ell} }$ for $x_{\alpha,\ell} \in \Gamma_\ell^-$ \;
+		}
+		\Return $\rho_k$
+	}
+\end{algorithm}
+
+
+\section{Numerical analysis for our particle method}
+
+Let $\rho_0 \in W^{1,1}( \mathbb{R}^n) $ with a support contained in a compact rectangular domain $D$ which we uniform ally grid.
+By the Sobelev embedding theorem we know that $\rho_0 \in L^\infty$.
+Let $\Gamma \subset \mathbb{R}^n$ be a regular grid on $D$ with resolution $\Delta \vec{x}$ and volume element $ \| \Delta \vec{x} \|$.
+Then
+\begin{align*}
+	 \left \| \rho_0 - \| \Delta \vec{x} \| \cdot \sum_{x \in \Gamma} \rho_0( x ) \delta_{x} \right \|_{L^1} = \mathcal{O}( \| \Delta \vec{x} \| ).
+\end{align*}
+
+Therefore
+\begin{align*}
+	\Phi_* \rho_0 = \| \Delta \vec{x} \| \cdot \sum_{x \in \Gamma} \rho_0( x ) \delta_{ \Phi(x) } + \mathcal{O}( \| \Delta \vec{x} \| ).
+\end{align*}
+for any $C^1$ diffeomorphism $\Phi$.
+\emph{Note: when you plot this density on your computer screen, it is tempting to just plot a bunch of dots at $\Phi(x)$ for $x \in \Gamma$,
+weighted by $\rho_0(x)$, then linearly interpolate.
+However, this is not what the eye expects (although it has the correct information).
+When people ``draw a picture of a distribution'', $\mu$, they are not really drawing a distribution (i.e. an element of a dual space to $C^0)$.
+They are typically drawing a Radon-Nikodym derivative with respect to the Lebesgue measure.
+In this case, before plotting, we should divide the values of each point by the amount of expansion witnessed at that point, $\det( D\Phi(x) )$.
+It's a subtle point, since there is a lot of human psychology going on here.
+The plotted object is a manipulated version of the object under scrutiny.}
+
+
+
 
 \bibliographystyle{amsalpha}
 \bibliography{hoj.bib}
