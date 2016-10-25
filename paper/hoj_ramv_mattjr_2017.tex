@@ -24,6 +24,9 @@
 \usepackage{graphicx}
 \usepackage{todonotes}
 
+\usepackage{tikz}
+\usetikzlibrary{arrows,positioning}
+
 \newtheorem{thm}{Theorem}
 
 \title{\LARGE \bf
@@ -31,7 +34,7 @@ Real-time Forecasting of Pedestrian Probability Densities*
 }
 
 
-\author{Henry O. Jacobs, Matt Johnson-Roberson, and Ram Vasudevan$^{2}$% <-this % stops a space
+\author{Henry O. Jacobs, Owen Hughes, Matt Johnson-Roberson, and Ram Vasudevan$^{2}$% <-this % stops a space
 \thanks{*This work was supported by ???}% <-this % stops a space
 \thanks{$^{2}$Bernard D. Researcheris with the Department of Electrical Engineering, Wright State University,
         Dayton, OH 45435, USA
@@ -99,17 +102,46 @@ finite set of classes of motion for each scene.
 %\end{figure}
 
 \section{MODEL DESCRIPTION}
-We consider a model where each agent belongs to an unobserved class from the set $C = \{c_0,c_1,\dots,c_n\}$.
-Classes $c_1$ through $c_n$ are each associated with vector fields $X_1, \dots, X_n$ which determine the dynamics of the agent, modulo the observed speed.
-Class $c_0$ corresponds to a linear predictor (i.e. moving with constant velocity).
+We assume each pedestrian is of two types, linear and nonlinear.
+Given the initial position and velocity, $x_0$ and $v_0$,
+the linear agents evolve according to the dynamics $x(t) = x_0 + t v_0$.
+If the agent is nonlinear there are $K$ possible sub-types.
+In particular, we assume that the dynamics for a nonlinear agent are prescribed by an ODE of the form $\dot{x} = v = s X_k(x)$
+for some $k \in \{ 1,\dots, K\}$ and some $s \in \mathbb{R}$.
+In all, the space of possible agents is parametrized by the set
+\begin{align*}
+	Typeset = \{ \emptyset \} \cup \{ (k,s) \mid k \in \{1,\dots,K\}, s \in \mathbb{R} \}
+\end{align*}
+If the type of an agent is $\emptyset$, then the agent satisfies linear dynamics.
+Otherwise, the type of an agent is nonlinear, and of type $(k,s)$ for some $k \in \{1,\dots,K\}$ and some $s \in \mathbb{R}$.
 
-Training entails learning the classes $c_1,\dots,c_n$ and the vector-field $X_1, \dots, X_n$ from observations of agent motion within a fixed scene.
-We also learn the posterior probability of an agent being in a location given its class, as well as the prior probabilities for each class.
-We view this learning step as a pre-computation.
-At runtime we infer the probability of the class of an observed agent using it's position data.
-This induces a probability distribution at time $t=0$ which we can evolve in time according to the dynamics of the vector-fields $X_1,\dots,X_n$.
+If we denote the measurements of position $x$ by $\hat{x}$ and the measurement of velocity $v$ by $\hat{v}$
+then the pgm for our model is given by
 
-\subsection{Offline computations}
+\begin{center}
+\begin{tikzpicture}[thick, module/.style={rectangle,draw,thin,rounded corners,shade,top color=blue!50,minimum size = 4mm}]
+	\node[module] (t) {Type};
+	\node[module] (x) [right=of t] {$x$};
+	\node[module] (x_hat) [right=of x] {$\hat{x}$};
+	\draw[->] (x.east) to (x_hat.west);
+	\node[module] (v) [below=of x] {$v$};
+	\node[module] (v_hat) [right=of v] {$\hat{v}$};
+	\draw[->] (v.east) to (v_hat.west);
+	\draw[->] (t.east) to (x.west);
+	\draw[->] (t.east) to (v.north west);
+	\draw[->] (x.south) to (v.north);
+\end{tikzpicture}
+\end{center}
+
+To initialize the model we will infer the probabilities $\Pr(t)$ for $t \in Typeset$.
+as well as the vector-field $X_1,\dots,X_K$ from our data.
+This is discussed in the next section.
+
+From our model, it is clear that $\Pr( v \mid (k, s), x ) = \delta( v - s X_k (x) )$, where $\delta( \cdot )$ is the Dirac-delta distribution.
+The other posteriors in the above pgm are regarded as modeling choices, and described in the appendix \todo{You still need to write this appendix}.
+
+
+\section{Offline computations}
 Offline, the primary task is to learn the classes for the agents.
 This entails clustering observed trajectories, and constructing a vector-field for each cluster.
 

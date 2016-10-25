@@ -29,6 +29,7 @@
 \DeclareMathOperator{\GL}{GL}
 \DeclareMathOperator{\SO}{SO}
 \DeclareMathOperator{\Lin}{Lin}
+\DeclareMathOperator{\erf}{erf}
 \DeclareMathOperator{\Prob}{Prob}
 
 %  TITLE, AUTHOR, DATE
@@ -58,10 +59,10 @@ Nonlinear agents come in flavors $\{1,\dots,n\}$ have dynamics given by
 \end{align}
 for some $k \in \{1,\dots,n\}$, a predetermined director-field, $X_k$, and some constant $s \in \mathbb{R}$.
 This motion model allows us to decompose the computation of $\rho(t)$ into tractable components.
-In particular $\rho(t,x)$ is defined as the probability density of finding the agent at position $x$ at time $t$ given measurements of position and velocity $\mu = (\hat{x}_0, \hat{v}_0)$ at time $t=0$.
+In particular $\rho(t,x)$ is defined as the probability density of finding the agent at position $x$ at time $t$ given measurements of position and velocity $\hat{x}_0, \hat{v}_0$ at time $t=0$.
 In terms of the density at time $t=0$, $\rho$ is given by
 \begin{align*}
-	\rho(t,x ) := \Pr( x = x(t)\mid \mu )
+	\rho(t,x ) := \Pr( x = x(t)\mid \hat{x}_0, \hat{v}_0 )
 \end{align*}
 If we know the agent is linear and we know the velocity, then we know the position $x(t)$ by \eqref{eq:lin}.
 If we know the agent is nonlinear, and we know the variables $k$ and $s$, then we know the position $x(t)$ by integrating \eqref{eq:nonlin}.
@@ -94,56 +95,75 @@ Substitution, and the change of variables formula tells us that
 		&\quad + \int \Pr( x_0 = x- t v_0 ,v_0, \Lin \mid \mu)dv_0
 \end{align*}
 
-So if we can compute the flow $\Phi_k^{t}$ efficiently, and we can compute $\Pr( k,s,x_0 \mid \mu)$ and $\Pr( x_0, v_0, \Lin \mid \mu)$ efficiently, then we are good to go.
-Computing the flow can be done using standard ode integration schemes, so the main obstacle is computing the posteriors $\Pr( k,s,x_0 \mid \mu)$ and $\Pr( x_0, v_0, \Lin \mid \mu)$.
+So if we can compute the flow $\Phi_k^{t}$ efficiently, and we can compute $\Pr( k,s,x \mid \hat{x}, \hat{v} )$ and $\Pr( x, v, \Lin \mid \hat{x}, \hat{v} )$ efficiently, then we are good to go.
+Computing the flow can be done using standard ode integration schemes, so the main obstacle is computing the posteriors $\Pr( k,s,x \mid \hat{x}, \hat{v} )$ and $\Pr( x, v, \Lin \mid \hat{x}, \hat{v} )$.
 
 \section{Choice of atomic distributions, and expressions for composite distributions}
-In order to compute $\Pr( k,s,x_0 \mid \mu)$ and $\Pr( x_0, v_0, \Lin \mid \mu)$ we use a probabilistic graphical model to organize our computations.
+In order to compute $\Pr( k,s,x \mid \hat{x}, \hat{v} )$ and $\Pr( x, v, \Lin \mid \hat{x}, \hat{v} )$ we use a probabilistic graphical model to organize our computations.
 To begin, define the set
 \begin{align*}
 	Type = \{ \Lin \} \cup \{ (k,s) \mid s \in [-\bar{s}, \bar{s}] , k = 1,\dots,n\}.
 \end{align*}
 Each agent is associated with one and only one type.
-The type of a given agents provides information about his true position $x_0$ based on how often we've see an agent of such a type at location $x_0$.
+The type of a given agents provides information about his true position $x$ based on how often we've see an agent of such a type at location $x$.
 Moreover, given an agents true position, and his type, we know something about his/her velocity.
-For example, if an agent is of type $(k,s)$ and is known to be at position $x_0$, then we know with certainty that his velocity is $v_0 = sX_k(x_0)$.
+For example, if an agent is of type $(k,s)$ and is known to be at position $x$, then we know with certainty that his velocity is $v = sX_k(x)$.
 Lastly, we assume our measurements of position are independent of Type, given the true position.
 This yields the probabilistic graphical model
 \begin{equation}
 \begin{tikzcd}
-	Type \arrow[r] \arrow[rd] & x_0 \arrow[d] \arrow[r] & \hat{x}_0 \\
-	 & v_0 \ar[r] & \hat{v}_0 \\
+	Type \arrow[r] \arrow[rd] & x \arrow[d] \arrow[r] & \hat{x} \\
+	 & v \ar[r] & \hat{v} \\
 \end{tikzcd}
 \label{eq:pgm}
 \end{equation}
-Under this model, the posteriors $\Pr( k,s,x_0 \mid \mu)$ and $\Pr( x_0, v_0, \Lin \mid \mu)$ can be computed in terms of the \emph{atomic distributions}
+Under this model, the posteriors $\Pr( k,s,x \mid \hat{x}, \hat{v} )$ and $\Pr( x, v, \Lin \mid \hat{x}, \hat{v} )$ can be computed in terms of the \emph{atomic distributions}
 \begin{itemize}
-	\item $\Pr( x_0 \mid Type )$
-	\item $\Pr( v_0 \mid Type,x_0)$
-	\item $\Pr( \hat{x}_0 \mid x_0)$
-	\item $\Pr( \hat{v}_0 \mid v_0)$
+	\item $\Pr( x \mid Type )$
+	\item $\Pr( v \mid Type, x)$
+	\item $\Pr( \hat{x} \mid x)$
+	\item $\Pr( \hat{v} \mid v)$
 	\item $\Pr(Type)$
 \end{itemize}
 These atomic distributions are chosen, and represent a set of parameters for our model.
 In the remainder of this section, we will assume that these atomic densities are known, and easily computable, expressions.
 We list precise choices for the atomic densities in the appendix.
 
-To calculate $\Pr(k,s,x_0 \mid \mu )$ in terms of the atomic distribution we use \eqref{eq:pgm} to find
+To calculate $\Pr(k,s,x \mid \hat{x}, \hat{v} )$ in terms of the atomic distribution we use \eqref{eq:pgm} to find
 \begin{align*}
-	\Pr( k,s,x_0 \mid \mu ) &\propto \Pr( \mu \mid k,s,x_0) \Pr( k,s,x_0) \\
-		&= \Pr( \hat{x}_0 \mid x_0) \left(  \int \Pr( \hat{v}_0 \mid v_0 ) \Pr( v_0 \mid k,s,x_0) dv_0 \right) \Pr(k,s,x_0) \\
-		&=  \Pr( \hat{x}_0 \mid x_0) \left(  \int \Pr( \hat{v}_0 \mid v_0 ) \Pr( v_0 \mid k,s,x_0) dv_0 \right) \Pr(x_0 \mid k) \Pr(k) \Pr(s) \\
-		&=  \Pr( \hat{x}_0 \mid x_0) \Pr( \hat{v}_0 \mid v_0 = sX_k(x_0) ) \Pr(x_0 \mid k) \Pr(k) \Pr(s)
+	\Pr( k,s,x \mid \hat{x}, \hat{v}) &= \frac{ \Pr(k, s, x, \hat{x}, \hat{v} ) }{ \Pr( \hat{x}, \hat{v} ) } \\
+		&= \frac{ \Pr(k,s,x, \hat{x}, \hat{v} ) }{ \Pr( \hat{x}, \hat{v}) } \\
+		&= \frac{ \int \Pr(k, s, x, v, \hat{x}, \hat{v} ) dv }{ \Pr( \hat{x}, \hat{v} ) }
 \end{align*}
-Each of the posteriors in the last line is assumed known.  We refer to $\Pr(k,s,x_0 \mid \mu)$ as a composite distribution, since it is written as a function of our atomic distributions.
+Using the pgm diagram we can decompose the integrand in the numerator as
+\begin{align*}
+	&= \frac{1}{ \Pr( \hat{x}, \hat{v} ) } \int \Pr( x \mid k,s) \Pr( \hat{x} \mid x ) \Pr( \hat{v} \mid v) \Pr( v \mid k,s,x) \Pr(k,s) dv \\
+	&= \frac{ \Pr( x \mid k,s) \Pr( \hat{x} \mid x ) \Pr( \hat{v} \mid v = s X_k(x) ) }{ \Pr( \hat{x} , \hat{v} ) }
+\end{align*}
+In order to compute $\Pr( \hat{x}, \hat{v})$ we can compute
+\begin{align*}
+	\Pr( \Lin , x \mid \hat{x} , \hat{v} ) = \frac{ \Pr( \Lin , x, \hat{x}, \hat{v} ) }{ \Pr( \hat{x}, \hat{v} ) } 
+\end{align*}
+where
+\begin{align*}
+	&\Pr( \Lin, x, \hat{x}, \hat{v} ) = \int \Pr( x \mid \Lin ) \Pr( \hat{x} \mid x ) \Pr( \hat{v} \mid v) \Pr( v \mid \Lin ,x) \Pr(\Lin) dv \\
+	&\quad = \frac{ \Pr( \Lin ) \Pr( x \mid \Lin ) \Pr( \hat{x} \mid x ) }{ 2\pi \sigma_v^2 w_v^2} \int_{\hat{v}_1 - w_v/2}^{\hat{v}_1 + w_v/2}  \int_{\hat{v}_2 - w_v/2}^{\hat{v}_2 + w_v/2} \exp \left( \frac{ - (v_1^2 + v_2^2) }{ 2 \sigma_v^2} \right) dv_1 dv_2 \\
+	&\quad = \frac{ \Pr( \Lin ) \Pr( x \mid \Lin ) \Pr( \hat{x} \mid x ) }{ 4 \sigma_v^2 w_v^2} \prod_{i=1,2} \left( \erf \left( \frac{ \hat{v}_i + w_v/2}{ \sigma \sqrt{2} } \right) - \erf \left( \frac{ \hat{v}_i - w_v/2}{ \sigma \sqrt{2} } \right) \right)
+\end{align*}
+Then we may use the fact that
+\begin{align*}
+	\Pr( \hat{x}, \hat{v} ) = \int \Pr( \Lin , x , \hat{x}, \hat{v} )dx  + \sum_{k} \int \Pr( k,s, x , \hat{x} , \hat{v} ) dx ds
+\end{align*}
 
-Similarly, in the linear case
+Finally, we should note that
 \begin{align*}
-	\Pr( \Lin , x_0, v_0 \mid \hat{x}_0, \hat{v}_0 ) &\propto \Pr( \hat{x}_0, \hat{v}_0 \mid \Lin, x_0, v_0 ) \Pr( \Lin, x_0, v_0 ) \\
-	&= \Pr( \hat{x}_0, \hat{v}_0 \mid \Lin, x_0, v_0 ) \Pr( x_0, v_0 \mid \Lin ) \Pr(\Lin) \\
-	&= \Pr( \hat{x}_0 \mid x_0 ) \Pr( \hat{v}_0 \mid v_0 ) \Pr( x_0 \mid \Lin ) \Pr( v_0 \mid x_0, \Lin ) \Pr(\Lin)
+	\Pr( \Lin , x, v \mid \hat{x}, \hat{v} ) = \frac{ \Pr( \Lin , x, v ,\hat{x}, \hat{v} ) }{ \Pr( \hat{x} , \hat{v} ) }
 \end{align*}
-Each of the above posteriors is assumed known.
+where the numerator is
+\begin{align*}
+	\Pr( \Lin, x, v, \hat{x}, \hat{v} ) = \Pr( x \mid \Lin ) \Pr( \hat{x} \mid x ) \Pr( \hat{v} \mid v) \Pr( v \mid \Lin ,x) \Pr(\Lin).
+\end{align*}
+
 
 
 \section{Code design}
@@ -175,6 +195,16 @@ where $\theta$ is a 3d array which allows one to compute the director field for 
 and $\alpha$ is a 3d array which allows one to compute the potential function involved in the atomic distribution $\Pr( x_0 \mid k)$.
 The usage of $\theta$ and $\alpha$ is described in appendix \ref{app:learning}.
 
+\section{Precision and Recall}
+We would like to view the computed $\rho$ as a classifier.
+Let $\tau > 0$.
+For any measurable set $E$, we classify it as positive at time $t > 0$ if $\int_E \rho(x,t)dx > \tau$.
+The precision over the time interval $[0,T]$ with respect to the test-sets $\mathcal{E}$ is given by
+\begin{align*}
+	precision( \tau , \mathcal{E} ) = \inf_{t \in [0,T] } \frac{ \#\{ E \in \mathcal{E}^+(t) \mid \int_E \rho_t > \tau \} }{  \#\{ E \in \mathcal{E}(t) \mid \int_E \rho_t > \tau \} } \\
+	recall( \tau , \mathcal{E} ) = \sup
+\end{align*}
+
 \appendix
 
 \section{Atomic distributions}
@@ -191,7 +221,7 @@ Here are posteriors:
 The only remaining posterior to provide is $\Pr( x \mid \Lin )$ and $\Pr( v \mid x,\Lin )$.
 We let $\Pr( x_0 \mid \Lin)$ be a uniform distribution over our domain and we let
 \begin{align}
-	\Pr( v_0 \mid x_0 , \Lin ) \sim \mathcal{N}( x_0, \sigma_{\Lin} ) \label{eq:v given x and Linear}
+	\Pr( v_0 \mid x_0 , \Lin ) = \Pr( v_0 \mid \Lin ) \sim \mathcal{N}( 0, \sigma_{\Lin} ) \label{eq:v given x and Linear}
 \end{align}
 where $\sigma_{\Lin} > 0$ is learned from the data.
 
