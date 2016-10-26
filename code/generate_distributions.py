@@ -50,8 +50,8 @@ def make_generator(scene, x, v, dt, Nt):
         xy_arr = np.zeros((2*Nt+1, 2, N_points))
         weight_arr = np.zeros((2*Nt+1, N_points))
         xy_arr[0] = initial_condition.reshape((2, N_points))
-        ds = dt*scene.s_max
         for n in range(Nt):
+            ds = scene.s_max / float(n)
             #Compute locations
             ode_forward.integrate(ode_forward.t + dt*scene.s_max)
             assert(ode_forward.successful())
@@ -64,7 +64,7 @@ def make_generator(scene, x, v, dt, Nt):
             for l in range(-n, n+1):
                 s_l = l*scene.s_max / float(n)
                 x_l = xy_arr[l]
-                weight_arr[l] = prob_k_s_x0_given_mu(k, s_l, x_l, x, v)
+                weight_arr[l] = ds*prob_k_s_x0_given_mu(k, s_l, x_l, x, v)
             x_out = np.concatenate([xy_arr[-n:], xy_arr[:n+1]], axis=0)
             weight_out = np.concatenate([weight_arr[-n:], weight_arr[:n+1]],
                     axis=0)

@@ -5,25 +5,27 @@ class Scene():
     """ A class which learns stuff from a list of trajectories.
     
     attributes:
-        num_nl_classes: This is the number of classes to consider (not counting the linear class)
-        P_of_c: 1d numpy array of length = num_nl_classes +1.  P_of_c[-1] = probability of linear class
+        num_nl_classes: This is the number of nonlinear vector fields
+        P_of_c: 1d numpy array of length = num_nl_classes +1.
         width: width of the domain
         height: height of the domain
         alpha_arr:  A coefficient array for the potential function V_k.
-        theta_arr:  A coefficient arrary for the angle-field associated to the vector-field X_k.
-        s_max:
-        bbox_width: Given a measurement (x,y), the associated bounding box is [x-width/2,x+width/2]x[y-width/2,y+width/2]
+        theta_arr:  A coefficient array for the angle-fields
+        s_max: The top observed speed
+        bbox_width: float
         bbox_velocity_width: Same as bbox_width but in velocity space.
         sigma_v: standard deviation of velocity
     
     methods:
-       director_field_vectorized:  A routine for computing a vector field at numerous points.
+       director_field_vectorized:  A routine for computing a vector field.
        ...  A bunch of shit which we wont use.
 
     Notes:
-        1)  V_k(x,y) = \sum_{ij} alpha_arr[k,i,j] L_i( x / width ) L_j( y / height )
-        2)  X_k(x,y) = ( cos(theta_k(x,y), \sin( \theta_k(x,y) ) )
-            where theta = \sum_{ij} theta_arr[k,i,j] L_i( x / width ) L_j( y / height )
+        1) V_k(x,y) = \sum_{ij} alpha_arr[k,i,j] L_i( x / width ) L_j( y / height )
+        2) X_k(x,y) = ( cos(theta_k(x,y), \sin( \theta_k(x,y) ) )
+           where theta = \sum_{ij} theta_arr[k,i,j] L_i( x / width ) L_j( y / height )
+        3) P_of_c[-1] = probability of linear class
+        4) Given a measurement (x,y), the associated bounding box is [x-width/2,x+width/2]x[y-width/2,y+width/2]
  
 
     """
@@ -63,22 +65,27 @@ class Scene():
         self.height = height
         self.clusters = clusters
 
-        #Learn a vector field for each class.  Presumable there are not too many.
+        #Learn a vector field for each class
         from director_field import trajectories_to_director_field
         X_ls = [] 
         k_max_theta = 4 #max degree of polynomial for angle field
         self.k_max_theta = k_max_theta
         self.num_nl_classes = len(clusters)
-        theta_coeffs = np.zeros( (self.num_nl_classes, self.k_max_theta+1, self.k_max_theta+1) )
+        theta_coeffs = np.zeros(
+                (self.num_nl_classes, self.k_max_theta+1, self.k_max_theta+1)
+                )
         for k,cl in enumerate(clusters):
-            theta_coeffs[k] = trajectories_to_director_field( cl , width, height, k_max = self.k_max_theta )
+            theta_coeffs[k] = trajectories_to_director_field(
+                    cl, width, height,
+                    k_max=self.k_max_theta
+                    )
         self.theta_coeffs = theta_coeffs
 
-    #--------------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     # METHODS
-    #--------------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def director_field(self, k, x, jac=False ):
-        """ Returns the value of the vector field for a nonlinear class at a given point.
+        """ Returns the value of the vector field for a nonlinear class.
 
         args:
             x: ndarray (2,)
@@ -97,7 +104,7 @@ class Scene():
                 x[1]/self.height,
                 self.theta_coeffs[k]
                 )
-        out1 = np.array( [ np.cos(theta), np.sin(theta) ] )
+        out1 = np.array([np.cos(theta), np.sin(theta)])
         if jac:
             dtheta_dx = legval2d(
                         x[0]/self.width,
@@ -110,10 +117,10 @@ class Scene():
                         legder( self.theta_coeffs[k], axis=1)
                         ) / self.height
             out2 = np.zeros( (2,2) )
-            out2[0,0] = - out1[1] * dtheta_dx
-            out2[0,1] = - out1[1] * dtheta_dy
-            out2[1,0] = out1[0] * dtheta_dx
-            out2[1,1] = out1[0] * dtheta_dy
+            out2[0,0] = - out1[1]*dtheta_dx
+            out2[0,1] = - out1[1]*dtheta_dy
+            out2[1,0] = out1[0]*dtheta_dx
+            out2[1,1] = out1[0]*dtheta_dy
             return out1, out2
         return out1
 
@@ -137,7 +144,7 @@ class Scene():
                 x[1]/self.height,
                 self.theta_coeffs[k]
                 )
-        out1 = np.array( [ np.cos(theta), np.sin(theta) ] )
+        out1 = np.array([np.cos(theta), np.sin(theta)])
         if jac:
             dtheta_dx = legval2d(
                         x[0]/self.width,
@@ -150,11 +157,11 @@ class Scene():
                         legder( self.theta_coeffs[k], axis=1)
                         ) / self.height
             N = x.shape[1]
-            out2 = np.zeros( (2,2,N) )
-            out2[0,0,:] = - out1[1] * dtheta_dx
-            out2[0,1,:] = - out1[1] * dtheta_dy
-            out2[1,0,:] = out1[0] * dtheta_dx
-            out2[1,1,:] = out1[0] * dtheta_dy
+            out2 = np.zeros((2,2,N))
+            out2[0,0,:] = -out1[1]*dtheta_dx
+            out2[0,1,:] = -out1[1]*dtheta_dy
+            out2[1,0,:] = out1[0]*dtheta_dx
+            out2[1,1,:] = out1[0]*dtheta_dy
             return out1, out2
         return out1
 
