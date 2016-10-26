@@ -1,67 +1,94 @@
 import numpy as np
+from scipy import integrate
 import itertools
 import scipy as sp
+from scene import Scene
 
 def prob_k_s_x0_given_mu(k, s, x0, x, v):
-    return np.zeros_like( x0 )
+    return np.zeros(x0.shape[1])
 
 def make_generator(scene, x, v, dt, Nt):
     """ Makes a generator from a scene object and an initial condition
+    
+    args:
+        scene: a scene object
+        x: np.array(2)
+        v: np.array(2)
+        dt: float
+        Nt: int
+   
+    returns:
+        a list of generators [g_0, ..., g_K]
+        where g_0.next() outputs two arrays, x, and w
+        where x is a np.array(2,N_points), w is a np.array(N_points)
+
     """
-    def gen(k, dt, Nt):
-        """ A generator up to time T = Nt * dt
-        """
-        ode_function = lambda t,x: scene.director_field(k, x)
-        from scipy import integrate
+    def gen(k,x,v):
+        """ A generator up to time T = Nt * dt"""
+        def ode_function(t, state):
+            xy = state.reshape((2,len(state)/2))
+            return scene.director_field_vectorized(k,xy).flatten()
         ode_forward = integrate.ode(ode_function)
         ode_forward.t = 0.0
+        x_span = np.linspace(
+                x[0]-scene.bbox_width/2.0,
+                x[0]+scene.bbox_width/2.0,
+                20)
+        y_span = np.linspace(
+                x[1]-scene.bbox_width/2.0,
+                x[1]+scene.bbox_width/2.0,
+                20)
+        xy = np.vstack([x.flatten() for x in np.meshgrid(x_span, y_span)])
+        N_points = xy.shape[1]
+        initial_condition = xy.flatten()
         ode_forward.set_initial_value(initial_condition)
         ode_forward.set_integrator('dopri5')
         ode_backward = integrate.ode(ode_function)
         ode_backward.t = 0.0
         ode_backward.set_initial_value(initial_condition)
         ode_backward.set_integrator('dopri5')
-        n = 0
-        x_arr = np.zeros((2*Nt+1, initial_condition.size))
-        p_arr = np.zeros((2*Nt+1, initial_condition.shape[0]))
-        x_arr[0] = initial_condition.flatten()
-
+        xy_arr = np.zeros((2*Nt+1, 2, N_points))
+        weight_arr = np.zeros((2*Nt+1, N_points))
+        xy_arr[0] = initial_condition.reshape((2, N_points))
         ds = dt*scene.s_max
         for n in range(Nt):
             #Compute locations
             ode_forward.integrate(ode_forward.t + dt*scene.s_max)
             assert(ode_forward.successful())
-            x_arr[n] = ode_forward.y
+            xy_arr[n] = ode_forward.y.reshape(2, N_points)
             ode_backward.integrate(ode_backward.t - dt*scene.s_max)
             assert(ode_backward.successful())
-            x_arr[-n] = ode_backward.y
+            xy_arr[-n] = ode_backward.y.reshape(2, N_points)
 
             #Computes weights
             for l in range(-n, n+1):
                 s_l = l*scene.s_max / float(n)
-                p_arr[l] = prob_k_s_x0_given_mu(k, s_l, x_arr[l], x, v)
-            #TODO:  As coded, you are leaving it up to user to ignor the 0-indices
-            yield x_arr, p_arr
+                x_l = xy_arr[l]
+                weight_arr[l] = prob_k_s_x0_given_mu(k, s_l, x_l, x, v)
+            x_out = np.concatenate([xy_arr[-n:], xy_arr[:n+1]], axis=0)
+            weight_out = np.concatenate([weight_arr[-n:], weight_arr[:n+1]],
+                    axis=0)
+            yield x_out, weight_out
 
     #TODO:  YOU ARE STILL NOT INCLUDING THE LINEAR DISTIRBUTION
-    def gen_linear(dt, Nt):
+    def gen_linear():
         #use scene.sigma_v
         for n in range(Nt):
             yield None  
 
     return itertools.izip(
-            *[ gen(k, dt, Nt) for k in range(scene.num_nl_classes)] )
+            *[gen(k,x,v) for k in range(scene.num_nl_classes)])
 
 if __name__ == '__main__':
     import pickle
     from scene import Scene
     with open('test_scene.pkl', 'rb') as f:
         scene = pickle.load(f)
-    initial_condition = np.zeros(2)
     dt = 0.1
     Nt = 10
-    x, v = np.random.randn(2)
+    x = np.random.randn(2)
+    v = np.random.randn(2)
     gen = make_generator(scene, x, v, dt, Nt)
     for data in gen:
-        for x,p in data:
-            print x
+        for xy,p in data:
+            print xy
