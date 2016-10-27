@@ -17,7 +17,6 @@ vel_width = np.ones([2]) * scene.bbox_velocity_width
 sigma_v = scene.sigma_v
 p_of_lin = scene.P_of_c[-1]
 scene_scale = np.array([scene.width, scene.height])
-sigma_v = 0.01
 
 
 def _prob_k_s_x0(k, s, x0, x, v):
