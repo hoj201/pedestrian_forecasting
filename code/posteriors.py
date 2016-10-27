@@ -44,7 +44,7 @@ def measurement_given_x0(x, x0):
     Returns the probability at x given an x0
 
     Takes x0: np.array(2): initial point
-    Takes x: np.array(2, N_Points): set of points at which to evaluate probability
+    Takes x: np.array(N_points, 2): set of points at which to evaluate probability
 
     Returns np.array(N_Points): probability that agent is at x given x0
 
@@ -60,7 +60,7 @@ def measurement_given_v0(v, v0):
     Returns the probability at points v given a v0
 
     Takes v0: np.array(2): initial point
-    Takes v: np.array(2, N_points): set of points at which to evaluate probability 
+    Takes v: np.array(N_points, 2): set of points at which to evaluate probability 
 
     Returns np.array(N_Points): probability that agent is at v given v0
     """
@@ -93,7 +93,7 @@ def x0_given_k(k, x0):
     Returns probability that an agent will be at x0 given k
 
     Takes k: int: cluster
-    Takes x0: np.array(2, N_points)
+    Takes x0: np.array(N_points, 2)
 
     Returns np.array(N_points)
     According to the equation (1/Z_K)exp(-1*V_k)
@@ -102,7 +102,7 @@ def x0_given_k(k, x0):
 
 def x0_given_lin(x0):
     """
-    takes x0: np.array(2, N_points): points to be evaluated
+    takes x0: np.array(N_points, 2): points to be evaluated
 
     Returns np.array(N_points)
     """
@@ -111,7 +111,7 @@ def x0_given_lin(x0):
 def v0_given_x0_lin(v0):
     """
     Takes:
-    v0: np.array(2, N_points): points to be evaluated
+    v0: np.array(N_points, 2): points to be evaluated
     Returns probability of v0 := N(0, sigma_v)
     """
     return multivariate_normal.pdf(v0, np.zeros([2]), scene.sigma_v)

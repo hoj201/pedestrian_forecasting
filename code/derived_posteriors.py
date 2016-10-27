@@ -25,7 +25,7 @@ def unnorm_prob_k_s_x0(k, s, x0, x, v):
     returns P(k,s,x0 | mu)
     Takes:
     k: float: class of agent
-    x0: np.array(2, N_points): points to be evaluated
+    x0: np.array(N_points, 2): points to be evaluated
     x: np.array(2): given measurement of x0
     v: np.array(2): given measurement of v0
     s: np.array(N_points): initial speed
@@ -49,7 +49,7 @@ def _prob_lin_x_mu(x0, x, v):
     """
     returns P(lin,x|mu)
     Takes:
-    x0: np.array(2, N_points): points to be evaluated
+    x0: np.array(N_points, 2): points to be evaluated
     x: np.array(2): given measurement of x0
     v: np.array(2): given measurement of v0
     """
@@ -102,7 +102,7 @@ def prob_k_s_x0_given_mu(k, s, x0, x, v):
     Takes
     k: int: cluster
     s: np.array(N_points), speeds of each initial point
-    x0: np.array(2, N_points), initial points to be evaluated
+    x0: np.array(N_points, 2), initial points to be evaluated
     x: np.array(2): given position measurement
     v: np.array(2): given velocity measurement
     """
@@ -112,7 +112,7 @@ def prob_k_s_x0_given_mu(k, s, x0, x, v):
 def prob_lin_x_given_mu(x0, x, v):
     """
     Takes:
-    x0: np.array(2, N_points): Points to be evaluated
+    x0: np.array(N_points, 2): Points to be evaluated
     x: np.array(2): given position measuremnet
     v: np.array(2): given velocity measurement
     Returns: np.array(N_points), P(x0, lin|x, v)
@@ -122,8 +122,8 @@ def prob_lin_x_given_mu(x0, x, v):
 def _prob_lin_x_v_mu(x0, v0, x, v):
     """
     Takes:
-    x0: np.array(2, N_points): positions to be evaluated
-    v0: np.array(2, n_points): velocities to be evaluated
+    x0: np.array(N_points, 2): positions to be evaluated
+    v0: np.array(N_points, 2): velocities to be evaluated
     x: np.array(2): position measurement
     v: np.array(2): velocity measurement
     returns np.array(N_points): P(x0, v0, lin, x, v)
@@ -139,8 +139,8 @@ def _prob_lin_x_v_mu(x0, v0, x, v):
 def prob_lin_x_v_given_mu(x0, v0, x, v):
     """
     Takes:
-    x0: np.array(2, N_points): points to be evaluated
-    v0: np.array(2, N_points): velocities to be evaluated
+    x0: np.array(N_points, 2): points to be evaluated
+    v0: np.array(N_points, 2): velocities to be evaluated
     x: np.array(2): measured position
     v: np.array(2): measured velocity
     Returns np.array(N_points): P(x0, v0, lin|x, v)
