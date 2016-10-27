@@ -75,7 +75,7 @@ def _normalizing_constant(x,v):
     global normalizing_constant_s
 
     if np.array_equal(x,x_s) and np.array_equal(v, v_s) and normalizing_constant_s != None:
-        return normalization_constant
+        return normalizing_constant
     
     bounds = (x[0] - dist_width[0]/2, x[0] + dist_width[0]/2,
               x[1] - dist_width[0]/2, x[1] + dist_width[0]/2,
