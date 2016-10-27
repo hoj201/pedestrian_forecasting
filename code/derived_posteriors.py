@@ -5,7 +5,7 @@ import numpy as np
 from integrate import trap_quad
 from scipy.special import erf
 
-with open("data/test_scene.pkl", "rb") as f:
+with open("test_scene.pkl", "rb") as f:
     scene = pickle.load(f)
 max_k = len(scene.P_of_c)-1
 #temporary s_max
@@ -17,10 +17,10 @@ vel_width = np.ones([2]) * scene.bbox_velocity_width
 sigma_v = scene.sigma_v
 p_of_lin = scene.P_of_c[-1]
 scene_scale = np.array([scene.width, scene.height])
+sigma_v = 0.01
 
 
-
-def unnorm_prob_k_s_x0(k, s, x0, x, v):
+def _prob_k_s_x0(k, s, x0, x, v):
     """
     returns P(k,s,x0 | mu)
     Takes:
@@ -42,7 +42,6 @@ def unnorm_prob_k_s_x0(k, s, x0, x, v):
     p_k = scene.P_of_c[k]
     p_s = posteriors.prob_s_uniform(s)
     ret = prob_measurement * measurement_given_velocity * p_k * p_s * x0_given_k
-
     return ret
 
 def _prob_lin_x_mu(x0, x, v):
@@ -60,12 +59,24 @@ def _prob_lin_x_mu(x0, x, v):
     term1 = erf((v[0] + vel_width[0]/2)/(np.sqrt(2) * sigma_v))
     term2 = erf((v[0] - vel_width[0]/2)/(np.sqrt(2) * sigma_v))
     product *= term1 - term2
+    #problem is in large params to erf
     term1 = erf((v[1] + vel_width[0]/2)/(np.sqrt(2) * sigma_v))
     term2 = erf((v[1] - vel_width[0]/2)/(np.sqrt(2) * sigma_v))
-    product *= term1 - term2
+    product *= term1-term2
     return product
 
-def normalizing_constant(x,v):
+
+x_s = np.zeros([2])
+v_s = np.zeros([2])
+normalizing_constant_s = None
+def _normalizing_constant(x,v):
+    global x_s
+    global v_s
+    global normalizing_constant_s
+
+    if np.array_equal(x,x_s) and np.array_equal(v, v_s) and normalizing_constant_s != None:
+        return normalization_constant
+    
     bounds = (x[0] - dist_width[0]/2, x[0] + dist_width[0]/2,
               x[1] - dist_width[0]/2, x[1] + dist_width[0]/2,
               -1 * s_max, s_max)
@@ -78,9 +89,9 @@ def normalizing_constant(x,v):
             #may be slow, possibly use dstack?
             xy = np.array(zip(x1,y1))
             z = z.flatten()
-            return unnorm_prob_k_s_x0(i, z, xy, x, v)
+            return _prob_k_s_x0(i, z, xy, x, v)
         normalizing_constant += trap_quad(temp, bounds)
-
+    print normalizing_constant
     bounds = (x[0] - dist_width[0]/2, x[0] + dist_width[0]/2,
               x[1] - dist_width[0]/2, x[1] + dist_width[0]/2)
     def temp(x1,y1):
@@ -90,6 +101,9 @@ def normalizing_constant(x,v):
         xy = np.array(zip(x1,y1))
         return _prob_lin_x_mu( xy, x, v)
     normalizing_constant += trap_quad(temp, bounds)
+    normalizing_constant_s = normalizing_constant
+    x_s = x
+    v_s = v
     return normalizing_constant
 
 #placeholder
@@ -107,17 +121,7 @@ def prob_k_s_x0_given_mu(k, s, x0, x, v):
     v: np.array(2): given velocity measurement
     """
 
-    return 1.0/normalizing_constant(x, v) * unnorm_prob_k_s_x0(k, s, x0, x, v)
-
-def prob_lin_x_given_mu(x0, x, v):
-    """
-    Takes:
-    x0: np.array(N_points, 2): Points to be evaluated
-    x: np.array(2): given position measuremnet
-    v: np.array(2): given velocity measurement
-    Returns: np.array(N_points), P(x0, lin|x, v)
-    """
-    return 1.0/normalizing_constant(x, v) * _prob_lin_x_mu(x0, x, v)
+    return 1.0/_normalizing_constant(x, v) * _prob_k_s_x0(k, s, x0, x, v)
 
 def _prob_lin_x_v_mu(x0, v0, x, v):
     """
@@ -145,7 +149,7 @@ def prob_lin_x_v_given_mu(x0, v0, x, v):
     v: np.array(2): measured velocity
     Returns np.array(N_points): P(x0, v0, lin|x, v)
     """
-    return _prob_lin_x_v_mu(x0, v0, x, v) / normalizing_constant(x, v)
+    return _prob_lin_x_v_mu(x0, v0, x, v) / _normalizing_constant(x, v)
 
 if __name__ == "__main__":
     # print "starting k normalization"
@@ -230,15 +234,20 @@ if __name__ == "__main__":
     #    return posteriors.v0_given_x0_lin(xy)
     #print trap_quad(temp, bounds)
 
-    k = 0
-    x0 = np.array([[0,0]])
-    x = np.array([0,0])
-    v = np.array([0,0])
-    s = np.array([.005])
-    dx = np.array([0,0.001])
+    #k = 0
+    #x0 = np.array([[0,0]])
+    #x = np.array([0,0])
+    #v = np.array([0,0])
+    #s = np.array([.005])
+    #dx = np.array([0,0.001])
     #print unnorm_prob_k_s_x0(k, s, x0 + dx, x, v)
-    print unnorm_prob_k_s_x0(k, s, x0, x, v) / unnorm_prob_k_s_x0(k, s, x0 + dx, x, v)
-    print posteriors.x0_given_k(k, x0) / posteriors.x0_given_k(k, x0+dx)
+    #print unnorm_prob_k_s_x0(k, s, x0, x, v) / unnorm_prob_k_s_x0(k, s, x0 + dx, x, v)
+    #print posteriors.x0_given_k(k, x0) / posteriors.x0_given_k(k, x0+dx)
+
+    x = np.array([1,0])
+    v = np.array([.03,0.03])
+    _normalizing_constant(x, v)
+    
     pass
 
 

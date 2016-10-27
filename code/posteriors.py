@@ -14,7 +14,7 @@ if __name__ == "__main__":
     vel_width = np.ones([2])
     s_max = 1
 else:
-    with open("data/test_scene.pkl", "rb") as f:
+    with open("test_scene.pkl", "rb") as f:
         scene = pickle.load(f)
     Vk = scene.alpha_arr
     scene_scale = np.array([scene.width, scene.height])
