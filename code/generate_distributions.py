@@ -21,10 +21,23 @@ def make_generator(scene, x, v, dt, Nt):
         a list of generators [g_0, ..., g_K]
         where g_0.next() outputs two arrays, x, and w
         where x is a np.array(2,N_points), w is a np.array(N_points)
-
     """
-    def gen(k,x,v):
+
+    print scene
+    print v
+    print dt
+    print Nt
+    print x
+
+    def gen(k):
         """ A generator up to time T = Nt * dt"""
+
+        print scene
+        print v
+        print dt
+        print Nt
+        print x
+
         def ode_function(t, state):
             xy = state.reshape((2,len(state)/2))
             return scene.director_field_vectorized(k,xy).flatten()
@@ -38,7 +51,8 @@ def make_generator(scene, x, v, dt, Nt):
                 x[1]-scene.bbox_width/2.0,
                 x[1]+scene.bbox_width/2.0,
                 20)
-        xy = np.vstack([x.flatten() for x in np.meshgrid(x_span, y_span)])
+        xy = np.vstack(
+                [spam.flatten() for spam in np.meshgrid(x_span, y_span)])
         N_points = xy.shape[1]
         initial_condition = xy.flatten()
         ode_forward.set_initial_value(initial_condition)
@@ -77,7 +91,7 @@ def make_generator(scene, x, v, dt, Nt):
             yield None  
 
     return itertools.izip(
-            *[gen(k,x,v) for k in range(scene.num_nl_classes)])
+            *[gen(k) for k in range(scene.num_nl_classes)])
 
 if __name__ == '__main__':
     import pickle
