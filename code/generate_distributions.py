@@ -4,8 +4,7 @@ import itertools
 import scipy as sp
 from scene import Scene
 
-def prob_k_s_x0_given_mu(k, s, x0, x, v):
-    return np.zeros(x0.shape[1])
+from derived_posteriors import prob_k_s_x0_given_mu
 
 def make_generator(scene, x, v, dt, Nt):
     """ Makes a generator from a scene object and an initial condition
@@ -22,21 +21,9 @@ def make_generator(scene, x, v, dt, Nt):
         where g_0.next() outputs two arrays, x, and w
         where x is a np.array(2,N_points), w is a np.array(N_points)
     """
-
-    print scene
-    print v
-    print dt
-    print Nt
-    print x
-
+    
     def gen(k):
         """ A generator up to time T = Nt * dt"""
-
-        print scene
-        print v
-        print dt
-        print Nt
-        print x
 
         def ode_function(t, state):
             xy = state.reshape((2,len(state)/2))
@@ -46,11 +33,11 @@ def make_generator(scene, x, v, dt, Nt):
         x_span = np.linspace(
                 x[0]-scene.bbox_width/2.0,
                 x[0]+scene.bbox_width/2.0,
-                20)
+                10)
         y_span = np.linspace(
                 x[1]-scene.bbox_width/2.0,
                 x[1]+scene.bbox_width/2.0,
-                20)
+                10)
         xy = np.vstack(
                 [spam.flatten() for spam in np.meshgrid(x_span, y_span)])
         N_points = xy.shape[1]
@@ -64,7 +51,7 @@ def make_generator(scene, x, v, dt, Nt):
         xy_arr = np.zeros((2*Nt+1, 2, N_points))
         weight_arr = np.zeros((2*Nt+1, N_points))
         xy_arr[0] = initial_condition.reshape((2, N_points))
-        for n in range(Nt):
+        for n in range(1,Nt):
             ds = scene.s_max / float(n)
             #Compute locations
             ode_forward.integrate(ode_forward.t + dt*scene.s_max)
@@ -76,13 +63,14 @@ def make_generator(scene, x, v, dt, Nt):
 
             #Computes weights
             for l in range(-n, n+1):
-                s_l = l*scene.s_max / float(n)
                 x_l = xy_arr[l]
-                weight_arr[l] = ds*prob_k_s_x0_given_mu(k, s_l, x_l, x, v)
-            x_out = np.concatenate([xy_arr[-n:], xy_arr[:n+1]], axis=0)
-            weight_out = np.concatenate([weight_arr[-n:], weight_arr[:n+1]],
-                    axis=0)
-            yield x_out, weight_out
+                s_l = l*ds*np.ones( x_l.shape[1] )
+                weight_arr[l] = ds*prob_k_s_x0_given_mu(
+                        k, s_l, np.transpose(x_l), x, v)
+            #x_out = np.concatenate([xy_arr[-n:], xy_arr[:n+1]], axis=0)
+            #weight_out = np.concatenate([weight_arr[-n:], weight_arr[:n+1]],
+            #        axis=0)
+            yield xy_arr, weight_arr
 
     #TODO:  YOU ARE STILL NOT INCLUDING THE LINEAR DISTIRBUTION
     def gen_linear():
@@ -98,11 +86,31 @@ if __name__ == '__main__':
     from scene import Scene
     with open('test_scene.pkl', 'rb') as f:
         scene = pickle.load(f)
+    with open('test_set.pkl', 'rb') as f:
+        test_set = pickle.load(f)
     dt = 0.1
     Nt = 10
-    x = np.random.randn(2)
-    v = np.random.randn(2)
+    test_BB_ts = test_set[3]
+    from matplotlib import pyplot as plt
+    plt.plot( test_BB_ts[0], test_BB_ts[1] )
+    plt.axis( [-scene.width, scene.width, -scene.height, scene.height] )
+    plt.axis('equal')
+    plt.show()
+    def get_initial_condition(BB_ts):
+        fd_width = 4
+        BB0 = BB_ts[:,0]
+        BB2 = BB_ts[::,,fd_width]
+        x = 0.5*(BB0[0]+BB0[2]+BB2[0]+BB2[2]) / fd_width
+        y = 0.5*(BB0[1]+BB0[3]+BB2[1]+BB2[3]) / fd_width
+        u = 0.5*(BB2[0]-BB0[0]+BB2[2]-BB0[2]) / fd_width
+        v = 0.5*(BB2[1]-BB0[1]+BB2[3]-BB0[3]) / fd_width
+        return np.array([x, y]), np.array([u, v])
+
+    x,v = get_initial_condition(test_BB_ts[:, 10:])
+    speed = np.sqrt(np.sum(v**2))
+    print "Measured speed / sigma_v = {:f}".format( speed / scene.sigma_v )
+    print "sigma_v = {:f}".format( scene.sigma_v)
     gen = make_generator(scene, x, v, dt, Nt)
     for data in gen:
         for xy,p in data:
-            print xy
+            print p.max()

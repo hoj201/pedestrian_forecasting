@@ -98,6 +98,44 @@ Substitution, and the change of variables formula tells us that
 So if we can compute the flow $\Phi_k^{t}$ efficiently, and we can compute $\Pr( k,s,x \mid \hat{x}, \hat{v} )$ and $\Pr( x, v, \Lin \mid \hat{x}, \hat{v} )$ efficiently, then we are good to go.
 Computing the flow can be done using standard ode integration schemes, so the main obstacle is computing the posteriors $\Pr( k,s,x \mid \hat{x}, \hat{v} )$ and $\Pr( x, v, \Lin \mid \hat{x}, \hat{v} )$.
 
+\section{Efficient computation of $\rho$}
+Let us write $\rho$ as
+\begin{align*}
+	\rho(t,x) &= \sum_{k} \int (\Phi_{k}^{st})_* \rho_{k,s}(x) ds + linear\, term
+\end{align*}
+where $\rho_{k,s}(x) = \Pr( k, s, x \mid \hat{x}, \hat{v})$.
+If we only evaluate at discrete times, $t_n = n \Delta t$ for $\Delta t \ll 1$ then we need only compute
+\begin{align*}
+	\rho(t_n , x) =  \sum_{k} \int (\Phi_{k}^{s n \Delta t})_* \rho_{k,s}(x) ds + linear\, term.
+\end{align*}
+We can approximate the integral over $s$ with a Riemann sum with step-size $\Delta s_n = \bar{s} / n$, at integration nodes
+$$
+	\left\{ -\bar{s} , -\bar{s} \frac{n-1}{n}, \dots, -\bar{s} \frac{1}{n}, 0, \bar{s} \frac{1}{n}, \dots, \bar{s} \frac{n-1}{n}, \bar{s} \right\}
+$$
+to yield the $\mathcal{O}( \Delta s_n )$ approximation
+\begin{align}
+	\rho(t_n , x) = \Delta s_n \left( \sum_{k} \sum_{ |m| \leq n } (\Phi_{k}^{ \bar{s} m \Delta t})_* \rho_{k,s}(x) \right) +\mathcal{O}( \Delta s_n ) + linear\, term. \label{eq:approx 1}
+\end{align}
+
+Finally, we may approximate $(\Phi_k^{st})*\rho_{k,s}$ up to $\mathcal{O}( \Delta x)$ by using a grid $\Lambda$ or resolution $\Delta x$.
+This gives us the approximation
+\begin{align*}
+	(\Phi_k^{st})_* \rho_{k,s}(x) = \sum_{\alpha \in \Lambda } \Pr( k , s , x_\alpha) \delta( x - \Phi_k^{st} (x_\alpha) ) + \mathcal{O}( \Delta x )
+\end{align*}
+Substitution of this approximation into \eqref{eq:approx 1} yields 
+\begin{align}
+\begin{split}
+	&\rho(t_n , x) = \\
+	&\quad \Delta s_n \left( \sum_{k} \sum_{ |m| \leq n }  \sum_{\alpha \in \Lambda } \Pr( k , \bar{s}\frac{m}{n} , x_\alpha) \delta( x - \Phi_k^{\bar{s}\, m \, \Delta t} (x_\alpha) ) \right) +\mathcal{O}( \Delta s_n + \Delta x) + lin. \label{eq:approx 2}
+\end{split}
+\end{align}
+
+From this computation it is clear what must be done.
+We need to compute the flow of the grid $\Lambda$ at times $\bar{s} m \Delta$ up to some maximal integer, $n$.
+Then we must compute $\Pr( k , \bar{s}\frac{m}{n} , x_\alpha)$ at each point on the grid and each $m$ with $|m| \leq n$.
+Many of these computations of $\Pr(k,\bar{s} \frac{m}{n}, x_\alpha)$ should be stored, for example, when $n=2^{N}$, about half of the computations overlap with the $n=2^{N-1}$ case.
+This allows us to compute the above sum for all times $t_m \leq t_n$.
+
 \section{Choice of atomic distributions, and expressions for composite distributions}
 In order to compute $\Pr( k,s,x \mid \hat{x}, \hat{v} )$ and $\Pr( x, v, \Lin \mid \hat{x}, \hat{v} )$ we use a probabilistic graphical model to organize our computations.
 To begin, define the set
@@ -138,7 +176,7 @@ To calculate $\Pr(k,s,x \mid \hat{x}, \hat{v} )$ in terms of the atomic distribu
 Using the pgm diagram we can decompose the integrand in the numerator as
 \begin{align*}
 	&= \frac{1}{ \Pr( \hat{x}, \hat{v} ) } \int \Pr( x \mid k,s) \Pr( \hat{x} \mid x ) \Pr( \hat{v} \mid v) \Pr( v \mid k,s,x) \Pr(k,s) dv \\
-	&= \frac{ \Pr( x \mid k,s) \Pr( \hat{x} \mid x ) \Pr( \hat{v} \mid v = s X_k(x) ) }{ \Pr( \hat{x} , \hat{v} ) }
+	&= \frac{ \Pr( x \mid k,s) \Pr( \hat{x} \mid x ) \Pr( \hat{v} \mid v = s X_k(x) ) \Pr(k) \Pr(s) }{ \Pr( \hat{x} , \hat{v} ) }
 \end{align*}
 In order to compute $\Pr( \hat{x}, \hat{v})$ we can compute
 \begin{align*}
@@ -195,15 +233,23 @@ where $\theta$ is a 3d array which allows one to compute the director field for 
 and $\alpha$ is a 3d array which allows one to compute the potential function involved in the atomic distribution $\Pr( x_0 \mid k)$.
 The usage of $\theta$ and $\alpha$ is described in appendix \ref{app:learning}.
 
-\section{Precision and Recall}
+\section{Evaluation}
 We would like to view the computed $\rho$ as a classifier.
-Let $\tau > 0$.
-For any measurable set $E$, we classify it as positive at time $t > 0$ if $\int_E \rho(x,t)dx > \tau$.
-The precision over the time interval $[0,T]$ with respect to the test-sets $\mathcal{E}$ is given by
+Let $\tau > 0$. Given a partition of measurable sets, $\mathcal{E}$, we consider the classifier $pred: \mathcal{E} \to \{ +, - \}$ given by
 \begin{align*}
-	precision( \tau , \mathcal{E} ) = \inf_{t \in [0,T] } \frac{ \#\{ E \in \mathcal{E}^+(t) \mid \int_E \rho_t > \tau \} }{  \#\{ E \in \mathcal{E}(t) \mid \int_E \rho_t > \tau \} } \\
-	recall( \tau , \mathcal{E} ) = \sup
+	pred(E) = \int_E \rho  > \tau
 \end{align*}
+If we have a ground truth distribution $\rho_{true}$ we define the variable
+\begin{align*}
+	truth(E) = \int_E \rho_{true} > \tau.
+\end{align*}
+If we weight each of the sets of this partition we can define precision, accuracy, and recall as
+\begin{align*}
+	precision &= \Pr_{\mathcal{E}} ( pred \mid truth ) \\
+	recall &= \Pr_{\mathcal{E}} ( truth \mid  pred ) \\
+	accuracy &= \Pr_{\mathcal{E}}( truth = pred )
+\end{align*}
+We can use these as evaluation metrics.  Unfortunately, that we get different metrics for different $\tau$s means we must do this for a variety of them.
 
 \appendix
 

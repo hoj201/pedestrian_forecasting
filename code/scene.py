@@ -1,4 +1,5 @@
 import numpy as np
+import pickle
 import process_data
 
 class Scene():
@@ -176,18 +177,20 @@ if __name__ == "__main__":
     from sklearn.cross_validation import train_test_split
     train_set, test_set = train_test_split( BB_ts_list, random_state = 0 )
 
-    coupa_scene = Scene( train_set, width, height )
+    test_scene = Scene( train_set, width, height )
     print "Display clusters"
-    for k in range( coupa_scene.num_nl_classes ):
+    for k in range( test_scene.num_nl_classes ):
         from visualization_routines import visualize_cluster
-        visualize_cluster( coupa_scene, k )
+        visualize_cluster( test_scene, k )
    
     print "P(k) = "
-    print coupa_scene.P_of_c
+    print test_scene.P_of_c
 
-    print "\sum_k P(k) = {}".format( coupa_scene.P_of_c.sum())
+    print "\sum_k P(k) = {}".format( test_scene.P_of_c.sum())
     response = raw_input("Would you like to pickle this scene? y/n")
     if response == "y":
         with open("test_scene.pkl", "w") as f:
-            import pickle
-            pickle.dump( coupa_scene, f)
+            pickle.dump( test_scene, f)
+
+        with open("test_set.pkl", "wb") as f:
+            pickle.dump( test_set, f)

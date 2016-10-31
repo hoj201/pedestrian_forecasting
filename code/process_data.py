@@ -111,8 +111,8 @@ def get_std_velocity( BB_ts_ls ):
     def BB_ts_to_std( BB_ts ):
         x = 0.5*( BB_ts[0] + BB_ts[2] )
         y = 0.5*( BB_ts[1] + BB_ts[3] )
-        u = ( x[2:] - x[:len(x)-2] ) / 2.0
-        v = ( y[2:] - y[:len(y)-2] ) / 2.0
+        u = (x[2:] - x[:len(x)-2]) / 2.0
+        v = (y[2:] - y[:len(y)-2]) / 2.0
         return np.sqrt( u.std()**2 + v.std()**2 )
     return max( map( BB_ts_to_std , BB_ts_ls ) )
 
@@ -127,5 +127,3 @@ if __name__ == '__main__':
 
     w = get_bbox_width( BB_ts_list)
     print "max width = {}".format(w)
-
-
