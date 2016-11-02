@@ -17,9 +17,16 @@ def make_generator(scene, x, v, dt, Nt):
         Nt: int
    
     returns:
-        a list of generators [g_0, ..., g_K]
-        where g_0.next() outputs two arrays, x, and w
-        where x is a np.array(2,N_points), w is a np.array(N_points)
+        a generator object
+
+        Example:
+            g = make_generator(scene, x,v,dt,Nt):
+            for data in g:
+                for k in range( scene.num_nl_classes ):
+                    xy, weights = data[k]
+                    #DO STUFF WITH DIRAC DELTAS
+                lin_term = data[ scene.num_nl_classes ]
+                #DO STUFF WITH LINEAR TERM
     """
     
     def gen(k):
@@ -72,34 +79,55 @@ def make_generator(scene, x, v, dt, Nt):
             #        axis=0)
             yield xy_arr, weight_arr
 
-    #TODO:  YOU ARE STILL NOT INCLUDING THE LINEAR DISTIRBUTION
     def gen_linear():
         #use scene.sigma_v
+        t = 0.0
         for n in range(Nt):
-            yield None  
-
-    return itertools.izip(
-            *[gen(k) for k in range(scene.num_nl_classes)])
+            t += dt
+            def linear_term(xy):
+                x,y = xy
+                sigma = scene.sigma_v
+                w, h = scene.width, scene.height
+                wx = scene.bbox_width
+                wv = scene.bbox_velocity_width
+                def np_max(*args):
+                    comp = lambda x,y: x*(x>y)+y*(y>x)
+                    return reduce(comp, args[1:], args[0])
+                def np_min(*args):
+                    comp = lambda x,y: x*(x<y)+y*(y<x)
+                    return reduce(comp, args[1:], args[0])
+                u_min = np_max((x-w)/t, (x-wx)/t, -wv)
+                v_min = np_max((y-h)/t, (y-wx)/t, -wv)
+                u_max = np_min((x+w)/t, (x+wx)/t, wv)
+                v_max = np_min((y+w)/t, (y+wx)/t, wv)
+                Prob_of_x_hat_and_v_hat = 1.0 #TODO: REPLACE THIS
+                scale = scene.P_of_c[-1] / Prob_of_x_hat_and_v_hat
+                scale /= h * w * wx**2 * wv**2
+                from scipy.special import erf
+                rt2 = np.sqrt(2)
+                out = erf( u_max/(sigma*rt2) ) - erf( u_min/(sigma*rt2) )
+                out *= erf( v_max/(sigma*rt2) ) - erf( v_min/(sigma*rt2) )
+                out *= 0.25 * scale
+                return out
+            yield linear_term
+    gen_ls = [ gen(k) for k in range(scene.num_nl_classes)]
+    gen_ls.append( gen_linear() )
+    return itertools.izip(*gen_ls)
 
 if __name__ == '__main__':
     import pickle
     from scene import Scene
-    with open('test_scene.pkl', 'rb') as f:
+    with open('test_scene.pkl', 'rs') as f:
         scene = pickle.load(f)
-    with open('test_set.pkl', 'rb') as f:
+    with open('test_set.pkl', 'rs') as f:
         test_set = pickle.load(f)
     dt = 0.1
     Nt = 10
     test_BB_ts = test_set[3]
-    from matplotlib import pyplot as plt
-    plt.plot( test_BB_ts[0], test_BB_ts[1] )
-    plt.axis( [-scene.width, scene.width, -scene.height, scene.height] )
-    plt.axis('equal')
-    plt.show()
     def get_initial_condition(BB_ts):
         fd_width = 4
         BB0 = BB_ts[:,0]
-        BB2 = BB_ts[::,,fd_width]
+        BB2 = BB_ts[::,fd_width]
         x = 0.5*(BB0[0]+BB0[2]+BB2[0]+BB2[2]) / fd_width
         y = 0.5*(BB0[1]+BB0[3]+BB2[1]+BB2[3]) / fd_width
         u = 0.5*(BB2[0]-BB0[0]+BB2[2]-BB0[2]) / fd_width
@@ -111,6 +139,10 @@ if __name__ == '__main__':
     print "Measured speed / sigma_v = {:f}".format( speed / scene.sigma_v )
     print "sigma_v = {:f}".format( scene.sigma_v)
     gen = make_generator(scene, x, v, dt, Nt)
+    xy_grid = np.random.randn(2,100)
     for data in gen:
-        for xy,p in data:
-            print p.max()
+        for k in range(scene.num_nl_classes):
+            xy, weights = data[k]
+            print "max_weight = {:f}".format(weights.max())
+        lin_term = data[-1]
+        print lin_term( xy_grid )

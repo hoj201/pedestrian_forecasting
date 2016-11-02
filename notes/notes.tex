@@ -94,11 +94,10 @@ Substitution, and the change of variables formula tells us that
 	\rho(t,x) &= \sum_{k=1}^n \int \det \left[ (D\Phi_{k}^{st})^{-1}(x)  \right] \cdot \Pr( k, s, x_0 = (\Phi_{k}^{st})^{-1} (x) \mid \mu) ds \\
 		&\quad + \int \Pr( x_0 = x- t v_0 ,v_0, \Lin \mid \mu)dv_0
 \end{align*}
-
 So if we can compute the flow $\Phi_k^{t}$ efficiently, and we can compute $\Pr( k,s,x \mid \hat{x}, \hat{v} )$ and $\Pr( x, v, \Lin \mid \hat{x}, \hat{v} )$ efficiently, then we are good to go.
 Computing the flow can be done using standard ode integration schemes, so the main obstacle is computing the posteriors $\Pr( k,s,x \mid \hat{x}, \hat{v} )$ and $\Pr( x, v, \Lin \mid \hat{x}, \hat{v} )$.
 
-\section{Efficient computation of $\rho$}
+\section{Efficient computation of the nonlinear component of $\rho$}
 Let us write $\rho$ as
 \begin{align*}
 	\rho(t,x) &= \sum_{k} \int (\Phi_{k}^{st})_* \rho_{k,s}(x) ds + linear\, term
@@ -135,6 +134,27 @@ We need to compute the flow of the grid $\Lambda$ at times $\bar{s} m \Delta$ up
 Then we must compute $\Pr( k , \bar{s}\frac{m}{n} , x_\alpha)$ at each point on the grid and each $m$ with $|m| \leq n$.
 Many of these computations of $\Pr(k,\bar{s} \frac{m}{n}, x_\alpha)$ should be stored, for example, when $n=2^{N}$, about half of the computations overlap with the $n=2^{N-1}$ case.
 This allows us to compute the above sum for all times $t_m \leq t_n$.
+
+\section{Computation of the linear component of $\rho$}
+The linear term is given by
+\begin{align*}
+	lin(x,t) &= \int \Pr( x_0 = x-t v_0, v_0, \Lin \mid \hat{x}_0, \hat{v}_0 ) dv_0 \\
+	&= \frac{1}{ \Pr( \hat{x}_0, \hat{v}_0 ) } \int \Pr( \hat{x}_0 \mid x_0 = x-tv_0 ) \Pr( \hat{v}_0 \mid v_0 ) \Pr( \Lin ) \Pr( v_0 \mid \Lin)  dv_0 \\
+	&= \frac{ \Pr(\Lin) }{ \Pr( \hat{x}_0 , \hat{v}_0 ) wh w_x^2 w_v^2 } \int_{v_{\min}}^{v_{\max}} \Pr(v_0 \mid \Lin ) dv_0
+\end{align*}
+where
+\begin{align*}
+	u_{\min} &= \max( (x-w)/t, (x-w_x)/t, -w_v ) \\
+	v_{\min} &= \max( (y-h)/t, (y-w_x)/t, -w_v ) \\
+	u_{\max} &=\min( (x+w)/t, (x+w_x)/t, w_v ) \\
+	v_{\max} &=\min( (x+w)/t, (y+w_x)/t, w_v ).
+\end{align*}
+If $\Pr( v_0 \mid \Lin)$ is normally distributed then
+\begin{align*}
+	lin(x,t) &= \frac{ \Pr(\Lin) }{ \Pr( \hat{x}_0 , \hat{v}_0 ) wh w_x^2 w_v^2 } \\
+	& \quad \cdot \frac{1}{4} \left[ \erf \left( \frac{ u_{\max} }{ \sigma \sqrt{2} } \right) - \erf \left( \frac{ u_{\min} }{ \sigma \sqrt{2} } \right) \right]
+	\cdot \left[ \erf \left( \frac{ v_{\max} }{ \sigma \sqrt{2} } \right) - \erf \left( \frac{ v_{\min} }{ \sigma \sqrt{2} } \right) \right]
+\end{align*}
 
 \section{Choice of atomic distributions, and expressions for composite distributions}
 In order to compute $\Pr( k,s,x \mid \hat{x}, \hat{v} )$ and $\Pr( x, v, \Lin \mid \hat{x}, \hat{v} )$ we use a probabilistic graphical model to organize our computations.

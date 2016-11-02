@@ -189,8 +189,8 @@ if __name__ == "__main__":
     print "\sum_k P(k) = {}".format( test_scene.P_of_c.sum())
     response = raw_input("Would you like to pickle this scene? y/n")
     if response == "y":
-        with open("test_scene.pkl", "w") as f:
+        with open("test_scene.pkl", "ws") as f:
             pickle.dump( test_scene, f)
 
-        with open("test_set.pkl", "wb") as f:
+        with open("test_set.pkl", "ws") as f:
             pickle.dump( test_set, f)
