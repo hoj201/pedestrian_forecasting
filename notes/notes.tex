@@ -144,10 +144,10 @@ The linear term is given by
 \end{align*}
 where
 \begin{align*}
-	u_{\min} &= \max( (x-w)/t, (x-w_x)/t, -w_v ) \\
-	v_{\min} &= \max( (y-h)/t, (y-w_x)/t, -w_v ) \\
-	u_{\max} &=\min( (x+w)/t, (x+w_x)/t, w_v ) \\
-	v_{\max} &=\min( (x+w)/t, (y+w_x)/t, w_v ).
+	u_{\min} &= \max( (x-w)/t, (x-\hat{x}_0-w_x)/t, -w_v ) \\
+	v_{\min} &= \max( (y-h)/t, (y-\hat{y}_0-w_x)/t, -w_v ) \\
+	u_{\max} &=\min( (x+w)/t, (x-\hat{x}_0+w_x)/t, w_v ) \\
+	v_{\max} &=\min( (x+w)/t, (y-\hat{y}_0+w_x)/t, w_v ).
 \end{align*}
 If $\Pr( v_0 \mid \Lin)$ is normally distributed then
 \begin{align*}
