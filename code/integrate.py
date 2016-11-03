@@ -2,91 +2,35 @@ import numpy as np
 
 def trap_quad( integrand, bounds, res = None ):
     """ Computes integrals using the n-dimensional trapezoid rule
-
     args:
         integrand: callable
         bounds: iterable of the form (x_min, x_max, y_min, y_max, ... )
-
     kwargs:
         res: iterable, of the form (x_res, y_res, ...)
-
     returns:
         q: float
-
     Notes:
         The integrand should be of the form f(x,y) for a 2D integrand
         where x and y are each 1D numpy arrays of equal length.
     """
+
     if res is None:
         res = (len(bounds)/2)*(100,)
-
     if type(res) == int:
         res = (res,)
-
     assert( len(res)*2 is len(bounds) )
-    if len(res) == 1:
-        weights = np.ones( res[0] )
-        weights[0], weights[-1] = 0.5, 0.5
-        grid = np.linspace( bounds[0], bounds[1], res[0] )
-        dx = grid[1] - grid[0]
-        weights *= dx
-        return np.einsum( 'i,i', weights, integrand( grid ) )
-
-    if len(res) == 2:
-        weights = np.ones( res )
-        weights[0,:] = 0.5
-        weights[-1,:] = 0.5
-        weights[:,0] = 0.5
-        weights[:,-1] = 0.5
-        weights[0,0] = 0.25
-        weights[0,-1] = 0.25
-        weights[-1,0] = 0.25
-        weights[-1,1] = 0.25
-        x_span = np.linspace( bounds[0], bounds[1], res[0] )
-        y_span = np.linspace( bounds[2], bounds[3], res[1] )
-        d = lambda x_arr: x_arr[1] - x_arr[0]
-        dV = d( x_span) * d(y_span)
-        weights *= dV
-        X_grid, Y_grid = np.meshgrid( x_span, y_span )
-        return np.einsum( 'i,i', weights.flatten(),
-                integrand( X_grid, Y_grid ).flatten() ) 
-
-    if len(res) == 3:
-        weights = np.ones( res )
-        # FACES (there are 6)
-        weights[0,:,:] = 0.5
-        weights[-1,:,:] = 0.5
-        weights[:,0,:] = 0.5
-        weights[:,-1,:] = 0.5
-        weights[:,:,0] = 0.5
-        weights[:,:,-1] = 0.5
-
-        # EDGES (there are 12)
-        weights[0,0,:] = 0.25
-        weights[0,-1,:] = 0.25
-        weights[-1,0,:], weights[-1,-1,:] = 0.25, 0.25
-        weights[0,:,0], weights[0,:,-1] = 0.25, 0.25
-        weights[-1,:,0], weights[-1,:,-1] = 0.25, 0.25
-        weights[:,0,0], weights[:,-1,0] = 0.25, 0.25
-        weights[:,-1,0], weights[:,-1,-1] = 0.25, 0.25
-
-        # CORNERS (there are 8)
-        weights[0,0,0], weights[0,0,-1] = 0.125, 0.125
-        weights[0,-1,0], weights[-1,0,0] = 0.125, 0.125
-        weights[0,-1,-1], weights[-1,0,-1] = 0.125, 0.125
-        weights[-1,-1,0], weights[-1,-1,-1] = 0.125, 0.125
-
-        x_span = np.linspace( bounds[0], bounds[1], res[0] )
-        y_span = np.linspace( bounds[2], bounds[3], res[1] )
-        z_span = np.linspace( bounds[4], bounds[5], res[2] )
-        d = lambda x_arr: x_arr[1] - x_arr[0]
-        dV = d( x_span) * d(y_span) * d(z_span)
-        weights *= dV
-        X_grid, Y_grid, Z_grid = np.meshgrid( x_span, y_span , z_span)
-        return np.einsum( 'i,i', weights.flatten(),
-                integrand( X_grid, Y_grid, Z_grid ).flatten() ) 
-    print "Dimension {dim} is too high for our code.  Aborting.".format(dim=len(res))
-    return -1
+    def weights_func(r):
+        weights_1d = np.ones(r)
+        weights_1d[0], weights_1d[-1] = 0.5, 0.5
+        return weights_1d
+    lower_bnds = [bounds[2*k] for k in range(len(res))]
+    upper_bnds = [bounds[2*k+1] for k in range(len(res))]
+    grid = np.meshgrid(
+            *[np.linspace(lower_bnds[k], upper_bnds[k],res[k])
+            for k in range(len(res))])
+    dV = reduce( lambda x,y:x*y, map( lambda mn,mx,r: (mx-mn)/float(r-1), lower_bnds, upper_bnds, res ))
+    weights = dV*reduce( np.outer, map( weights_func, res) )
+    return np.einsum( 'i,i', weights.flatten(), integrand( *grid ).flatten() ) 
 
 if __name__ == '__main__':
     integrand = lambda x: x**2
