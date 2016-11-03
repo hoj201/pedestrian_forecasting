@@ -75,8 +75,10 @@ if __name__ == "__main__":
     tau = 0.001
     rho = (np.array([[0.5, 0.5], [-0.5, -0.5]]), np.array([0.2, 0.1]))
     E = np.array([[[0.4, 0.4], [1,1]], [[1, 1], [0,0]], [[0.2, 0.2], [0.6, 0.6]]])
-    f = lambda x: 0
-    print classifier(E, rho, tau, f)
+    def fn(x, y):
+        x = x.flatten()
+        return np.zeros(len(x))
+    print classifier(E, rho, tau, fn)
 
 
 
