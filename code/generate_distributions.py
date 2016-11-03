@@ -4,18 +4,16 @@ import itertools
 import scipy as sp
 from scene import Scene
 
-from derived_posteriors import prob_k_s_x0_given_mu
+from derived_posteriors import prob_k_s_x0_given_mu, _normalizing_constant
 
 def make_generator(scene, x, v, dt, Nt):
     """ Makes a generator from a scene object and an initial condition
-    
     args:
         scene: a scene object
         x: np.array(2)
         v: np.array(2)
         dt: float
         Nt: int
-   
     returns:
         a generator object
 
@@ -28,13 +26,14 @@ def make_generator(scene, x, v, dt, Nt):
                 lin_term = data[ scene.num_nl_classes ]
                 #DO STUFF WITH LINEAR TERM
     """
-    
+    _x, _v = x, v
+
     def gen(k):
         """ A generator up to time T = Nt * dt"""
 
         def ode_function(t, state):
             xy = state.reshape((2,len(state)/2))
-            return scene.director_field_vectorized(k,xy).flatten()
+            return scene.director_field_vectorized(k, xy).flatten()
         ode_forward = integrate.ode(ode_function)
         ode_forward.t = 0.0
         x_span = np.linspace(
@@ -100,7 +99,7 @@ def make_generator(scene, x, v, dt, Nt):
                 v_min = np_max((y-h)/t, (y-wx)/t, -wv)
                 u_max = np_min((x+w)/t, (x+wx)/t, wv)
                 v_max = np_min((y+w)/t, (y+wx)/t, wv)
-                Prob_of_x_hat_and_v_hat = 1.0 #TODO: REPLACE THIS
+                Prob_of_x_hat_and_v_hat = _normalizing_constant(_x, _v) #TODO: REPLACE THIS
                 scale = scene.P_of_c[-1] / Prob_of_x_hat_and_v_hat
                 scale /= h * w * wx**2 * wv**2
                 from scipy.special import erf
