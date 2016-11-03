@@ -73,6 +73,10 @@ def _normalizing_constant(x,v):
     global v_s
     global normalizing_constant_s
 
+    res = 40
+
+    print "resolution is " + str(res)
+
     if np.array_equal(x,x_s) and np.array_equal(v, v_s) and normalizing_constant_s != None:
         return normalizing_constant_s
     
@@ -89,7 +93,7 @@ def _normalizing_constant(x,v):
             xy = np.array(zip(x1,y1))
             z = z.flatten()
             return _prob_k_s_x0(i, z, xy, x, v)
-        normalizing_constant += trap_quad(temp, bounds)
+        normalizing_constant += trap_quad(temp, bounds, res = (res, res, res))
     print normalizing_constant
     bounds = (x[0] - dist_width[0]/2, x[0] + dist_width[0]/2,
               x[1] - dist_width[0]/2, x[1] + dist_width[0]/2)
@@ -99,7 +103,7 @@ def _normalizing_constant(x,v):
         #may be slow, possibly use dstack?
         xy = np.array(zip(x1,y1))
         return _prob_lin_x_mu( xy, x, v)
-    normalizing_constant += trap_quad(temp, bounds)
+    normalizing_constant += trap_quad(temp, bounds, res = (res, res))
     normalizing_constant_s = normalizing_constant
     x_s = x
     v_s = v
@@ -243,8 +247,8 @@ if __name__ == "__main__":
     #print unnorm_prob_k_s_x0(k, s, x0, x, v) / unnorm_prob_k_s_x0(k, s, x0 + dx, x, v)
     #print posteriors.x0_given_k(k, x0) / posteriors.x0_given_k(k, x0+dx)
 
-    x = np.array([1,0])
-    v = np.array([.03,0.03])
+    x = np.array([0,0])
+    v = np.array([.005,0.005])
     _normalizing_constant(x, v)
     
     pass
