@@ -26,7 +26,7 @@ def classifier(E, rho, tau, lin_term):
     for box in E:
         bounds = [box[1][0] - box[0][0]/2, box[1][0] + box[0][0]/2,
                   box[1][1] - box[0][1]/2, box[1][1] + box[0][1]/2]
-        integrals.append(trap_quad(bounds, lin_term))
+        integrals.append(trap_quad(lin_term, bounds))
 
     integrals = np.array(integrals)
 
