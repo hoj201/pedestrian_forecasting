@@ -13,8 +13,9 @@ from integrate import trap_quad
 def classifier(E, rho, tau, lin_term):
     #takes E: np.array(n_boxes, 2, 2)
     #looks like [[[box_width, box_height], [box_x, box_y]]]
-    #takes rho: (np.array(n_points, 2), np.array(n_points))
-    #takes tau: float
+    #rho: (np.array(n_points, 2), np.array(n_points))
+    #tau: float
+    #returns: bool array
     xy, p = rho
 
     def filter(e):
@@ -32,6 +33,21 @@ def classifier(E, rho, tau, lin_term):
 
     return res + integrals > tau
 
+def true_classifier(E, rho_true, tau):
+    #takes:
+    #E: [[[box_width, box_height], [box_x, box_y]]]
+    #rho_true: function
+    #tau: float
+    #returns: bool array
+    integrals = []
+    for box in e:
+        bounds = [box[1][0] - box[0][0]/2, box[1][0] + box[0][0]/2,
+                  box[1][1] - box[0][1]/2, box[1][1] + box[0][1]/2]
+        integrals.append(trap_quad(rho_true, bounds))
+    integrals = np.array(integrals)
+    return integrals > tau
+
+
 def precision(pred, truth):
     return len(np.where(np.logical_and(pred, truth))[0]) / float(len(np.where(truth)[0]))
 
@@ -40,6 +56,35 @@ def recall(pred, truth):
 
 def accuracy(pred, truth):
     return len(np.where(pred == truth)[0]) / float(len(truth))
+
+def evaluate_plane(bbox, rho, rho_true, tau, lin_term, resolution):
+    #Takes:
+    #bbox: np.array(2): [scene_width, scene_height]
+    #rho: (np.array(n_points, 2), np.array(n_points))
+    #rho_true: function
+    #tau: float
+    #lin_term: function
+    #resolution: np.array(2): [num_boxes_x, num_boxes_y]
+
+    #returns (precision, recall, accuracy)
+
+    x_vals = np.linspace(-bbox[0]/2, bbox[0]/2, resolution[0]+1)
+    y_vals = np.linspace(-bbox[1]/2, bbox[1]/2, resolution[1]+1)
+    bboxes = []
+    for x in resolution[0]:
+        for y in resolution[1]:
+            bboxes.append([[bbox[0]/resolution[0], bbox[1]/resolution[1]],
+                  [x + bbox[0]/resolution[0]/2, y + bbox[1]/resolution[1]/2]])
+    pred = classifier(bbox, rho, tau, lin_term)
+    true = true_classifier(bbox, rho_true, tau)
+
+    precision = precision(pred, true)
+    recall = recall(pred, true)
+    accuracy = accuracy(pred, true)
+
+    return (precision, recall, accuracy)
+
+
 
 if __name__ == "__main__":
     import itertools
@@ -79,6 +124,8 @@ if __name__ == "__main__":
         x = x.flatten()
         return np.zeros(len(x))
     print classifier(E, rho, tau, fn)
+
+
 
 
 

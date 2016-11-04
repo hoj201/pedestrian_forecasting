@@ -99,8 +99,8 @@ def make_generator(scene, x, v, dt, Nt):
                 v_min = np_max((y-h)/t, (y-wx)/t, -wv)
                 u_max = np_min((x+w)/t, (x+wx)/t, wv)
                 v_max = np_min((y+w)/t, (y+wx)/t, wv)
-                Prob_of_x_hat_and_v_hat = _normalizing_constant(_x, _v) #TODO: REPLACE THIS
-                scale = scene.P_of_c[-1] / Prob_of_x_hat_and_v_hat
+                prob_of_x_hat_and_v_hat = _normalizing_constant(_x, _v) #TODO: REPLACE THIS
+                scale = scene.P_of_c[-1] / prob_of_x_hat_and_v_hat
                 scale /= h * w * wx**2 * wv**2
                 from scipy.special import erf
                 rt2 = np.sqrt(2)
@@ -116,6 +116,7 @@ def make_generator(scene, x, v, dt, Nt):
 if __name__ == '__main__':
     import pickle
     from scene import Scene
+    from integrate import trap_quad
     with open('test_scene.pkl', 'rs') as f:
         scene = pickle.load(f)
     with open('test_set.pkl', 'rs') as f:
@@ -140,8 +141,27 @@ if __name__ == '__main__':
     gen = make_generator(scene, x, v, dt, Nt)
     xy_grid = np.random.randn(2,100)
     for data in gen:
+        td_sum = 0
         for k in range(scene.num_nl_classes):
             xy, weights = data[k]
-            print "max_weight = {:f}".format(weights.max())
+            #print "max_weight = {:f}".format(weights.max())
+            td_sum += sum(weights.flatten())
+            print "weights"
+            print sum(weights.flatten())
+
         lin_term = data[-1]
-        print lin_term( xy_grid )
+
+        #print td_sum
+
+        def temp(x, y):
+            return lin_term(np.array([x, y]))
+
+        bounds = [-0.5*scene.width, 0.5*scene.width, -0.5*scene.height, 0.5* scene.height]
+        quad = trap_quad(temp, bounds)
+        td_sum += quad
+        print "Should be 1:"
+        print td_sum
+        #print lin_term( xy_grid )
+
+
+    #test linear term
