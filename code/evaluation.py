@@ -20,14 +20,13 @@ def classifier(E, rho, tau, lin_term):
 
     def filter(e):
         fn = lambda x: (np.absolute((x[0]-e[1][0])) <= e[0][0]/2.0) and (np.absolute(x[1] - e[1][1]) <= e[0][1]/2.0)
-        return sum(p[np.where(map(fn, xy))])
-
+        return sum(p[np.where(map(fn, xy))[0]])
     res = np.array(map(filter, E))
     integrals = []
     for box in E:
         bounds = [box[1][0] - box[0][0]/2, box[1][0] + box[0][0]/2,
                   box[1][1] - box[0][1]/2, box[1][1] + box[0][1]/2]
-        integrals.append(trap_quad(lin_term, bounds))
+        integrals.append(trap_quad(lin_term, bounds, res=(40, 40)))
 
     integrals = np.array(integrals)
 
@@ -40,10 +39,10 @@ def true_classifier(E, rho_true, tau):
     #tau: float
     #returns: bool array
     integrals = []
-    for box in e:
+    for box in E:
         bounds = [box[1][0] - box[0][0]/2, box[1][0] + box[0][0]/2,
                   box[1][1] - box[0][1]/2, box[1][1] + box[0][1]/2]
-        integrals.append(trap_quad(rho_true, bounds))
+        integrals.append(trap_quad(rho_true, bounds, res=(40, 40)))
     integrals = np.array(integrals)
     return integrals > tau
 
@@ -65,24 +64,20 @@ def evaluate_plane(bbox, rho, rho_true, tau, lin_term, resolution):
     #tau: float
     #lin_term: function
     #resolution: np.array(2): [num_boxes_x, num_boxes_y]
-
     #returns (precision, recall, accuracy)
-
-    x_vals = np.linspace(-bbox[0]/2, bbox[0]/2, resolution[0]+1)
-    y_vals = np.linspace(-bbox[1]/2, bbox[1]/2, resolution[1]+1)
     bboxes = []
-    for x in resolution[0]:
-        for y in resolution[1]:
+    for x in range(resolution[0]):
+        for y in range(resolution[1]):
             bboxes.append([[bbox[0]/resolution[0], bbox[1]/resolution[1]],
-                  [x + bbox[0]/resolution[0]/2, y + bbox[1]/resolution[1]/2]])
-    pred = classifier(bbox, rho, tau, lin_term)
-    true = true_classifier(bbox, rho_true, tau)
+                  [-1 * bbox[0]/2 + (bbox[0] * x + bbox[0]/2)/resolution[0],-1 * bbox[1]/2 +  (bbox[1] * y + bbox[1]/2)/resolution[1]]])
+    pred = classifier(bboxes, rho, tau, lin_term)
+    true = true_classifier(bboxes, rho_true, tau)
 
-    precision = precision(pred, true)
-    recall = recall(pred, true)
-    accuracy = accuracy(pred, true)
+    pres = precision(pred, true)
+    rec = recall(pred, true)
+    acc = accuracy(pred, true)
 
-    return (precision, recall, accuracy)
+    return (pres, rec, acc)
 
 
 
@@ -117,13 +112,33 @@ if __name__ == "__main__":
 
 
     #Test dirac deltas
+
     tau = 0.001
     rho = (np.array([[0.5, 0.5], [-0.5, -0.5]]), np.array([0.2, 0.1]))
     E = np.array([[[0.4, 0.4], [1,1]], [[1, 1], [0,0]], [[0.2, 0.2], [0.6, 0.6]]])
     def fn(x, y):
         x = x.flatten()
         return np.zeros(len(x))
+    print "should return [False, True, True]:"
     print classifier(E, rho, tau, fn)
+
+    bbox = np.array([0.4, 0.4])
+    tau = 0.1
+    rho = (np.array([[0.1, 0.1], [0.11, 0.11], [0, 0], [-.1, -.1]]), np.array([0.2, 0.2, 0.2, 1]))
+    lin_term = lambda x, y: np.zeros(len(x.flatten()))
+
+    def rho_true(x, y):
+        x = x.flatten()
+        y = y.flatten()
+        filt = lambda y0: 1 if (np.absolute(y0[0] - 0.1) <= 0.02) and (np.absolute(y0[1] - 0.1) <= 0.02) else 0
+        ident = np.array(map(filt, zip(x, y)))
+        return 1.0/0.04**2 * ident
+
+    resolution = [21, 21]
+
+    print evaluate_plane(bbox, rho, rho_true, tau, lin_term, resolution)
+
+
 
 
 

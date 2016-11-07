@@ -51,10 +51,9 @@ def _prob_lin_x_mu(x0, x, v):
     x: np.array(2): given measurement of x0
     v: np.array(2): given measurement of v0
     """
-
     product = 1
     product *= posteriors.measurement_given_x0(x0, x) * scene.P_of_c[-1] * posteriors.x0_given_lin(x0)
-    product /= 4 * sigma_v**2 * vel_width[0]**2 #* scene_scale[0] * scene_scale[1]
+    product /= 4 *  vel_width[0]**2 #* scene_scale[0] * scene_scale[1]
     term1 = erf((v[0] + vel_width[0]/2)/(np.sqrt(2) * sigma_v))
     term2 = erf((v[0] - vel_width[0]/2)/(np.sqrt(2) * sigma_v))
     product *= term1 - term2
@@ -157,12 +156,13 @@ def prob_lin_x_v_given_mu(x0, v0, x, v):
     return _prob_lin_x_v_mu(x0, v0, x, v) / _normalizing_constant(x, v)
 
 if __name__ == "__main__":
-    print "starting k normalization"
+
     sum_k = 0
     x = np.array([0, 0])
     v = np.array([0.0,0])
 
     print "Starting sanity check"
+    print "should be same:"
     x0 = [[0.01, 0.01]]
     print _prob_lin_x_mu(x0, x, v)
     bounds = [v[0] - vel_width[0]/2,  v[0] + vel_width[0]/2,
@@ -175,7 +175,7 @@ if __name__ == "__main__":
         return _prob_lin_x_v_mu(xs, xy, x, v)
     print trap_quad(temp, bounds)
 
-
+    print "starting k normalization"
     bounds = (x[0] - dist_width[0]/2, x[0] + dist_width[0]/2,
              x[1] - dist_width[0]/2, x[1] + dist_width[0]/2,
              -0.5 * s_max, 0.5 * s_max)
@@ -189,7 +189,6 @@ if __name__ == "__main__":
            z = z.flatten()
            return prob_k_s_x0_given_mu(i, z, xy, x, v)
        sum_k += trap_quad(temp, bounds, (40, 40, 40))
-    print sum_k
     print "starting lin"
     bounds = (x[0] - dist_width[0]/2, x[0] + dist_width[0]/2,
               x[1] - dist_width[0]/2, x[1] + dist_width[0]/2,
@@ -206,7 +205,6 @@ if __name__ == "__main__":
         return prob_lin_x_v_given_mu(xy, zw, x, v)
     lin_term = trap_quad(temp, bounds, (40, 40, 40, 40))
     sum_k += lin_term
-    print lin_term
     print "Should be 1.0:"
     print sum_k
 

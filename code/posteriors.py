@@ -60,7 +60,7 @@ def measurement_given_v0(v, v0):
     Returns the probability at points v given a v0
 
     Takes v0: np.array(2): initial point
-    Takes v: np.array(N_points, 2): set of points at which to evaluate probability 
+    Takes v: np.array(N_points, 2): set of points at which to evaluate probability
 
     Returns np.array(N_Points): probability that agent is at v given v0
     """
@@ -114,7 +114,7 @@ def v0_given_x0_lin(v0):
     v0: np.array(N_points, 2): points to be evaluated
     Returns probability of v0 := N(0, sigma_v)
     """
-    return multivariate_normal.pdf(v0, np.zeros([2]), scene.sigma_v)
+    return multivariate_normal.pdf(v0, np.zeros([2]), scene.sigma_v**2)
 
 if __name__ == "__main__":
     pass
