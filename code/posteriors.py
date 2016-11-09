@@ -133,4 +133,6 @@ if __name__ == "__main__":
 
     print measurement_given_v0([[0,0], [0.5, 0.5], [1,1], [2,2]], [0,0])
 
+    
+
 

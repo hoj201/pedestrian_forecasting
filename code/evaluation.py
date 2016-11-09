@@ -9,17 +9,22 @@
      #sum(truth and pred) / sum(pred)
 import numpy as np
 from integrate import trap_quad
+import matplotlib.pyplot as plt
 
 def classifier(E, rho, tau, lin_term):
+    E = np.array(E)
     #takes E: np.array(n_boxes, 2, 2)
     #looks like [[[box_width, box_height], [box_x, box_y]]]
     #rho: (np.array(n_points, 2), np.array(n_points))
     #tau: float
     #returns: bool array
     xy, p = rho
-
+    print len(E)
+    x = {"counter": 0}
     def filter(e):
         fn = lambda x: (np.absolute((x[0]-e[1][0])) <= e[0][0]/2.0) and (np.absolute(x[1] - e[1][1]) <= e[0][1]/2.0)
+        x["counter"] += 1
+        print "{}%".format(100*x["counter"] / float(len(E)))
         return sum(p[np.where(map(fn, xy))[0]])
     res = np.array(map(filter, E))
     integrals = []
@@ -27,9 +32,9 @@ def classifier(E, rho, tau, lin_term):
         bounds = [box[1][0] - box[0][0]/2, box[1][0] + box[0][0]/2,
                   box[1][1] - box[0][1]/2, box[1][1] + box[0][1]/2]
         integrals.append(trap_quad(lin_term, bounds, res=(40, 40)))
-
     integrals = np.array(integrals)
 
+    #print E[np.where(res + integrals > tau)[0]]
     return res + integrals > tau
 
 def true_classifier(E, rho_true, tau):
@@ -38,12 +43,15 @@ def true_classifier(E, rho_true, tau):
     #rho_true: function
     #tau: float
     #returns: bool array
-    integrals = []
-    for box in E:
-        bounds = [box[1][0] - box[0][0]/2, box[1][0] + box[0][0]/2,
-                  box[1][1] - box[0][1]/2, box[1][1] + box[0][1]/2]
-        integrals.append(trap_quad(rho_true, bounds, res=(40, 40)))
-    integrals = np.array(integrals)
+    #integrals = []
+    #for box in E:
+    #    bounds = [box[1][0] - box[0][0]/2, box[1][0] + box[0][0]/2,
+    #              box[1][1] - box[0][1]/2, box[1][1] + box[0][1]/2]
+    #    integrals.append(trap_quad(rho_true, bounds, res=(40, 40)))
+    #integrals = np.array(integrals)
+    E = np.array(E)
+    integrals = rho_true(E)
+    #print E[np.where(integrals > tau)[0]]
     return integrals > tau
 
 
@@ -66,18 +74,35 @@ def evaluate_plane(bbox, rho, rho_true, tau, lin_term, resolution):
     #resolution: np.array(2): [num_boxes_x, num_boxes_y]
     #returns (precision, recall, accuracy)
     bboxes = []
+    print "beginning prediction classifier"
+    #create all of the bounding boxes
     for x in range(resolution[0]):
         for y in range(resolution[1]):
             bboxes.append([[bbox[0]/resolution[0], bbox[1]/resolution[1]],
                   [-1 * bbox[0]/2 + (bbox[0] * x + bbox[0]/2)/resolution[0],-1 * bbox[1]/2 +  (bbox[1] * y + bbox[1]/2)/resolution[1]]])
+    bboxes = np.array(bboxes)
+    #Create prediction
     pred = classifier(bboxes, rho, tau, lin_term)
+    print "beginning true classifier"
+    #create truth for comparison
     true = true_classifier(bboxes, rho_true, tau)
-
     pres = precision(pred, true)
     rec = recall(pred, true)
     acc = accuracy(pred, true)
 
-    return (pres, rec, acc)
+    #plotting bollocks
+    true_bboxes = bboxes[np.where(true)[0]]
+    pred_bboxes = bboxes[np.where(pred)[0]]
+    true_xs = true_bboxes[:, :, 0][1::2]
+    true_ys = true_bboxes[:, :, 1][1::2]
+    pred_xs = pred_bboxes[:, :, 0][1::2]
+    pred_ys = pred_bboxes[:, :, 1][1::2]
+
+    plt.scatter(true_xs, true_ys, color="red")
+    plt.scatter(pred_xs, pred_ys, color="blue")
+    plt.show()
+
+    return (pres, rec, acc, pred, true)
 
 
 
@@ -137,6 +162,8 @@ if __name__ == "__main__":
     resolution = [21, 21]
 
     print evaluate_plane(bbox, rho, rho_true, tau, lin_term, resolution)
+
+    
 
 
 
