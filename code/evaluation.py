@@ -19,12 +19,11 @@ def classifier(E, rho, tau, lin_term):
     #tau: float
     #returns: bool array
     xy, p = rho
-    print len(E)
-    x = {"counter": 0}
+    asdf = {"counter": 0}
     def filter(e):
-        fn = lambda x: (np.absolute((x[0]-e[1][0])) <= e[0][0]/2.0) and (np.absolute(x[1] - e[1][1]) <= e[0][1]/2.0)
-        x["counter"] += 1
-        print "{}%".format(100*x["counter"] / float(len(E)))
+        fn = lambda x: (np.absolute((x[0]-e[1][0])) <= e[0][0]/2.0 + 10E-6) and (np.absolute(x[1] - e[1][1]) <= e[0][1]/2.0 + 10E-6)
+        asdf["counter"] += 1
+        print "{}%".format(100*asdf["counter"] / float(len(E)))
         return sum(p[np.where(map(fn, xy))[0]])
     res = np.array(map(filter, E))
     integrals = []
@@ -33,9 +32,9 @@ def classifier(E, rho, tau, lin_term):
                   box[1][1] - box[0][1]/2, box[1][1] + box[0][1]/2]
         integrals.append(trap_quad(lin_term, bounds, res=(40, 40)))
     integrals = np.array(integrals)
-
+    #print (res + integrals)[np.where(res + integrals > tau)[0]][36:]
     #print E[np.where(res + integrals > tau)[0]]
-    return res + integrals > tau
+    return res + integrals
 
 def true_classifier(E, rho_true, tau):
     #takes:
@@ -52,7 +51,7 @@ def true_classifier(E, rho_true, tau):
     E = np.array(E)
     integrals = rho_true(E)
     #print E[np.where(integrals > tau)[0]]
-    return integrals > tau
+    return integrals
 
 
 def precision(pred, truth):
@@ -73,6 +72,11 @@ def evaluate_plane(bbox, rho, rho_true, tau, lin_term, resolution):
     #lin_term: function
     #resolution: np.array(2): [num_boxes_x, num_boxes_y]
     #returns (precision, recall, accuracy)
+    xy,p = rho
+    where = np.where(p > 0)[0]
+    p = p[where]
+    xy = xy[where]
+    rho = (xy, p)
     bboxes = []
     print "beginning prediction classifier"
     #create all of the bounding boxes
@@ -82,27 +86,56 @@ def evaluate_plane(bbox, rho, rho_true, tau, lin_term, resolution):
                   [-1 * bbox[0]/2 + (bbox[0] * x + bbox[0]/2)/resolution[0],-1 * bbox[1]/2 +  (bbox[1] * y + bbox[1]/2)/resolution[1]]])
     bboxes = np.array(bboxes)
     #Create prediction
-    pred = classifier(bboxes, rho, tau, lin_term)
+    predic = classifier(bboxes, rho, tau, lin_term)
+    pred = predic > tau
     print "beginning true classifier"
     #create truth for comparison
-    true = true_classifier(bboxes, rho_true, tau)
-    pres = precision(pred, true)
-    rec = recall(pred, true)
-    acc = accuracy(pred, true)
+    truth = true_classifier(bboxes, rho_true, tau)
+    true = truth > tau
+    #pres = precision(pred, true)
+    #rec = recall(pred, true)
+    #acc = accuracy(pred, true)
+    predic = predic[np.where(pred)[0]]
+    truth = truth[np.where(true)[0]]
 
     #plotting bollocks
     true_bboxes = bboxes[np.where(true)[0]]
-    pred_bboxes = bboxes[np.where(pred)[0]]
-    true_xs = true_bboxes[:, :, 0][1::2]
-    true_ys = true_bboxes[:, :, 1][1::2]
-    pred_xs = pred_bboxes[:, :, 0][1::2]
-    pred_ys = pred_bboxes[:, :, 1][1::2]
+    pred_bboxes = bboxes[np.where(pred)[0]]#[34:]
+    true_xs = true_bboxes[:, :, 0].flatten()[1::2]
+    true_ys = true_bboxes[:, :, 1].flatten()[1::2]
+    pred_xs = pred_bboxes[:, :, 0].flatten()[1::2]
+    pred_ys = pred_bboxes[:, :, 1].flatten()[1::2]
+    #for box in pred_bboxes:
+    #    x0 = box[1][0] - box[0][0]/2.0
+    #    x1 = box[1][0] + box[0][0]/2.0
+    #    y = box[1][1] - box[0][1]/2.0
+    #    plt.plot([x0, x1], [y, y], color='purple', linestyle='-', linewidth=.5)
+    #    x = box[1][0] + box[0][0]/2.0
+    #    y0 = box[1][1] - box[0][1]/2.0
+    #    y1 = box[1][1] + box[0][1]/2.0
+    #    plt.plot([x, x], [y0, y1], color='purple', linestyle='-', linewidth=.5)
+    #for box in true_bboxes:
+    #    x0 = box[1][0] - box[0][0]/2.0
+    #    x1 = box[1][0] + box[0][0]/2.0
+    #    y = box[1][1] - box[0][1]/2.0
+    #    plt.plot([x0, x1], [y, y], color='orange', linestyle='-', linewidth=.5)
+    #    x = box[1][0] + box[0][0]/2.0
+    #    y0 = box[1][1] - box[0][1]/2.0
+    #    y1 = box[1][1] + box[0][1]/2.0
+    #    plt.plot([x, x], [y0, y1], color='orange', linestyle='-', linewidth=.5)
+    plt.scatter(true_xs, true_ys, color="red", s=10)
+    plt.scatter(pred_xs, pred_ys, color="blue", s=10)
 
-    plt.scatter(true_xs, true_ys, color="red")
-    plt.scatter(pred_xs, pred_ys, color="blue")
-    plt.show()
+    bboxes_x = bboxes[:, :, 0][1::2]
+    bboxes_y = bboxes[:, :, 1][1::2]
+    #plt.scatter(bboxes_x, bboxes_y, color="yellow")
+    weights_x = rho[0][:, 0]
+    weights_y = rho[0][:, 1]
+    plt.scatter(weights_x, weights_y, color="black", s = 5)
 
-    return (pres, rec, acc, pred, true)
+    #plt.show()
+
+    #return (pres, rec, acc, pred, true)
 
 
 
@@ -140,30 +173,33 @@ if __name__ == "__main__":
 
     tau = 0.001
     rho = (np.array([[0.5, 0.5], [-0.5, -0.5]]), np.array([0.2, 0.1]))
-    E = np.array([[[0.4, 0.4], [1,1]], [[1, 1], [0,0]], [[0.2, 0.2], [0.6, 0.6]]])
+    E = np.array([[[.01, .01], [.5, .495]], [[.01, .01], [-.5, -.495]]])
     def fn(x, y):
         x = x.flatten()
         return np.zeros(len(x))
     print "should return [False, True, True]:"
     print classifier(E, rho, tau, fn)
 
+    assert False
+
     bbox = np.array([0.4, 0.4])
     tau = 0.1
-    rho = (np.array([[0.1, 0.1], [0.11, 0.11], [0, 0], [-.1, -.1]]), np.array([0.2, 0.2, 0.2, 1]))
+    rho = (np.array([[-0.1, 0.1], [0.11, 0.11], [0, 0], [-.1, -.1], [-.1, 0]]), np.array([0.2, 0.2, 0.2, .2, .2]))
+
     lin_term = lambda x, y: np.zeros(len(x.flatten()))
 
-    def rho_true(x, y):
-        x = x.flatten()
-        y = y.flatten()
-        filt = lambda y0: 1 if (np.absolute(y0[0] - 0.1) <= 0.02) and (np.absolute(y0[1] - 0.1) <= 0.02) else 0
-        ident = np.array(map(filt, zip(x, y)))
-        return 1.0/0.04**2 * ident
+    #def rho_true(x, y):
+    #    x = x.flatten()
+    #    y = y.flatten()
+    #    filt = lambda y0: 1 if (np.absolute(y0[0] - 0.1) <= 0.02) and (np.absolute(y0[1] - 0.1) <= 0.02) else 0
+    #    ident = np.array(map(filt, zip(x, y)))
+    #    return 1.0/0.04**2 * ident
+    def rho_true(bounding_boxes):
+        return np.zeros([len(bounding_boxes)])
 
-    resolution = [21, 21]
+    resolution = [100, 100]
 
     print evaluate_plane(bbox, rho, rho_true, tau, lin_term, resolution)
-
-    
 
 
 

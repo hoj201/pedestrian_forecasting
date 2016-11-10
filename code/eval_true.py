@@ -2,6 +2,7 @@ import pickle
 import numpy as np
 from generate_distributions import make_generator
 from evaluation import evaluate_plane
+import matplotlib.pyplot as plt
 
 with open('test_scene.pkl','r') as f:
     test_scene = pickle.load(f)
@@ -38,9 +39,8 @@ def rho_true(subj, T, test_set, bbox_ls):
 
 
 if __name__ == "__main__":
-    
     dt = .1
-    Nt = 50
+    Nt = 1200
 
     def get_initial_condition(BB_ts):
             fd_width = 4
@@ -63,6 +63,7 @@ if __name__ == "__main__":
         gen = make_generator(test_scene, x, v, dt, Nt)
         print "starting eval"
         #iterate through all time steps
+        flibberty = 0
         for (ct, data) in enumerate(gen):
             #ignore predictions where actual data doesn't exist
             if ct % 10 != 0:
@@ -80,19 +81,26 @@ if __name__ == "__main__":
                     xs = np.concatenate((xs, np.array(zip(row[0], row[1]))))
             #delete placeholder component
             xs = np.delete(xs, 0, 0)
+            #Define initial conditions
             rho = (xs, ps)
-            tau = 0.00001
+            tau = 0.01
             lin_term = data[-1]
 
             def lin(x, y):
                 x = x.flatten()
                 y = y.flatten()
                 return lin_term([x,y])
+
             resolution = np.array([40, 40])
-            rt = lambda bboxes: rho_true(i, ct, test_set, bboxes)
+            #Define rho_true for a given time step etc
+            rt = lambda bboxes: rho_true(i, ct, test_set,bboxes)
             bbox = np.array([test_scene.width, test_scene.height])
             #Call evaluate_plane
             res =  evaluate_plane(bbox, rho, rt, tau, lin, resolution)
+            print flibberty
+            if flibberty > 10:
+                plt.show()
             print res
+            flibberty += 1
 
 
