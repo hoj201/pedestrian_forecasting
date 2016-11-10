@@ -95,11 +95,11 @@ def make_generator(scene, x, v, dt, Nt):
                 def np_min(*args):
                     comp = lambda x,y: x*(x<y)+y*(y<x)
                     return reduce(comp, args[1:], args[0])
-                u_min = np_max((x-w)/t, (x-wx)/t, -wv)
-                v_min = np_max((y-h)/t, (y-wx)/t, -wv)
-                u_max = np_min((x+w)/t, (x+wx)/t, wv)
-                v_max = np_min((y+w)/t, (y+wx)/t, wv)
-                Prob_of_x_hat_and_v_hat = _normalizing_constant(_x, _v) #TODO: REPLACE THIS
+                u_min = np_max((x-w/2)/t, (x-_x[0]-wx/2)/t, -wv/2)
+                v_min = np_max((y-h/2)/t, (y-_x[1]-wx/2)/t, -wv/2)
+                u_max = np_min((x+w/2)/t, (x-_x[0]+wx/2)/t, wv/2)
+                v_max = np_min((y+w/2)/t, (y-_x[1]+wx/2)/t, wv/2)
+                Prob_of_x_hat_and_v_hat = _normalizing_constant(_x, _v)
                 scale = scene.P_of_c[-1] / Prob_of_x_hat_and_v_hat
                 scale /= h * w * wx**2 * wv**2
                 from scipy.special import erf
