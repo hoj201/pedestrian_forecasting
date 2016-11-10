@@ -51,10 +51,9 @@ def _prob_lin_x_mu(x0, x, v):
     x: np.array(2): given measurement of x0
     v: np.array(2): given measurement of v0
     """
-
     product = 1
     product *= posteriors.measurement_given_x0(x0, x) * scene.P_of_c[-1] * posteriors.x0_given_lin(x0)
-    product /= 4 * sigma_v**2 * vel_width[0]**2 * scene_scale[0] * scene_scale[1]
+    product /= 4 *  vel_width[0]**2 #* scene_scale[0] * scene_scale[1]
     term1 = erf((v[0] + vel_width[0]/2)/(np.sqrt(2) * sigma_v))
     term2 = erf((v[0] - vel_width[0]/2)/(np.sqrt(2) * sigma_v))
     product *= term1 - term2
@@ -75,14 +74,12 @@ def _normalizing_constant(x,v):
 
     res = 40
 
-    print "resolution is " + str(res)
-
     if np.array_equal(x,x_s) and np.array_equal(v, v_s) and normalizing_constant_s != None:
         return normalizing_constant_s
     
     bounds = (x[0] - dist_width[0]/2, x[0] + dist_width[0]/2,
               x[1] - dist_width[0]/2, x[1] + dist_width[0]/2,
-              -1 * s_max, s_max)
+              -0.5 * s_max, 0.5 * s_max)
 
     normalizing_constant = 0
     for i in range(max_k):
@@ -94,14 +91,18 @@ def _normalizing_constant(x,v):
             z = z.flatten()
             return _prob_k_s_x0(i, z, xy, x, v)
         normalizing_constant += trap_quad(temp, bounds, res = (res, res, res))
-    print normalizing_constant
     bounds = (x[0] - dist_width[0]/2, x[0] + dist_width[0]/2,
               x[1] - dist_width[0]/2, x[1] + dist_width[0]/2)
+              #v[0] - vel_width[0]/2, v[0] + vel_width[0]/2,
+              #v[1] - vel_width[1]/2, v[1] + vel_width[1]/2)
     def temp(x1,y1):
         x1 = x1.flatten()
         y1 = y1.flatten()
+        #z = z.flatten()
+        #w = w.flatten()
         #may be slow, possibly use dstack?
         xy = np.array(zip(x1,y1))
+        #zw = np.array(zip(z, w))
         return _prob_lin_x_mu( xy, x, v)
     normalizing_constant += trap_quad(temp, bounds, res = (res, res))
     normalizing_constant_s = normalizing_constant
@@ -137,8 +138,8 @@ def _prob_lin_x_v_mu(x0, v0, x, v):
     """
     product = 1
     product *= posteriors.x0_given_lin(x0)
-    product *= posteriors.measurement_given_x0(x, x0)
-    product *= posteriors.measurement_given_v0(v, v0)
+    product *= posteriors.measurement_given_x0(x0, x)
+    product *= posteriors.measurement_given_v0(v0, v)
     product *= posteriors.v0_given_x0_lin(v0)
     product *= p_of_lin
     return product
@@ -155,55 +156,60 @@ def prob_lin_x_v_given_mu(x0, v0, x, v):
     return _prob_lin_x_v_mu(x0, v0, x, v) / _normalizing_constant(x, v)
 
 if __name__ == "__main__":
-    print "starting k normalization"
-    print scene_scale
+
     sum_k = 0
-    print vel_width
-    x = np.array([0.5, 0.5])
-    v = np.array([0.011,011])
-    bounds = (x[0] - dist_width[0]/2, x[0] + dist_width[0]/2,
-              x[1] - dist_width[0]/2, x[1] + dist_width[0]/2,
-              -1 * s_max, s_max)
-    for i in range(max_k):
-        print i
-        def temp(x1,y1,z):
-            x1 = x1.flatten()
-            y1 = y1.flatten()
-            #may be slow, possibly use dstack?
-            xy = np.array(zip(x1,y1))
-            z = z.flatten()
-            return prob_k_s_x0_given_mu(i, z, xy, x, v)
-        sum_k += trap_quad(temp, bounds)
-    print sum_k
-    print "starting lin"
-    bounds = (x[0] - dist_width[0]/2, x[0] + dist_width[0]/2,
-              x[1] - dist_width[0]/2, x[1] + dist_width[0]/2)
-    def temp(x1,y1):
+    x = np.array([0, 0])
+    v = np.array([0.0,0])
+
+    print "Starting sanity check"
+    print "should be same:"
+    x0 = [[0.01, 0.01]]
+    print _prob_lin_x_mu(x0, x, v)
+    bounds = [v[0] - vel_width[0]/2,  v[0] + vel_width[0]/2,
+               v[1] - vel_width[0]/2, v[1] + vel_width[0]/2]
+    def temp(x1, y1):
         x1 = x1.flatten()
         y1 = y1.flatten()
-        xy = np.array(zip(x1,y1))
-        return prob_lin_x_given_mu(xy, x, v)
-    lin_term = trap_quad(temp, bounds)
-    print lin_term
-    sum_k += lin_term
-    print sum_k
-    sum_k = 0
-    bounds = [-10*s_max, 10*s_max]
-    x0 = np.array([[0,0]])
-    x = np.array([0,0])
-    v = np.array([0,0])
-    print "starting second test"
-    for i in range(max_k):
-        print i
-        def temp(z):
-            z = z.flatten()
-            x1 = np.zeros([len(z), 2])
-            return prob_k_s_x0_given_mu(i, z, x1, x, v)
-        sum_k += trap_quad(temp, bounds)
-    print sum_k
-    print posteriors.measurement_given_x0(x0, x)
+        xy = np.array(zip(x1, y1))
+        xs = np.tile(x0, (len(xy), 1))
+        return _prob_lin_x_v_mu(xs, xy, x, v)
+    print trap_quad(temp, bounds)
 
-    print prob_k_s_x0_given_mu(0, [0], x0, x, v)
+    print "starting k normalization"
+    bounds = (x[0] - dist_width[0]/2, x[0] + dist_width[0]/2,
+             x[1] - dist_width[0]/2, x[1] + dist_width[0]/2,
+             -0.5 * s_max, 0.5 * s_max)
+    for i in range(max_k):
+       print i
+       def temp(x1,y1,z):
+           x1 = x1.flatten()
+           y1 = y1.flatten()
+           #may be slow, possibly use dstack?
+           xy = np.array(zip(x1,y1))
+           z = z.flatten()
+           return prob_k_s_x0_given_mu(i, z, xy, x, v)
+       sum_k += trap_quad(temp, bounds, (40, 40, 40))
+    print "starting lin"
+    bounds = (x[0] - dist_width[0]/2, x[0] + dist_width[0]/2,
+              x[1] - dist_width[0]/2, x[1] + dist_width[0]/2,
+              v[0] - vel_width[0]/2, v[0] + vel_width[0]/2,
+              v[1] - vel_width[1]/2, v[1] + vel_width[1]/2
+              )
+    def temp(x1,y1, z, w):
+        x1 = x1.flatten()
+        y1 = y1.flatten()
+        z = z.flatten()
+        w = w.flatten()
+        xy = np.array(zip(x1,y1))
+        zw = np.array(zip(z, w))
+        return prob_lin_x_v_given_mu(xy, zw, x, v)
+    lin_term = trap_quad(temp, bounds, (40, 40, 40, 40))
+    sum_k += lin_term
+    print "Should be 1.0:"
+    print sum_k
+
+    print "should be close to 1:"
+    #print prob_k_s_x0_given_mu(0, [0], x0, x, v)
     def temp(x, y):
         x = x.flatten()
         y = y.flatten()
@@ -211,43 +217,46 @@ if __name__ == "__main__":
         xy = np.array(zip(x,y))
         return posteriors.measurement_given_v0(xy, np.array([0,0]))
     bounds = (-1 * vel_width[0], 1 * vel_width[0], -1 * vel_width[0], 1 * vel_width[0])
-    print trap_quad(temp, bounds, res=(1000,1000))
+    print trap_quad(temp, bounds, res=(40,40))
 
+    print "should be close to 1:"
     bounds = [-1 * s_max, s_max]
     print trap_quad(posteriors.prob_s_uniform, bounds)
 
+    print "all should be close to 1:"
     bounds = []
     for i in range(max_k):
-        def temp(x,y):
-            x = x.flatten()
-            y = y.flatten()
-            xy = np.array(zip(x,y))
-            return posteriors.x0_given_k(i, xy)
-        width = posteriors.scene_scale[0]
-        height = posteriors.scene_scale[1]
-        bounds = [-2*width/2.0,2* width/2.0, -2*height/2.0, 2*height/2.0]
-        print trap_quad(temp, bounds)
+       def temp(x,y):
+           x = x.flatten()
+           y = y.flatten()
+           xy = np.array(zip(x,y))
+           return posteriors.x0_given_k(i, xy)
+       width = posteriors.scene_scale[0]
+       height = posteriors.scene_scale[1]
+       bounds = [-2*width/2.0,2* width/2.0, -2*height/2.0, 2*height/2.0]
+       print trap_quad(temp, bounds)
 
-    bounds = [-.1, .1, -.1, .1]
+    print "should be close to 1:"
+    bounds = [-.5, .5, -.5, .5]
     def temp(x,y):
-        x = x.flatten()
-        y = y.flatten()
-        xy = np.array(zip(x,y))
-        return posteriors.v0_given_x0_lin(xy)
+       x = x.flatten()
+       y = y.flatten()
+       xy = np.array(zip(x,y))
+       return posteriors.v0_given_x0_lin(xy)
     print trap_quad(temp, bounds)
 
     k = 0
     x0 = np.array([[0,0]])
     x = np.array([0,0])
     v = np.array([0,0])
-    s = np.array([.005])
-    dx = np.array([0,0.001])
-    print unnorm_prob_k_s_x0(k, s, x0 + dx, x, v)
-    print unnorm_prob_k_s_x0(k, s, x0, x, v) / unnorm_prob_k_s_x0(k, s, x0 + dx, x, v)
+    s = np.array([-.002])
+    dx = np.array([0,0.02])
+    print "Should be the same:"
+    print _prob_k_s_x0(k, s, x0, x, v) / _prob_k_s_x0(k, s, x0 + dx, x, v)
     print posteriors.x0_given_k(k, x0) / posteriors.x0_given_k(k, x0+dx)
 
     x = np.array([0,0])
     v = np.array([.005,0.005])
     _normalizing_constant(x, v)
-    
+
     pass

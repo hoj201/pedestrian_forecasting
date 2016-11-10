@@ -116,6 +116,7 @@ def make_generator(scene, x, v, dt, Nt):
 if __name__ == '__main__':
     import pickle
     from scene import Scene
+    from integrate import trap_quad
     with open('test_scene.pkl', 'rs') as f:
         scene = pickle.load(f)
     with open('test_set.pkl', 'rs') as f:
@@ -140,8 +141,25 @@ if __name__ == '__main__':
     gen = make_generator(scene, x, v, dt, Nt)
     xy_grid = np.random.randn(2,100)
     for data in gen:
+        td_sum = 0
         for k in range(scene.num_nl_classes):
             xy, weights = data[k]
             print "max_weight = {:f}".format(weights.max())
+            td_sum += sum(weights.flatten())
+
         lin_term = data[-1]
-        print lin_term( xy_grid )
+
+        print td_sum
+        td_sum = 0
+        def temp(x, y):
+            return lin_term(np.array([x, y]))
+
+        bounds = [-0.5*scene.width, 0.5*scene.width, -0.5*scene.height, 0.5 * scene.height]
+        quad = trap_quad(temp, bounds, (200, 200))
+        td_sum += quad
+        print "Should be 1:"
+        print td_sum
+        #print lin_term( xy_grid )
+
+
+    #test linear term
