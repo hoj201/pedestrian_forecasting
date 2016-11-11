@@ -105,24 +105,24 @@ def evaluate_plane(bbox, rho, rho_true, tau, lin_term, resolution):
     true_ys = true_bboxes[:, :, 1].flatten()[1::2]
     pred_xs = pred_bboxes[:, :, 0].flatten()[1::2]
     pred_ys = pred_bboxes[:, :, 1].flatten()[1::2]
-    #for box in pred_bboxes:
-    #    x0 = box[1][0] - box[0][0]/2.0
-    #    x1 = box[1][0] + box[0][0]/2.0
-    #    y = box[1][1] - box[0][1]/2.0
-    #    plt.plot([x0, x1], [y, y], color='purple', linestyle='-', linewidth=.5)
-    #    x = box[1][0] + box[0][0]/2.0
-    #    y0 = box[1][1] - box[0][1]/2.0
-    #    y1 = box[1][1] + box[0][1]/2.0
-    #    plt.plot([x, x], [y0, y1], color='purple', linestyle='-', linewidth=.5)
-    #for box in true_bboxes:
-    #    x0 = box[1][0] - box[0][0]/2.0
-    #    x1 = box[1][0] + box[0][0]/2.0
-    #    y = box[1][1] - box[0][1]/2.0
-    #    plt.plot([x0, x1], [y, y], color='orange', linestyle='-', linewidth=.5)
-    #    x = box[1][0] + box[0][0]/2.0
-    #    y0 = box[1][1] - box[0][1]/2.0
-    #    y1 = box[1][1] + box[0][1]/2.0
-    #    plt.plot([x, x], [y0, y1], color='orange', linestyle='-', linewidth=.5)
+    for box in pred_bboxes:
+        x0 = box[1][0] - box[0][0]/2.0
+        x1 = box[1][0] + box[0][0]/2.0
+        y = box[1][1] - box[0][1]/2.0
+        plt.plot([x0, x1], [y, y], color='purple', linestyle='-', linewidth=.5)
+        x = box[1][0] + box[0][0]/2.0
+        y0 = box[1][1] - box[0][1]/2.0
+        y1 = box[1][1] + box[0][1]/2.0
+        plt.plot([x, x], [y0, y1], color='purple', linestyle='-', linewidth=.5)
+    for box in true_bboxes:
+        x0 = box[1][0] - box[0][0]/2.0
+        x1 = box[1][0] + box[0][0]/2.0
+        y = box[1][1] - box[0][1]/2.0
+        plt.plot([x0, x1], [y, y], color='orange', linestyle='-', linewidth=.5)
+        x = box[1][0] + box[0][0]/2.0
+        y0 = box[1][1] - box[0][1]/2.0
+        y1 = box[1][1] + box[0][1]/2.0
+        plt.plot([x, x], [y0, y1], color='orange', linestyle='-', linewidth=.5)
     plt.scatter(true_xs, true_ys, color="red", s=10)
     plt.scatter(pred_xs, pred_ys, color="blue", s=10)
 

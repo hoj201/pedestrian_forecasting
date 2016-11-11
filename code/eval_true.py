@@ -40,7 +40,7 @@ def rho_true(subj, T, test_set, bbox_ls):
 
 if __name__ == "__main__":
     dt = .1
-    Nt = 1200
+    Nt = 50
 
     def get_initial_condition(BB_ts):
             fd_width = 4
@@ -63,7 +63,6 @@ if __name__ == "__main__":
         gen = make_generator(test_scene, x, v, dt, Nt)
         print "starting eval"
         #iterate through all time steps
-        flibberty = 0
         for (ct, data) in enumerate(gen):
             #ignore predictions where actual data doesn't exist
             if ct % 10 != 0:
@@ -97,10 +96,7 @@ if __name__ == "__main__":
             bbox = np.array([test_scene.width, test_scene.height])
             #Call evaluate_plane
             res =  evaluate_plane(bbox, rho, rt, tau, lin, resolution)
-            print flibberty
-            if flibberty > 10:
-                plt.show()
+            plt.show()
             print res
-            flibberty += 1
 
 
