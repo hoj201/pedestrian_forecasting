@@ -237,13 +237,14 @@ if __name__ == "__main__":
        print trap_quad(temp, bounds)
 
     print "should be close to 1:"
-    bounds = [-.5, .5, -.5, .5]
+    bounds = 3*scene.sigma_v*np.array([-1., 1., -1., 1.])
+    bounds = list(bounds)
     def temp(x,y):
        x = x.flatten()
        y = y.flatten()
        xy = np.array(zip(x,y))
        return posteriors.v0_given_x0_lin(xy)
-    print trap_quad(temp, bounds)
+    print trap_quad(temp, bounds, (100,100))
 
     k = 0
     x0 = np.array([[0,0]])

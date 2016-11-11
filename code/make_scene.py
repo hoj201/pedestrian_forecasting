@@ -17,10 +17,10 @@ print test_scene.P_of_c
 
 print "\sum_k P(k) = {}".format( test_scene.P_of_c.sum())
 print "Pickling scene and test set."
-with open("test_scene.pkl", "ws") as f:
+with open("test_scene.pkl", "w") as f:
     pickle.dump( test_scene, f)
     print "Pickled scene"
 
-with open("test_set.pkl", "ws") as f:
+with open("test_set.pkl", "w") as f:
     pickle.dump( test_set, f)
     print "Pickled the test set"
