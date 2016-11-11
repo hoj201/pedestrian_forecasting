@@ -36,14 +36,17 @@ def make_generator(scene, x, v, dt, Nt):
             return scene.director_field_vectorized(k, xy).flatten()
         ode_forward = integrate.ode(ode_function)
         ode_forward.t = 0.0
+        nl_res = 20
+        dx = scene.bbox_width / (nl_res-1)
+        dvol = dx**2
         x_span = np.linspace(
                 x[0]-scene.bbox_width/2.0,
                 x[0]+scene.bbox_width/2.0,
-                10)
+                nl_res)
         y_span = np.linspace(
                 x[1]-scene.bbox_width/2.0,
                 x[1]+scene.bbox_width/2.0,
-                10)
+                nl_res)
         xy = np.vstack(
                 [spam.flatten() for spam in np.meshgrid(x_span, y_span)])
         N_points = xy.shape[1]
@@ -69,10 +72,11 @@ def make_generator(scene, x, v, dt, Nt):
 
             #Computes weights
             for l in range(-n, n+1):
-                x_l = xy_arr[l]
+                x_l = xy_arr[l] #TODO hoj:  It appears I forgot to multiply by dx!!!  In fact, I didn't compute |dx| anywhere.
                 s_l = l*ds*np.ones( x_l.shape[1] )
-                weight_arr[l] = ds*prob_k_s_x0_given_mu(
-                        k, s_l, np.transpose(x_l), x, v)
+                weight_arr[l] = prob_k_s_x0_given_mu(
+                        k, s_l, np.transpose(x_l), _x, _v)
+                weight_arr[l] *= ds * dvol
             #x_out = np.concatenate([xy_arr[-n:], xy_arr[:n+1]], axis=0)
             #weight_out = np.concatenate([weight_arr[-n:], weight_arr[:n+1]],
             #        axis=0)
@@ -149,8 +153,6 @@ if __name__ == '__main__':
 
         lin_term = data[-1]
 
-        print td_sum
-        td_sum = 0
         def temp(x, y):
             return lin_term(np.array([x, y]))
 
@@ -160,6 +162,3 @@ if __name__ == '__main__':
         print "Should be 1:"
         print td_sum
         #print lin_term( xy_grid )
-
-
-    #test linear term

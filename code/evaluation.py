@@ -17,10 +17,10 @@ def classifier(E, rho, tau, lin_term):
     #looks like [[[box_width, box_height], [box_x, box_y]]]
     #rho: (np.array(n_points, 2), np.array(n_points))
     #tau: float
-    #returns: bool array
+    #returns: bool array #NOTE hoj:  This does not output a bool, as written
     xy, p = rho
     asdf = {"counter": 0}
-    def filter(e):
+    def filter(e): #NOTE hoj:  Probably should rename this, as filter is a built-in func
         fn = lambda x: (np.absolute((x[0]-e[1][0])) <= e[0][0]/2.0 + 10E-6) and (np.absolute(x[1] - e[1][1]) <= e[0][1]/2.0 + 10E-6)
         asdf["counter"] += 1
         print "{}%".format(100*asdf["counter"] / float(len(E)))
@@ -200,10 +200,3 @@ if __name__ == "__main__":
     resolution = [100, 100]
 
     print evaluate_plane(bbox, rho, rho_true, tau, lin_term, resolution)
-
-
-
-
-
-
-

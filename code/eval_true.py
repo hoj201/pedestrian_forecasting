@@ -33,7 +33,7 @@ def rho_true(subj, T, test_set, bbox_ls):
     x_right = pmin(x_max, x_pos_arr + x_width_arr/2.0)
     y_bottom = pmax(y_min, y_pos_arr - y_width_arr/2.0)
     y_top = pmin(y_max, y_pos_arr + y_width_arr/2.0)
-    out = (x_right-x_left)*(x_right>x_left)*(y_top-y_bottom)*(y_top-y_bottom)
+    out = (x_right-x_left)*(x_right>x_left)*(y_top-y_bottom)*(y_top>y_bottom)
     out /= test_scene.bbox_width**2
     return out
 
@@ -67,7 +67,7 @@ if __name__ == "__main__":
         for (ct, data) in enumerate(gen):
             #ignore predictions where actual data doesn't exist
             if ct % 10 != 0:
-                continue
+                continue #NOTE  hoj:What??
             #Concatenate all xs, ps for the different classes
             xs = np.array([[0,0]])
             ps = np.array([])

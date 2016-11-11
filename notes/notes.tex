@@ -37,10 +37,10 @@
 \author{Henry O. Jacobs}
 \date{\today}
 
-
 \begin{document}
 
 \maketitle
+\tableofcontents
 
 \section{Problem Description}
 Given a finite set of time-series of bounding boxes, representing the location of previously observed agents, and
@@ -119,20 +119,21 @@ to yield the $\mathcal{O}( \Delta s_n )$ approximation
 Finally, we may approximate $(\Phi_k^{st})*\rho_{k,s}$ up to $\mathcal{O}( \Delta x)$ by using a grid $\Lambda$ or resolution $\Delta x$.
 This gives us the approximation
 \begin{align*}
-	(\Phi_k^{st})_* \rho_{k,s}(x) = \sum_{\alpha \in \Lambda } \Pr( k , s , x_\alpha) \delta( x - \Phi_k^{st} (x_\alpha) ) + \mathcal{O}( \Delta x )
+	(\Phi_k^{st})_* \rho_{k,s}(x) = |\Delta x |\, \sum_{\alpha \in \Lambda } \Pr( k , s , x_\alpha) \delta( x - \Phi_k^{st} (x_\alpha) ) + \mathcal{O}( \Delta x )
 \end{align*}
 Substitution of this approximation into \eqref{eq:approx 1} yields 
 \begin{align}
 \begin{split}
 	&\rho(t_n , x) = \\
-	&\quad \Delta s_n \left( \sum_{k} \sum_{ |m| \leq n }  \sum_{\alpha \in \Lambda } \Pr( k , \bar{s}\frac{m}{n} , x_\alpha) \delta( x - \Phi_k^{\bar{s}\, m \, \Delta t} (x_\alpha) ) \right) +\mathcal{O}( \Delta s_n + \Delta x) + lin. \label{eq:approx 2}
+	&\quad \Delta s_n \cdot | \Delta x| \, \left( \sum_{k} \sum_{ |m| \leq n }  \sum_{\alpha \in \Lambda } \Pr( k , \bar{s}\frac{m}{n} , x_\alpha) \delta( x - \Phi_k^{\bar{s}\, m \, \Delta t} (x_\alpha) ) \right) \\
+	&\quad +\mathcal{O}( \Delta s_n + \Delta x) + lin. \label{eq:approx 2}
 \end{split}
 \end{align}
 
 From this computation it is clear what must be done.
-We need to compute the flow of the grid $\Lambda$ at times $\bar{s} m \Delta$ up to some maximal integer, $n$.
+We need to compute the flow of the grid $\Lambda$ at times $\bar{s} m \Delta t$ up to some maximal integer, $n$.
 Then we must compute $\Pr( k , \bar{s}\frac{m}{n} , x_\alpha)$ at each point on the grid and each $m$ with $|m| \leq n$.
-Many of these computations of $\Pr(k,\bar{s} \frac{m}{n}, x_\alpha)$ should be stored, for example, when $n=2^{N}$, about half of the computations overlap with the $n=2^{N-1}$ case.
+Many of these computations of $\Pr(k,\bar{s} \frac{m}{n}, x_\alpha)$ could be stored, for example, when $n=2^{N}$, about half of the computations overlap with the $n=2^{N-1}$ case.
 This allows us to compute the above sum for all times $t_m \leq t_n$.
 
 \section{Computation of the linear component of $\rho$}
@@ -205,8 +206,7 @@ In order to compute $\Pr( \hat{x}, \hat{v})$ we can compute
 where
 \begin{align*}
 	&\Pr( \Lin, x, \hat{x}, \hat{v} ) = \int \Pr( x \mid \Lin ) \Pr( \hat{x} \mid x ) \Pr( \hat{v} \mid v) \Pr( v \mid \Lin ,x) \Pr(\Lin) dv \\
-	&\quad = \frac{ \Pr( \Lin ) \Pr( x \mid \Lin ) \Pr( \hat{x} \mid x ) }{ 2\pi \sigma_v^2 w_v^2} \int_{\hat{v}_1 - w_v/2}^{\hat{v}_1 + w_v/2}  \int_{\hat{v}_2 - w_v/2}^{\hat{v}_2 + w_v/2} \exp \left( \frac{ - (v_1^2 + v_2^2) }{ 2 \sigma_v^2} \right) dv_1 dv_2 \\
-	&\quad = \frac{ \Pr( \Lin ) \Pr( x \mid \Lin ) \Pr( \hat{x} \mid x ) }{ 4 \sigma_v^2 w_v^2} \prod_{i=1,2} \left( \erf \left( \frac{ \hat{v}_i + w_v/2}{ \sigma \sqrt{2} } \right) - \erf \left( \frac{ \hat{v}_i - w_v/2}{ \sigma \sqrt{2} } \right) \right)
+	&\quad = \frac{ \Pr( \Lin ) \Pr( x \mid \Lin ) \Pr( \hat{x} \mid x ) }{ 4 w_v^2} \prod_{i=1,2} \left( \erf \left( \frac{ \hat{v}_i + w_v/2}{ \sigma_v \sqrt{2} } \right) - \erf \left( \frac{ \hat{v}_i - w_v/2}{ \sigma_v \sqrt{2} } \right) \right)
 \end{align*}
 Then we may use the fact that
 \begin{align*}
