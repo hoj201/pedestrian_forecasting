@@ -50,8 +50,7 @@ def measurement_given_x0(x, x0):
 
     """
     #function to determine if points are within bounding box
-    filt = lambda y: 1 if (np.absolute(y[0] - x0[0]) <= dist_width[0]/2) and (np.absolute(y[1] - x0[1]) <= dist_width[0]/2) else 0
-    ident = np.array(map(filt, x))
+    ident = np.logical_and(np.absolute(x[:, 0] - x0[0]) <= dist_width[0]/2.0, np.absolute(x[:, 1] - x0[1]) <= dist_width[0]/2.0)
     return 1.0/( dist_width[0]**2) * ident
 
 
@@ -65,8 +64,7 @@ def measurement_given_v0(v, v0):
     Returns np.array(N_Points): probability that agent is at v given v0
     """
     #filters out points not inside the bounding box.
-    filt = lambda y: 1 if (np.absolute(y[0] - v0[0]) <= vel_width[0]/2) and (np.absolute(y[1] - v0[1]) <= vel_width[0]/2) else 0
-    ident = np.array(map(filt, v))
+    ident = np.logical_and(np.absolute(v[:, 0] - v0[0]) <= vel_width[0]/2, np.absolute(v[:, 1] - v0[1]) <= vel_width[0]/2)
     return 1.0/(vel_width[0]**2) * ident
 
 def prob_s_uniform(s):
@@ -75,8 +73,7 @@ def prob_s_uniform(s):
     s_max: float
     s: np.array(n_points): s values to be sampled
     """
-    filt = lambda x: 1 if np.absolute(x) <= s_max else 0
-    ident = np.array(map(filt, s))
+    ident = s <= s_max
     return 1.0/(2*s_max) * ident
 
 
