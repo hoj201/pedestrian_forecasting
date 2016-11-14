@@ -74,10 +74,6 @@ def evaluate_plane(bbox, rho, rho_true, tau, lin_term, width):
     #returns (precision, recall, accuracy)
     
     xy,p = rho
-    where = np.where(p > 0)[0]
-    p = p[where]
-    xy = xy[where]
-    rho = (xy, p)
     bboxes = []
     print "beginning prediction classifier"
     #create all of the bounding boxes

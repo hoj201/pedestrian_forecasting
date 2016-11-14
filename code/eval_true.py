@@ -104,6 +104,9 @@ if __name__ == "__main__":
             #delete placeholder component
             xs = np.delete(xs, 0, 0)
             #Define initial conditions
+            where = np.where(ps > 0)[0]
+            xs = xs[where]
+            ps = ps[where]
             rho = (xs, ps)
             tau = 0.001
             lin_term = data[-1]
