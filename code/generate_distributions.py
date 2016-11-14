@@ -121,6 +121,7 @@ if __name__ == '__main__':
     import pickle
     from scene import Scene
     from integrate import trap_quad
+    import matplotlib.pyplot as plt
     with open('test_scene.pkl', 'rs') as f:
         scene = pickle.load(f)
     with open('test_set.pkl', 'rs') as f:
@@ -139,6 +140,7 @@ if __name__ == '__main__':
         return np.array([x, y]), np.array([u, v])
 
     x,v = get_initial_condition(test_BB_ts[:, 10:])
+    plt.scatter(x[0], x[1], s=60)
     speed = np.sqrt(np.sum(v**2))
     print "Measured speed / sigma_v = {:f}".format( speed / scene.sigma_v )
     print "sigma_v = {:f}".format( scene.sigma_v)
@@ -146,11 +148,17 @@ if __name__ == '__main__':
     xy_grid = np.random.randn(2,100)
     for data in gen:
         td_sum = 0
+        xs = np.array([])
+        ys = np.array([])
         for k in range(scene.num_nl_classes):
             xy, weights = data[k]
+            for t in xy:
+                xs = np.concatenate((xs, t[0]))
+                ys = np.concatenate((ys, t[1]))
             print "max_weight = {:f}".format(weights.max())
             td_sum += sum(weights.flatten())
-
+        plt.scatter(xs, ys, color="k")
+        plt.show()
         lin_term = data[-1]
 
         def temp(x, y):

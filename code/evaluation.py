@@ -63,15 +63,16 @@ def recall(pred, truth):
 def accuracy(pred, truth):
     return len(np.where(pred == truth)[0]) / float(len(truth))
 
-def evaluate_plane(bbox, rho, rho_true, tau, lin_term, resolution):
+def evaluate_plane(bbox, rho, rho_true, tau, lin_term, width):
     #Takes:
     #bbox: np.array(2): [scene_width, scene_height]
     #rho: (np.array(n_points, 2), np.array(n_points))
     #rho_true: function
     #tau: float
     #lin_term: function
-    #resolution: np.array(2): [num_boxes_x, num_boxes_y]
+    #width: float
     #returns (precision, recall, accuracy)
+    
     xy,p = rho
     where = np.where(p > 0)[0]
     p = p[where]
@@ -80,10 +81,12 @@ def evaluate_plane(bbox, rho, rho_true, tau, lin_term, resolution):
     bboxes = []
     print "beginning prediction classifier"
     #create all of the bounding boxes
-    for x in range(resolution[0]):
-        for y in range(resolution[1]):
-            bboxes.append([[bbox[0]/resolution[0], bbox[1]/resolution[1]],
-                  [-1 * bbox[0]/2 + (bbox[0] * x + bbox[0]/2)/resolution[0],-1 * bbox[1]/2 +  (bbox[1] * y + bbox[1]/2)/resolution[1]]])
+    ctx = int(np.ceil(bbox[0]/width))
+    cty = int(np.ceil(bbox[1]/width))
+    for x in range(ctx):
+        for y in range(cty):
+            bboxes.append([[width, width],
+                           [-1 * bbox[0]/2.0 + width/2.0 + width * x, -1 * bbox[1]/2.0 + width/2.0 + width * y]])
     bboxes = np.array(bboxes)
     #Create prediction
     predic = classifier(bboxes, rho, tau, lin_term)
@@ -126,8 +129,8 @@ def evaluate_plane(bbox, rho, rho_true, tau, lin_term, resolution):
     plt.scatter(true_xs, true_ys, color="red", s=10)
     plt.scatter(pred_xs, pred_ys, color="blue", s=10)
 
-    bboxes_x = bboxes[:, :, 0][1::2]
-    bboxes_y = bboxes[:, :, 1][1::2]
+    bboxes_x = bboxes[:, :, 0].flatten()[1::2]
+    bboxes_y = bboxes[:, :, 1].flatten()[1::2]
     #plt.scatter(bboxes_x, bboxes_y, color="yellow")
     weights_x = rho[0][:, 0]
     weights_y = rho[0][:, 1]
@@ -197,6 +200,6 @@ if __name__ == "__main__":
     def rho_true(bounding_boxes):
         return np.zeros([len(bounding_boxes)])
 
-    resolution = [100, 100]
+    resolution = [2, 2]
 
     print evaluate_plane(bbox, rho, rho_true, tau, lin_term, resolution)
