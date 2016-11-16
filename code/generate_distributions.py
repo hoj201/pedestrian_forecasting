@@ -136,7 +136,7 @@ if __name__ == '__main__':
     with open('test_set.pkl', 'rs') as f:
         test_set = pickle.load(f)
     dt = 0.1
-    Nt = 10
+    Nt = 100
     test_BB_ts = test_set[3]
     def get_initial_condition(BB_ts):
         fd_width = 4
@@ -161,9 +161,8 @@ if __name__ == '__main__':
         ys = np.array([])
         for k in range(scene.num_nl_classes):
             xy, weights = data[k]
-            for t in xy:
-                xs = np.concatenate((xs, t[0]))
-                ys = np.concatenate((ys, t[1]))
+            xs = xy[:, 0]
+            ys = xy[:, 1]
             print "max_weight = {:f}".format(weights.max())
             td_sum += sum(weights.flatten())
         plt.scatter(xs, ys, color="k")
