@@ -16,7 +16,7 @@ def rho_true(subj, T, test_set, bbox_ls):
     x = 0.5*(test_set[subj][0,T] + test_set[subj][2,T])
     y = 0.5*(test_set[subj][1,T] + test_set[subj][3,T])
     print "Rho TRUE"
-    plt.scatter(x, y, s=60, color="green")
+    plt.scatter(x, y, s=60, color="grey")
     x_min = x-test_scene.bbox_width/2
     x_max = x+test_scene.bbox_width/2
     y_min = y-test_scene.bbox_width/2
@@ -69,25 +69,28 @@ if __name__ == "__main__":
         print "starting eval"
         #iterate through all time steps
         ct = 0
-        while 1:
-            print ct
-            pr = cProfile.Profile()
-            pr.enable()
-            bleherg = next(gen, None)
-            pr.disable()
-            s = StringIO.StringIO()
-            sortby = 'cumulative'
-            ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-            ps.print_stats()
-            if ct % 10 == 0:
-                print s.getvalue()
-                raw_input()
-            ct += 1
+        # while 1:
+        #     print ct
+        #     pr = cProfile.Profile()
+        #     pr.enable()
+        #     bleherg = next(gen, None)
+        #     pr.disable()
+        #     s = StringIO.StringIO()
+        #     sortby = 'cumulative'
+        #     ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+        #     ps.print_stats()
+        #     if ct % 10 == 0:
+        #         print s.getvalue()
+        #         raw_input()
+        #     ct += 1
 
-        assert False
+        # assert False
+
         for (ct, data) in enumerate(gen):
             #ignore predictions where actual data doesn't exist
-            if ct % 10 != 0:
+            print ct
+            ct += 1
+            if ct % 500 != 0:
                 continue #NOTE  hoj:What??
             #Concatenate all xs, ps for the different classes
             xs = np.array([[0,0]])
@@ -95,20 +98,19 @@ if __name__ == "__main__":
             print "Evaluation for agent {}, time {}".format(i, dt * ct)
             for cl in range(test_scene.num_nl_classes):
                 xy, p = data[cl]
-                p = p.flatten()
                 ps = np.concatenate((ps, p))
-                print xy.shape
 
-                for row in xy:
-                    xs = np.concatenate((xs, np.array(zip(row[0], row[1]))))
+                xs = np.concatenate((xs, xy))
+            print "Reshaped arrays"
             #delete placeholder component
             xs = np.delete(xs, 0, 0)
             #Define initial conditions
             where = np.where(ps > 0)[0]
+            print p.shape
             xs = xs[where]
             ps = ps[where]
             rho = (xs, ps)
-            tau = 0.001
+            tau = 0.01
             lin_term = data[-1]
 
             def lin(x, y):
@@ -118,10 +120,10 @@ if __name__ == "__main__":
             print "Starting evaluate_plane"
             resolution = test_scene.bbox_width
             #Define rho_true for a given time step etc
-            rt = lambda bboxes: rho_true(i, ct+12, test_set,bboxes)
+            rt = lambda bboxes: rho_true(i, ct/10+12, test_set,bboxes)
             bbox = np.array([test_scene.width, test_scene.height])
             #Call evaluate_plane
-            res =  evaluate_plane(bbox, rho, rt, tau, lin, resolution)
+            res =  evaluate_plane(bbox, rho, rt, tau, lin, resolution, debug=True)
             plt.scatter(x[0], x[1], s=60, color="green")
             plt.show()
             print res

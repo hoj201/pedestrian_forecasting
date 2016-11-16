@@ -72,6 +72,7 @@ def make_generator(scene, x, v, dt, Nt):
 
             #Computes weights
             for l in range(-n, n+1):
+                
                 x_l = xy_arr[l] #TODO hoj:  It appears I forgot to multiply by dx!!!  In fact, I didn't compute |dx| anywhere.
                 s_l = l*ds*np.ones( x_l.shape[1] )
                 weight_arr[l] = prob_k_s_x0_given_mu(
@@ -80,7 +81,15 @@ def make_generator(scene, x, v, dt, Nt):
             #x_out = np.concatenate([xy_arr[-n:], xy_arr[:n+1]], axis=0)
             #weight_out = np.concatenate([weight_arr[-n:], weight_arr[:n+1]],
             #        axis=0)
-            yield xy_arr, weight_arr
+
+            weights = weight_arr.flatten()
+            where = np.where(weights > 0)[0]
+            ret_weight = weights[where]
+            xy_xs = xy_arr[:, 0, :].flatten()[where]
+            xy_ys = xy_arr[:, 1, :].flatten()[where]
+            ret_xy = np.array(zip(xy_xs, xy_ys))
+
+            yield ret_xy, ret_weight
 
     def gen_linear():
         #use scene.sigma_v

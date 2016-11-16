@@ -63,7 +63,7 @@ def recall(pred, truth):
 def accuracy(pred, truth):
     return len(np.where(pred == truth)[0]) / float(len(truth))
 
-def evaluate_plane(bbox, rho, rho_true, tau, lin_term, width):
+def evaluate_plane(bbox, rho, rho_true, tau, lin_term, width, debug=False):
     #Takes:
     #bbox: np.array(2): [scene_width, scene_height]
     #rho: (np.array(n_points, 2), np.array(n_points))
@@ -91,50 +91,51 @@ def evaluate_plane(bbox, rho, rho_true, tau, lin_term, width):
     #create truth for comparison
     truth = true_classifier(bboxes, rho_true, tau)
     true = truth > tau
-    #pres = precision(pred, true)
-    #rec = recall(pred, true)
-    #acc = accuracy(pred, true)
+    pres = precision(pred, true)
+    rec = recall(pred, true)
+    acc = accuracy(pred, true)
     predic = predic[np.where(pred)[0]]
     truth = truth[np.where(true)[0]]
 
-    #plotting bollocks
-    true_bboxes = bboxes[np.where(true)[0]]
-    pred_bboxes = bboxes[np.where(pred)[0]]#[34:]
-    true_xs = true_bboxes[:, :, 0].flatten()[1::2]
-    true_ys = true_bboxes[:, :, 1].flatten()[1::2]
-    pred_xs = pred_bboxes[:, :, 0].flatten()[1::2]
-    pred_ys = pred_bboxes[:, :, 1].flatten()[1::2]
-    for box in pred_bboxes:
-        x0 = box[1][0] - box[0][0]/2.0
-        x1 = box[1][0] + box[0][0]/2.0
-        y = box[1][1] - box[0][1]/2.0
-        plt.plot([x0, x1], [y, y], color='purple', linestyle='-', linewidth=.5)
-        x = box[1][0] + box[0][0]/2.0
-        y0 = box[1][1] - box[0][1]/2.0
-        y1 = box[1][1] + box[0][1]/2.0
-        plt.plot([x, x], [y0, y1], color='purple', linestyle='-', linewidth=.5)
-    for box in true_bboxes:
-        x0 = box[1][0] - box[0][0]/2.0
-        x1 = box[1][0] + box[0][0]/2.0
-        y = box[1][1] - box[0][1]/2.0
-        plt.plot([x0, x1], [y, y], color='orange', linestyle='-', linewidth=.5)
-        x = box[1][0] + box[0][0]/2.0
-        y0 = box[1][1] - box[0][1]/2.0
-        y1 = box[1][1] + box[0][1]/2.0
-        plt.plot([x, x], [y0, y1], color='orange', linestyle='-', linewidth=.5)
-    plt.scatter(true_xs, true_ys, color="red", s=10)
-    plt.scatter(pred_xs, pred_ys, color="blue", s=10)
+    if debug:
+        #plotting bollocks
+        true_bboxes = bboxes[np.where(true)[0]]
+        pred_bboxes = bboxes[np.where(pred)[0]]#[34:]
+        true_xs = true_bboxes[:, :, 0].flatten()[1::2]
+        true_ys = true_bboxes[:, :, 1].flatten()[1::2]
+        pred_xs = pred_bboxes[:, :, 0].flatten()[1::2]
+        pred_ys = pred_bboxes[:, :, 1].flatten()[1::2]
+        for box in pred_bboxes:
+            x0 = box[1][0] - box[0][0]/2.0
+            x1 = box[1][0] + box[0][0]/2.0
+            y = box[1][1] - box[0][1]/2.0
+            plt.plot([x0, x1], [y, y], color='purple', linestyle='-', linewidth=.5)
+            x = box[1][0] + box[0][0]/2.0
+            y0 = box[1][1] - box[0][1]/2.0
+            y1 = box[1][1] + box[0][1]/2.0
+            plt.plot([x, x], [y0, y1], color='purple', linestyle='-', linewidth=.5)
+        for box in true_bboxes:
+            x0 = box[1][0] - box[0][0]/2.0
+            x1 = box[1][0] + box[0][0]/2.0
+            y = box[1][1] - box[0][1]/2.0
+            plt.plot([x0, x1], [y, y], color='orange', linestyle='-', linewidth=.5)
+            x = box[1][0] + box[0][0]/2.0
+            y0 = box[1][1] - box[0][1]/2.0
+            y1 = box[1][1] + box[0][1]/2.0
+            plt.plot([x, x], [y0, y1], color='orange', linestyle='-', linewidth=.5)
+        plt.scatter(true_xs, true_ys, color="red", s=10)
+        plt.scatter(pred_xs, pred_ys, color="blue", s=10)
 
-    bboxes_x = bboxes[:, :, 0].flatten()[1::2]
-    bboxes_y = bboxes[:, :, 1].flatten()[1::2]
-    #plt.scatter(bboxes_x, bboxes_y, color="yellow")
-    weights_x = rho[0][:, 0]
-    weights_y = rho[0][:, 1]
-    plt.scatter(weights_x, weights_y, color="black", s = 5)
+        bboxes_x = bboxes[:, :, 0].flatten()[1::2]
+        bboxes_y = bboxes[:, :, 1].flatten()[1::2]
+        #plt.scatter(bboxes_x, bboxes_y, color="yellow")
+        weights_x = rho[0][:, 0]
+        weights_y = rho[0][:, 1]
+        plt.scatter(weights_x, weights_y, color="black", s = 5)
 
     #plt.show()
 
-    #return (pres, rec, acc, pred, true)
+    return (pres, rec, acc, pred, true)
 
 
 
