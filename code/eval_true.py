@@ -41,7 +41,7 @@ if __name__ == "__main__":
     import cProfile, pstats, StringIO
     import matplotlib.pyplot as plt
     import time
-    dt = .1
+    dt = 3
     Nt = 10000
 
     def get_initial_condition(BB_ts):
@@ -90,7 +90,7 @@ if __name__ == "__main__":
             #ignore predictions where actual data doesn't exist
             print ct
             ct += 1
-            if ct % 500 != 0:
+            if ct % 30 != 0:
                 continue #NOTE  hoj:What??
             #Concatenate all xs, ps for the different classes
             xs = np.array([[0,0]])

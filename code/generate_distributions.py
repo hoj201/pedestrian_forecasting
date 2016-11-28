@@ -72,11 +72,10 @@ def make_generator(scene, x, v, dt, Nt):
 
             #Computes weights
             for l in range(-n, n+1):
-                
                 x_l = xy_arr[l] #TODO hoj:  It appears I forgot to multiply by dx!!!  In fact, I didn't compute |dx| anywhere.
                 s_l = l*ds*np.ones( x_l.shape[1] )
                 weight_arr[l] = prob_k_s_x0_given_mu(
-                        k, s_l, np.transpose(x_l), _x, _v)
+                        k, s_l, np.transpose(xy_arr[0]), _x, _v)
                 weight_arr[l] *= ds * dvol
             #x_out = np.concatenate([xy_arr[-n:], xy_arr[:n+1]], axis=0)
             #weight_out = np.concatenate([weight_arr[-n:], weight_arr[:n+1]],

@@ -72,7 +72,6 @@ def evaluate_plane(bbox, rho, rho_true, tau, lin_term, width, debug=False):
     #lin_term: function
     #width: float
     #returns (precision, recall, accuracy)
-    
     xy,p = rho
     bboxes = []
     print "beginning prediction classifier"
@@ -131,7 +130,8 @@ def evaluate_plane(bbox, rho, rho_true, tau, lin_term, width, debug=False):
         #plt.scatter(bboxes_x, bboxes_y, color="yellow")
         weights_x = rho[0][:, 0]
         weights_y = rho[0][:, 1]
-        plt.scatter(weights_x, weights_y, color="black", s = 5)
+        plt.scatter(weights_x, weights_y, c=p/np.amax(p), s = 3, cmap="viridis", edgecolors='none')
+
 
     #plt.show()
 
