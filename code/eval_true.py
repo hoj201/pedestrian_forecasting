@@ -42,7 +42,7 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import time
     dt = 3
-    Nt = 10000
+    Nt = 100
 
     def get_initial_condition(BB_ts):
             fd_width = 4
@@ -59,6 +59,7 @@ if __name__ == "__main__":
         #Set up generator, code given to me by you.
         test_BB_ts = test_set[i]
         x,v = get_initial_condition(test_BB_ts[:, 10:])
+        print test_BB_ts[:, 10:].shape
 
         speed = np.sqrt(np.sum(v**2))
         print "Measured speed / sigma_v = {:f}".format( speed / test_scene.sigma_v )
@@ -85,19 +86,35 @@ if __name__ == "__main__":
         #     ct += 1
 
         # assert False
+        import time
+        t = time.time()
 
         for (ct, data) in enumerate(gen):
+            print time.time() - t
             #ignore predictions where actual data doesn't exist
-            print ct
             ct += 1
-            if ct % 30 != 0:
-                continue #NOTE  hoj:What??
+            #if ct % 1 != 0:
+            #    continue #NOTE  hoj:What??
             #Concatenate all xs, ps for the different classes
             xs = np.array([[0,0]])
             ps = np.array([])
             print "Evaluation for agent {}, time {}".format(i, dt * ct)
             for cl in range(test_scene.num_nl_classes):
-                xy, p = data[cl]
+                xys, weights = data[cl]
+                print xys.shape
+                print weights.shape
+                xys = xys[40:60]
+                weights = weights[40:60]
+                print xys.shape
+                print weights.shape
+                #show all weights
+                weights = weights.flatten()
+                where = np.where(weights > 0)[0]
+                p = weights[where]
+                xy_xs = xys[:, 0, :].flatten()[where]
+                xy_ys = xys[:, 1, :].flatten()[where]
+                xy = np.array(zip(xy_xs, xy_ys))
+
                 ps = np.concatenate((ps, p))
 
                 xs = np.concatenate((xs, xy))
@@ -124,7 +141,14 @@ if __name__ == "__main__":
             bbox = np.array([test_scene.width, test_scene.height])
             #Call evaluate_plane
             res =  evaluate_plane(bbox, rho, rt, tau, lin, resolution, debug=True)
-            plt.scatter(x[0], x[1], s=60, color="green")
+            xs = [[], []]
+            for i in range(100):
+                x1, v1 = get_initial_condition(test_BB_ts[:, (10 + i):])
+                xs[0].append(x1[0])
+                xs[1].append(x1[1])
+            plt.scatter(xs[0], xs[1], s=10, color="green")
+            plt.axis('off')
+            plt.savefig('foo.png')
             plt.show()
             print res
 

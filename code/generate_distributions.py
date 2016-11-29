@@ -60,6 +60,7 @@ def make_generator(scene, x, v, dt, Nt):
         xy_arr = np.zeros((2*Nt+1, 2, N_points))
         weight_arr = np.zeros((2*Nt+1, N_points))
         xy_arr[0] = initial_condition.reshape((2, N_points))
+        print "Begin advection for " + str(k)
         for n in range(1,Nt):
             ds = scene.s_max / float(n)
             #Compute locations
@@ -71,6 +72,9 @@ def make_generator(scene, x, v, dt, Nt):
             xy_arr[-n] = ode_backward.y.reshape(2, N_points)
 
             #Computes weights
+            if n != Nt-1:
+                continue
+            print "Finished advection for " + str(k)
             for l in range(-n, n+1):
                 x_l = xy_arr[l] #TODO hoj:  It appears I forgot to multiply by dx!!!  In fact, I didn't compute |dx| anywhere.
                 s_l = l*ds*np.ones( x_l.shape[1] )
@@ -80,15 +84,15 @@ def make_generator(scene, x, v, dt, Nt):
             #x_out = np.concatenate([xy_arr[-n:], xy_arr[:n+1]], axis=0)
             #weight_out = np.concatenate([weight_arr[-n:], weight_arr[:n+1]],
             #        axis=0)
+            print "Finished for " + str(k)
+            #weights = weight_arr.flatten()
+            #where = np.where(weights > 0)[0]
+            #ret_weight = weights[where]
+            #xy_xs = xy_arr[:, 0, :].flatten()[where]
+            #xy_ys = xy_arr[:, 1, :].flatten()[where]
+            #ret_xy = np.array(zip(xy_xs, xy_ys))
 
-            weights = weight_arr.flatten()
-            where = np.where(weights > 0)[0]
-            ret_weight = weights[where]
-            xy_xs = xy_arr[:, 0, :].flatten()[where]
-            xy_ys = xy_arr[:, 1, :].flatten()[where]
-            ret_xy = np.array(zip(xy_xs, xy_ys))
-
-            yield ret_xy, ret_weight
+            yield xy_arr, weight_arr
 
     def gen_linear():
         #use scene.sigma_v
