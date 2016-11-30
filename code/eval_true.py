@@ -101,18 +101,12 @@ if __name__ == "__main__":
             print "Evaluation for agent {}, time {}".format(i, dt * ct)
             for cl in range(test_scene.num_nl_classes):
                 xys, weights = data[cl]
-                print xys.shape
-                print weights.shape
-                xys = xys[40:60]
-                weights = weights[40:60]
-                print xys.shape
-                print weights.shape
                 #show all weights
                 weights = weights.flatten()
                 where = np.where(weights > 0)[0]
-                p = weights[where]
-                xy_xs = xys[:, 0, :].flatten()[where]
-                xy_ys = xys[:, 1, :].flatten()[where]
+                p = weights#[where]
+                xy_xs = xys[:, 0, :].flatten()#[where]
+                xy_ys = xys[:, 1, :].flatten()#[where]
                 xy = np.array(zip(xy_xs, xy_ys))
 
                 ps = np.concatenate((ps, p))
@@ -127,7 +121,7 @@ if __name__ == "__main__":
             xs = xs[where]
             ps = ps[where]
             rho = (xs, ps)
-            tau = 0.01
+            tau = 0.005
             lin_term = data[-1]
 
             def lin(x, y):

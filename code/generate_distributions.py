@@ -102,19 +102,19 @@ def make_generator(scene, x, v, dt, Nt):
             def linear_term(xy):
                 x,y = xy
                 sigma = scene.sigma_v
-                w, h = scene.width, scene.height
-                wx = scene.bbox_width
-                wv = scene.bbox_velocity_width
+                w, h = scene.width/2.0, scene.height/2.0
+                wx = scene.bbox_width/2.0
+                wv = scene.bbox_velocity_width/2.0
                 def np_max(*args):
                     comp = lambda x,y: x*(x>y)+y*(y>x)
                     return reduce(comp, args[1:], args[0])
                 def np_min(*args):
                     comp = lambda x,y: x*(x<y)+y*(y<x)
                     return reduce(comp, args[1:], args[0])
-                u_min = np_max((x-w/2)/t, (x-_x[0]-wx/2)/t, -wv/2)
-                v_min = np_max((y-h/2)/t, (y-_x[1]-wx/2)/t, -wv/2)
-                u_max = np_min((x+w/2)/t, (x-_x[0]+wx/2)/t, wv/2)
-                v_max = np_min((y+w/2)/t, (y-_x[1]+wx/2)/t, wv/2)
+                u_min = np_max((x-w)/t, (x-_x[0]-wx)/t, -wv)
+                v_min = np_max((y-h)/t, (y-_x[1]-wx)/t, -wv)
+                u_max = np_max(u_min, np_min((x+w)/t, (x-_x[0]+wx)/t, wv))
+                v_max = np_max(v_min, np_min((y+h)/t, (y-_x[1]+wx)/t, wv))
                 Prob_of_x_hat_and_v_hat = _normalizing_constant(_x, _v)
                 scale = scene.P_of_c[-1] / Prob_of_x_hat_and_v_hat
                 scale /= h * w * wx**2 * wv**2
