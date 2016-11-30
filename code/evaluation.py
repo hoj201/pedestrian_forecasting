@@ -89,6 +89,7 @@ def evaluate_plane(bbox, rho, rho_true, tau, lin_term, width, debug=False):
     print "beginning true classifier"
     #create truth for comparison
     truth = true_classifier(bboxes, rho_true, tau)
+    print np.amin(truth)
     true = truth > tau
     pres = precision(pred, true)
     rec = recall(pred, true)
