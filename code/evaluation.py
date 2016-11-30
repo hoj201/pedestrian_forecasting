@@ -128,10 +128,6 @@ def evaluate_plane(bbox, rho, rho_true, tau, lin_term, width, debug=False):
         bboxes_x = bboxes[:, :, 0].flatten()[1::2]
         bboxes_y = bboxes[:, :, 1].flatten()[1::2]
         #plt.scatter(bboxes_x, bboxes_y, color="yellow")
-        weights_x = rho[0][:, 0]
-        weights_y = rho[0][:, 1]
-        plt.scatter(weights_x, weights_y, c=p/np.amax(p), s = 3, cmap="viridis", edgecolors='none')
-
 
     #plt.show()
 

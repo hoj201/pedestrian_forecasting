@@ -39,10 +39,20 @@ def rho_true(subj, T, test_set, bbox_ls):
 
 if __name__ == "__main__":
     import cProfile, pstats, StringIO
+    import matplotlib
+    matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    import matplotlib.animation as anim
     import time
-    dt = 3
-    Nt = 100
+
+    FFMpegWriter = anim.writers['ffmpeg']
+    metadata = dict(title='Movie Test', artist='Matplotlib',
+                    comment='Movie support!')
+    writer = FFMpegWriter(fps=10, metadata=metadata)
+    dt = 0.5
+    Nt = 600
+    fig = plt.figure()
+    dat = plt.plot([], [], "k-o")
 
     def get_initial_condition(BB_ts):
             fd_width = 4
@@ -92,43 +102,64 @@ if __name__ == "__main__":
         for (ct, data) in enumerate(gen):
             print time.time() - t
             #ignore predictions where actual data doesn't exist
-            ct += 1
-            #if ct % 1 != 0:
-            #    continue #NOTE  hoj:What??
             #Concatenate all xs, ps for the different classes
-            xs = np.array([[0,0]])
-            ps = np.array([])
-            print "Evaluation for agent {}, time {}".format(i, dt * ct)
-            for cl in range(test_scene.num_nl_classes):
-                xys, weights = data[cl]
-                print xys.shape
-                print weights.shape
-                xys = xys[40:60]
-                weights = weights[40:60]
-                print xys.shape
-                print weights.shape
-                #show all weights
-                weights = weights.flatten()
-                where = np.where(weights > 0)[0]
-                p = weights[where]
-                xy_xs = xys[:, 0, :].flatten()[where]
-                xy_ys = xys[:, 1, :].flatten()[where]
-                xy = np.array(zip(xy_xs, xy_ys))
+            with writer.saving(fig, "writer_test.mp4", 100):
+                for thr in range(0, Nt-5, 5):
+                    xs = np.array([[0,0]])
+                    ps = np.array([])
+                    print "Evaluation for agent {}, time {}".format(i, dt * ct)
+                    for cl in range(test_scene.num_nl_classes):
+                        xys, weights = data[cl]
+                        xys = xys[thr:thr+5]
+                        weights = weights[thr:thr+5]
+                        #show all weights
+                        weights = weights.flatten()
+                        p = weights#[where]
+                        xy_xs = xys[:, 0, :].flatten()#[where]
+                        xy_ys = xys[:, 1, :].flatten()#[where]
+                        xy = np.array(zip(xy_xs, xy_ys))
+                        if len(p) > 0:
+                            ps = np.concatenate((ps, p))
+                        if len(p) > 0:
+                            xs = np.concatenate((xs, xy))
+                        xys, weights = data[cl]
+                        xys = xys[-1*(thr+5):-1*thr]
+                        weights = weights[-1*(thr+5):-1*thr]
+                        #show all weights
+                        weights = weights.flatten()
+                        p = weights#[where]
+                        xy_xs = xys[:, 0, :].flatten()#[where]
+                        xy_ys = xys[:, 1, :].flatten()#[where]
+                        xy = np.array(zip(xy_xs, xy_ys))
+                        if len(p) > 0:
+                            ps = np.concatenate((ps, p))
+                        if len(p) > 0:
+                            xs = np.concatenate((xs, xy))
 
-                ps = np.concatenate((ps, p))
+                    #delete placeholder component
+                    xs = np.delete(xs, 0, 0)
+                    #Define initial conditions
+                    where = np.where(ps > 0)[0]
+                    xs = xs[where]
+                    ps = ps[where]
+                    rho = (xs, ps)
+                    tau = 0.01
+                    lin_term = data[-1]
+                    if len(xs) > 0:
+                        plt.scatter(xs[:, 0], xs[:, 1], c=ps/np.amax(ps), s = 3, cmap="viridis", edgecolors='none')
+                        xs = [[],[]]
+                        for i in range(100):
+                            x1, v1 = get_initial_condition(test_BB_ts[:, (10 + i):])
+                            xs[0].append(x1[0])
+                            xs[1].append(x1[1])
+                        plt.ylim([-1.2, 0.4])
+                        plt.xlim([-.75, 1.25])
+                        plt.axes().set_aspect('equal', 'datalim')
+                        plt.axis('off')
+                        writer.grab_frame()
 
-                xs = np.concatenate((xs, xy))
-            print "Reshaped arrays"
-            #delete placeholder component
-            xs = np.delete(xs, 0, 0)
-            #Define initial conditions
-            where = np.where(ps > 0)[0]
-            print p.shape
-            xs = xs[where]
-            ps = ps[where]
-            rho = (xs, ps)
-            tau = 0.01
-            lin_term = data[-1]
+            assert False
+
 
             def lin(x, y):
                 x = x.flatten()
@@ -142,14 +173,9 @@ if __name__ == "__main__":
             #Call evaluate_plane
             res =  evaluate_plane(bbox, rho, rt, tau, lin, resolution, debug=True)
             xs = [[], []]
-            for i in range(100):
-                x1, v1 = get_initial_condition(test_BB_ts[:, (10 + i):])
-                xs[0].append(x1[0])
-                xs[1].append(x1[1])
             plt.scatter(xs[0], xs[1], s=10, color="green")
-            plt.axis('off')
             plt.savefig('foo.png')
-            plt.show()
+
             print res
 
 
