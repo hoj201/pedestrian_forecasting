@@ -3,6 +3,8 @@ import numpy as np
 from generate_distributions import make_generator
 from evaluation import evaluate_plane
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+
 
 with open('test_scene.pkl','r') as f:
     test_scene = pickle.load(f)
@@ -43,16 +45,20 @@ if __name__ == "__main__":
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     import matplotlib.animation as anim
+    import matplotlib.cm as cm
     import time
-
     FFMpegWriter = anim.writers['ffmpeg']
     metadata = dict(title='Movie Test', artist='Matplotlib',
                     comment='Movie support!')
     writer = FFMpegWriter(fps=10, metadata=metadata)
-    dt = 0.5
-    Nt = 600
+    img=mpimg.imread('background.jpg')
+    dt = 1
+    Nt = 100
     fig = plt.figure()
     dat = plt.plot([], [], "k-o")
+    print "Aspect ratio:"
+    print test_scene.width/test_scene.height
+    cmap = cm.ScalarMappable(cmap="viridis")
 
     def get_initial_condition(BB_ts):
             fd_width = 4
@@ -69,7 +75,6 @@ if __name__ == "__main__":
         #Set up generator, code given to me by you.
         test_BB_ts = test_set[i]
         x,v = get_initial_condition(test_BB_ts[:, 10:])
-        print test_BB_ts[:, 10:].shape
 
         speed = np.sqrt(np.sum(v**2))
         print "Measured speed / sigma_v = {:f}".format( speed / test_scene.sigma_v )
@@ -103,11 +108,12 @@ if __name__ == "__main__":
             print time.time() - t
             #ignore predictions where actual data doesn't exist
             #Concatenate all xs, ps for the different classes
-            with writer.saving(fig, "writer_test.mp4", 100):
+            with writer.saving(fig, "writer_test{}.mp4".format(i), 100):
                 for thr in range(0, Nt-5, 5):
                     xs = np.array([[0,0]])
                     ps = np.array([])
-                    print "Evaluation for agent {}, time {}".format(i, dt * ct)
+                    #print "Evaluation for agent {}, time {}".format(i, dt * ct)
+                    print thr
                     for cl in range(test_scene.num_nl_classes):
                         xys, weights = data[cl]
                         xys = xys[thr:thr+5]
@@ -146,36 +152,66 @@ if __name__ == "__main__":
                     tau = 0.01
                     lin_term = data[-1]
                     if len(xs) > 0:
-                        plt.scatter(xs[:, 0], xs[:, 1], c=ps/np.amax(ps), s = 3, cmap="viridis", edgecolors='none')
+
+                        stpx = 0.05
+                        stpy = stpx
+                        x, y = np.mgrid[slice(-test_scene.height/2, test_scene.height/2 + stpy, stpy),
+                                        slice(-test_scene.width, test_scene.width + stpx, stpx)]
+                        pts = np.array([x.flatten(), y.flatten()])
+                        vals = lin_term(pts).reshape(x.shape)
+                        #np.concatenate((xs, np.array([[0, 10]])))
+                        mx = np.amax(ps)
+                        mx_lin = np.amax(vals)
+                        #mesh = plt.pcolormesh(x, y, vals, cmap="viridis", vmin = 0, vmax = mx_lin, alpha = 0.5)
+                        mesh = plt.imshow(vals, cmap='viridis', vmin=0, vmax=mx_lin, zorder=10,
+                                   extent=[-test_scene.width/2, test_scene.width/2, -test_scene.height/2, test_scene.height/2],
+                                          interpolation='nearest', alpha = 0.5, origin="lower")
+                        #c = np.asarray([(0, 0, 0, 0.5* v/mx) for v in ps])
+                        #np.concatenate((c, np.array([[0, 0, 0, 1]])))
+                        colors = cmap.to_rgba(ps/mx)
+                        colors[:, 3] = ps/mx / 2
+                        plt.scatter(xs[:, 0], xs[:, 1], c = colors, s = 3, cmap="viridis", edgecolors='none', zorder=11)
+                        #plt.scatter(xs[:, 0], xs[:, 1], c=ps/mx, s = 3, cmap="viridis", edgecolors='none')
                         xs = [[],[]]
-                        for i in range(100):
-                            x1, v1 = get_initial_condition(test_BB_ts[:, (10 + i):])
-                            xs[0].append(x1[0])
-                            xs[1].append(x1[1])
-                        plt.ylim([-1.2, 0.4])
-                        plt.xlim([-.75, 1.25])
-                        plt.axes().set_aspect('equal', 'datalim')
+                        #DRAW MEASUREMENTS
+                        #for i in range(100):
+                        x1, v1 = get_initial_condition(test_BB_ts[:, (10 + thr):])
+                        plt.scatter(x1[0], x1[1], c="white", s=1, edgecolors="none", zorder=12)
+                        w = test_scene.bbox_width/2
+                        lines = []
+                        ln1, = plt.plot([x1[0] - w, x1[0] + w], [x1[1] - w, x1[1] - w], color='white', linestyle='-', linewidth=1, zorder=12)
+                        ln2, = plt.plot([x1[0] - w, x1[0] + w], [x1[1] + w, x1[1] + w], color='white', linestyle='-', linewidth=1, zorder=12)
+                        ln3, = plt.plot([x1[0] - w, x1[0] - w], [x1[1] - w, x1[1] + w], color='white', linestyle='-', linewidth=1, zorder=12)
+                        ln4, = plt.plot([x1[0] + w, x1[0] + w], [x1[1] - w, x1[1] + w], color='white', linestyle='-', linewidth=1, zorder=12)
+                        plt.ylim([-test_scene.height/2, test_scene.height/2])
+                        plt.xlim([-test_scene.width/2, test_scene.width/2])
+                        #plt.axes().set_aspect('equal', 'datalim')
                         plt.axis('off')
+                        plt.imshow(img, zorder=0, extent=[-test_scene.width/2, test_scene.width/2, -test_scene.height/2, test_scene.height/2])
                         writer.grab_frame()
+                        ln1.remove()
+                        ln2.remove()
+                        ln3.remove()
+                        ln4.remove()
+                        mesh.remove()
+                        #plt.clf()
+                plt.clf()
 
-            assert False
+            # def lin(x, y):
+            #     x = x.flatten()
+            #     y = y.flatten()
+            #     return lin_term([x,y])
+            # print "Starting evaluate_plane"
+            # resolution = test_scene.bbox_width
+            # #Define rho_true for a given time step etc
+            # rt = lambda bboxes: rho_true(i, ct/10+12, test_set,bboxes)
+            # bbox = np.array([test_scene.width, test_scene.height])
+            # #Call evaluate_plane
+            # res =  evaluate_plane(bbox, rho, rt, tau, lin, resolution, debug=True)
+            # xs = [[], []]
+            # plt.scatter(xs[0], xs[1], s=10, color="green")
+            # plt.savefig('foo.png')
 
-
-            def lin(x, y):
-                x = x.flatten()
-                y = y.flatten()
-                return lin_term([x,y])
-            print "Starting evaluate_plane"
-            resolution = test_scene.bbox_width
-            #Define rho_true for a given time step etc
-            rt = lambda bboxes: rho_true(i, ct/10+12, test_set,bboxes)
-            bbox = np.array([test_scene.width, test_scene.height])
-            #Call evaluate_plane
-            res =  evaluate_plane(bbox, rho, rt, tau, lin, resolution, debug=True)
-            xs = [[], []]
-            plt.scatter(xs[0], xs[1], s=10, color="green")
-            plt.savefig('foo.png')
-
-            print res
+            # print res
 
 
