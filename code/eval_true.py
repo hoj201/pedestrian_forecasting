@@ -42,7 +42,7 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import time
     dt = 3
-    Nt = 100
+    Nt = 33
 
     def get_initial_condition(BB_ts):
             fd_width = 4
@@ -117,7 +117,6 @@ if __name__ == "__main__":
             xs = np.delete(xs, 0, 0)
             #Define initial conditions
             where = np.where(ps > 0)[0]
-            print p.shape
             xs = xs[where]
             ps = ps[where]
             rho = (xs, ps)
@@ -140,6 +139,23 @@ if __name__ == "__main__":
                 x1, v1 = get_initial_condition(test_BB_ts[:, (10 + i):])
                 xs[0].append(x1[0])
                 xs[1].append(x1[1])
+
+            stpx = 0.01
+            stpy = stpx
+            x, y = np.mgrid[slice(-test_scene.height/2, test_scene.height/2 + stpy, stpy),
+                            slice(-test_scene.width, test_scene.width + stpx, stpx)]
+            def tmp(arr):
+                return np.sin(arr[0]) * np.sin(arr[1])
+            pts = np.array([x.flatten(), y.flatten()])
+            #vals = lin_term(pts).reshape(x.shape)
+            vals = tmp(pts).reshape(x.shape)
+            #np.concatenate((xs, np.array([[0, 10]])))
+            mx = np.amax(ps)
+            mx_lin = np.amax(vals)
+            #mesh = plt.pcolormesh(x, y, vals, cmap="viridis", vmin = 0, vmax = mx_lin, alpha = 0.5)
+            mesh = plt.imshow(vals, cmap='viridis', vmin=0, vmax=mx_lin, zorder=10,
+                        extent=[-test_scene.width/2, test_scene.width/2, -test_scene.height/2, test_scene.height/2],
+                                interpolation='nearest', alpha = 0.5, origin="lower")
             plt.scatter(xs[0], xs[1], s=10, color="green")
             plt.axis('off')
             plt.savefig('foo.png')
