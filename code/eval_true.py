@@ -126,7 +126,7 @@ if __name__ == "__main__":
             def lin(x, y):
                 x = x.flatten()
                 y = y.flatten()
-                return lin_term([x,y])
+                return lin_term[-1]([x,y])
             print "Starting evaluate_plane"
             resolution = test_scene.bbox_width
             #Define rho_true for a given time step etc
@@ -144,11 +144,10 @@ if __name__ == "__main__":
             stpy = stpx
             x, y = np.mgrid[slice(-test_scene.height/2, test_scene.height/2 + stpy, stpy),
                             slice(-test_scene.width, test_scene.width + stpx, stpx)]
-            def tmp(arr):
-                return np.sin(arr[0]) * np.sin(arr[1])
+
             pts = np.array([x.flatten(), y.flatten()])
-            #vals = lin_term(pts).reshape(x.shape)
-            vals = tmp(pts).reshape(x.shape)
+            vals = lin_term[-1](pts).reshape(x.shape)
+            #vals = tmp(pts).reshape(x.shape)
             #np.concatenate((xs, np.array([[0, 10]])))
             mx = np.amax(ps)
             mx_lin = np.amax(vals)
