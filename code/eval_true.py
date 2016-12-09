@@ -143,7 +143,7 @@ if __name__ == "__main__":
             stpx = 0.01
             stpy = stpx
             x, y = np.mgrid[slice(-test_scene.height/2, test_scene.height/2 + stpy, stpy),
-                            slice(-test_scene.width, test_scene.width + stpx, stpx)]
+                            slice(-test_scene.width/2, test_scene.width/2 + stpx, stpx)]
 
             pts = np.array([x.flatten(), y.flatten()])
             vals = lin_term[-1](pts).reshape(x.shape)
