@@ -155,17 +155,17 @@ if __name__ == "__main__":
 
                         stpx = 0.01
                         stpy = stpx
-                        x, y = np.mgrid[slice(-test_scene.height/2, test_scene.height/2 + stpy, stpy),
-                                        slice(-test_scene.width/2, test_scene.width/2 + stpx, stpx)]
+                        x, y = np.mgrid[slice(-test_scene.width/2, test_scene.width/2 + stpy, stpy),
+                                        slice(-test_scene.height/2, test_scene.height/2 + stpx, stpx)]
                         pts = np.array([x.flatten(), y.flatten()])
-                        vals = lin_term[thr](pts).reshape(x.shape)
+                        vals = lin_term[thr](pts).reshape(x.shape).transpose()
                         #np.concatenate((xs, np.array([[0, 10]])))
                         mx = np.amax(ps)
                         mx_lin = np.amax(vals)
                         #mesh = plt.pcolormesh(x, y, vals, cmap="viridis", vmin = 0, vmax = mx_lin, alpha = 0.5)
                         mesh = plt.imshow(vals, cmap='viridis', vmin=0, vmax=mx_lin, zorder=10,
                                    extent=[-test_scene.width/2, test_scene.width/2, -test_scene.height/2, test_scene.height/2],
-                                          interpolation='nearest', alpha = 0.35, origin="lower")
+                                          interpolation='nearest', alpha = 0.5, origin="lower")
                         #c = np.asarray([(0, 0, 0, 0.5* v/mx) for v in ps])
                         #np.concatenate((c, np.array([[0, 0, 0, 1]])))
                         colors = cmap.to_rgba(ps/mx)
