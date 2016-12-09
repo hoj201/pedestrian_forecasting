@@ -133,7 +133,8 @@ if __name__ == "__main__":
             rt = lambda bboxes: rho_true(i, ct/10+12, test_set,bboxes)
             bbox = np.array([test_scene.width, test_scene.height])
             #Call evaluate_plane
-            res =  evaluate_plane(bbox, rho, rt, tau, lin, resolution, debug=True)
+            #res =  evaluate_plane(bbox, rho, rt, tau, lin, resolution, debug=True)
+            res = None
             xs = [[], []]
             for i in range(100):
                 x1, v1 = get_initial_condition(test_BB_ts[:, (10 + i):])
@@ -142,11 +143,11 @@ if __name__ == "__main__":
 
             stpx = 0.01
             stpy = stpx
-            x, y = np.mgrid[slice(-test_scene.height/2, test_scene.height/2 + stpy, stpy),
-                            slice(-test_scene.width/2, test_scene.width/2 + stpx, stpx)]
+            x, y = np.mgrid[slice(-test_scene.width/2, test_scene.width/2 + stpy, stpy),
+                            slice(-test_scene.height/2, test_scene.height/2 + stpx, stpx)]
 
             pts = np.array([x.flatten(), y.flatten()])
-            vals = lin_term[-1](pts).reshape(x.shape)
+            vals = lin_term[-1](pts).reshape(x.shape).transpose()
             #vals = tmp(pts).reshape(x.shape)
             #np.concatenate((xs, np.array([[0, 10]])))
             mx = np.amax(ps)
@@ -155,6 +156,7 @@ if __name__ == "__main__":
             mesh = plt.imshow(vals, cmap='viridis', vmin=0, vmax=mx_lin, zorder=10,
                         extent=[-test_scene.width/2, test_scene.width/2, -test_scene.height/2, test_scene.height/2],
                                 interpolation='nearest', alpha = 0.5, origin="lower")
+            #plt.scatter(x, y, c=vals, cmap="viridis", edgecolor="none")
             plt.scatter(xs[0], xs[1], s=10, color="green")
             plt.axis('off')
             plt.savefig('foo.png')

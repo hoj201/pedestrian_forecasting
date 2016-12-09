@@ -4,6 +4,7 @@ import itertools
 import scipy as sp
 from scene import Scene
 from functools import partial
+import matplotlib.pyplot as plt
 
 from derived_posteriors import prob_k_s_x0_given_mu, _normalizing_constant
 
@@ -103,6 +104,7 @@ def make_generator(scene, x, v, dt, Nt):
             tl += dt
             def linear_term(t, xy):
                 x,y = xy
+                plt.scatter(_x[0], _x[1], s=100)
                 sigma = scene.sigma_v
                 w, h = scene.width/2.0, scene.height/2.0
                 wx = scene.bbox_width/2.0
