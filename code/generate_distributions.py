@@ -3,6 +3,7 @@ from scipy import integrate
 import itertools
 import scipy as sp
 from scene import Scene
+from functools import partial
 
 from derived_posteriors import prob_k_s_x0_given_mu, _normalizing_constant
 
@@ -96,10 +97,11 @@ def make_generator(scene, x, v, dt, Nt):
 
     def gen_linear():
         #use scene.sigma_v
-        t = 0.0
+        tl = 0.0
+        lin_terms = []
         for n in range(Nt):
-            t += dt
-            def linear_term(xy):
+            tl += dt
+            def linear_term(t, xy):
                 x,y = xy
                 sigma = scene.sigma_v
                 w, h = scene.width/2.0, scene.height/2.0
@@ -124,7 +126,10 @@ def make_generator(scene, x, v, dt, Nt):
                 out *= erf( v_max/(sigma*rt2) ) - erf( v_min/(sigma*rt2) )
                 out *= 0.25 * scale
                 return out
-            yield linear_term
+            lin_terms.append(partial(linear_term, tl))
+            if n != Nt-1:
+                continue
+            yield lin_terms
     gen_ls = [ gen(k) for k in range(scene.num_nl_classes)]
     gen_ls.append( gen_linear() )
     return itertools.izip(*gen_ls)
