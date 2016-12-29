@@ -2,3 +2,4 @@ code/plt.py
 .DS_Store
 *.pyc
 *.mp4
+.#*

@@ -17,7 +17,7 @@ def classifier(E, rho, tau, lin_term):
     #looks like [[[box_width, box_height], [box_x, box_y]]]
     #rho: (np.array(n_points, 2), np.array(n_points))
     #tau: float
-    #returns: bool array #NOTE hoj:  This does not output a bool, as written
+    #returns: float array #NOTE hoj:  This does not output a bool, as written
     xy, p = rho
     asdf = {"counter": 0}
     def filter(e): #NOTE hoj:  Probably should rename this, as filter is a built-in func
