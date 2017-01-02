@@ -69,33 +69,14 @@ If we know the agent is nonlinear, and we know the variables $k$ and $s$, then w
 These observations suggest that we decompose the computation of $\rho$ using Baye's theorem, as
 We find
 \begin{align*}
-	\rho(t,x ) &:= \int \Pr( x = x(t) \mid x(0) = x_0, \mu ) \cdot \Pr(x_0 \mid \mu ) dx_0 \\
-	&= \sum_{k=1}^{n} \int \Pr( x = x(t) \mid k,s, x(0) = x_0, \mu ) \cdot P( k,s,x_0 \mid \mu) ds \, dx_0 \\
-	&\quad + \int \Pr(x = x(t) \mid \Lin, x(0) = x_0, v_0 , \mu ) P( \Lin, x_0, v_0  \mid \mu ) dx_0 dv_0
+	\rho(t,x ) &:= \int \Pr( x = x_t, x_0 \mid \mu ) dx_0 \\
+	&= \sum_{k=1}^{n} \int \Pr(k, s, x = x_t, x_0 \mid \mu ) ds \, dx_0 \\
+	&\quad + \int \Pr(x = x_t, \Lin, x_0, v_0 \mid \mu ) dx_0 dv_0 \\
+	&=\Big( \sum_{k=1}^{n} \int \Pr(k, s, x = x_t, x_0, \mu ) ds \, dx_0 \\
+	&\quad + \int \Pr(x = x_t, \Lin, x_0, v_0, \mu ) dx_0 dv_0 \Big) / \Pr(\mu) \\
 \end{align*}
 
-There are a lot of terms to deal with here.
-Let us first deal with $\Pr( x = x(t) \mid k,s, x(0) = x_0, \mu )$.
-Given \eqref{eq:nonlin} determines $x(t)$ precisely given and agent's flavor, $k$, speed, $s$, and initial condition,
-we should expect a Dirac-delta type distribution which is independent of $\mu$.
-Moreover, if $\Phi_k^t$ is the time-$t$ flow of $X_k$, then $\Phi_k^{st}$ is the time $t$ flow of $s X_k$. 
-This means
-\begin{align*}
-	\Pr( x  = x(t) \mid k,s, x_0 = x_0 , \mu ) = \delta( x - \Phi_k^{st}( x_0) ).
-\end{align*}
-
-Similarly,
-\begin{align*}
-	\Pr( x = x(t) \mid \Lin, x(0) = x_0, v_0 , \mu ) = \delta \left( x - (x_0 + t \cdot v_0 ) \right)
-\end{align*}
-
-Substitution, and the change of variables formula tells us that
-\begin{align*}
-	\rho(t,x) &= \sum_{k=1}^n \int \det \left[ (D\Phi_{k}^{st})^{-1}(x)  \right] \cdot \Pr( k, s, x_0 = (\Phi_{k}^{st})^{-1} (x) \mid \mu) ds \\
-		&\quad + \int \Pr( x_0 = x- t v_0 ,v_0, \Lin \mid \mu)dv_0
-\end{align*}
-So if we can compute the flow $\Phi_k^{t}$ efficiently, and we can compute $\Pr( k,s,x \mid \hat{x}, \hat{v} )$ and $\Pr( x, v, \Lin \mid \hat{x}, \hat{v} )$ efficiently, then we are good to go.
-Computing the flow can be done using standard ode integration schemes, so the main obstacle is computing the posteriors $\Pr( k,s,x \mid \hat{x}, \hat{v} )$ and $\Pr( x, v, \Lin \mid \hat{x}, \hat{v} )$.
+So we see we can compute $\rho$ in terms of various joint probability distributions.
 
 \section{Efficient computation of the nonlinear component of $\rho$}
 Let us write $\rho$ as
@@ -136,27 +117,6 @@ Then we must compute $\Pr( k , \bar{s}\frac{m}{n} , x_\alpha)$ at each point on 
 Many of these computations of $\Pr(k,\bar{s} \frac{m}{n}, x_\alpha)$ could be stored, for example, when $n=2^{N}$, about half of the computations overlap with the $n=2^{N-1}$ case.
 This allows us to compute the above sum for all times $t_m \leq t_n$.
 
-\section{Computation of the linear component of $\rho$}
-The linear term is given by
-\begin{align*}
-	lin(x,t) &= \int \Pr( x_0 = x-t v_0, v_0, \Lin \mid \hat{x}_0, \hat{v}_0 ) dv_0 \\
-	&= \frac{1}{ \Pr( \hat{x}_0, \hat{v}_0 ) } \int \Pr( \hat{x}_0 \mid x_0 = x-tv_0 ) \Pr( \hat{v}_0 \mid v_0 ) \Pr( \Lin ) \Pr( v_0 \mid \Lin)  dv_0 \\
-	&= \frac{ \Pr(\Lin) }{ \Pr( \hat{x}_0 , \hat{v}_0 ) wh w_x^2 w_v^2 } \int_{v_{\min}}^{v_{\max}} \Pr(v_0 \mid \Lin ) dv_0
-\end{align*}
-where
-\begin{align*}
-	u_{\min} &= \max( (x-w)/t, (x-\hat{x}_0-w_x)/t, -w_v ) \\
-	v_{\min} &= \max( (y-h)/t, (y-\hat{y}_0-w_x)/t, -w_v ) \\
-	u_{\max} &=\min( (x+w)/t, (x-\hat{x}_0+w_x)/t, w_v ) \\
-	v_{\max} &=\min( (x+w)/t, (y-\hat{y}_0+w_x)/t, w_v ).
-\end{align*}
-If $\Pr( v_0 \mid \Lin)$ is normally distributed then
-\begin{align*}
-	lin(x,t) &= \frac{ \Pr(\Lin) }{ \Pr( \hat{x}_0 , \hat{v}_0 ) wh w_x^2 w_v^2 } \\
-	& \quad \cdot \frac{1}{4} \left[ \erf \left( \frac{ u_{\max} }{ \sigma \sqrt{2} } \right) - \erf \left( \frac{ u_{\min} }{ \sigma \sqrt{2} } \right) \right]
-	\cdot \left[ \erf \left( \frac{ v_{\max} }{ \sigma \sqrt{2} } \right) - \erf \left( \frac{ v_{\min} }{ \sigma \sqrt{2} } \right) \right]
-\end{align*}
-
 \section{Choice of atomic distributions, and expressions for composite distributions}
 In order to compute $\Pr( k,s,x \mid \hat{x}, \hat{v} )$ and $\Pr( x, v, \Lin \mid \hat{x}, \hat{v} )$ we use a probabilistic graphical model to organize our computations.
 To begin, define the set
@@ -178,10 +138,10 @@ This yields the probabilistic graphical model
 \end{equation}
 Under this model, the posteriors $\Pr( k,s,x \mid \hat{x}, \hat{v} )$ and $\Pr( x, v, \Lin \mid \hat{x}, \hat{v} )$ can be computed in terms of the \emph{atomic distributions}
 \begin{itemize}
-	\item $\Pr( x \mid Type )$
-	\item $\Pr( v \mid Type, x)$
-	\item $\Pr( \hat{x} \mid x)$
-	\item $\Pr( \hat{v} \mid v)$
+	\item $\Pr( x \mid \Lin ) \sim \mathcal{U}( [-w/2,w/2] \times [-h/2, h/2] )$
+	\item $\Pr( v \mid \Lin, x) \sim \mathcal{N}(0, \sigma_{\Lin} )$
+	\item $\Pr( \hat{x} \mid x) \sim \mathcal{N}( x , \sigma_x)$
+	\item $\Pr( \hat{v} \mid v) \sim \mathcal{N}( x , \sigma_v)$
 	\item $\Pr(Type)$
 \end{itemize}
 These atomic distributions are chosen, and represent a set of parameters for our model.
@@ -206,7 +166,7 @@ In order to compute $\Pr( \hat{x}, \hat{v})$ we can compute
 where
 \begin{align*}
 	&\Pr( \Lin, x, \hat{x}, \hat{v} ) = \int \Pr( x \mid \Lin ) \Pr( \hat{x} \mid x ) \Pr( \hat{v} \mid v) \Pr( v \mid \Lin ,x) \Pr(\Lin) dv \\
-	&\quad = \frac{ \Pr( \Lin ) \Pr( x \mid \Lin ) \Pr( \hat{x} \mid x ) }{ 4 w_v^2} \prod_{i=1,2} \left( \erf \left( \frac{ \hat{v}_i + w_v/2}{ \sigma_v \sqrt{2} } \right) - \erf \left( \frac{ \hat{v}_i - w_v/2}{ \sigma_v \sqrt{2} } \right) \right)
+	&\quad =  \chi_{D_x}(x) G_{\sigma_x}( x - \hat{x}) \Pr(\Lin) \int G_{\sigma_v}( v- \hat{v}) G_{\sigma_{\Lin}}( v ) dv
 \end{align*}
 Then we may use the fact that
 \begin{align*}
@@ -224,7 +184,7 @@ where the numerator is
 
 
 
-\section{Code design}
+\subsection{Code design}
 
 The ultimate goal is to compute $\rho(x,t)$, or at least to integrate over a region of space-time.
 To do this we can consider the following diagram of modules
@@ -274,13 +234,14 @@ We can use these as evaluation metrics.  Unfortunately, that we get different me
 \appendix
 
 \section{Atomic distributions}
-Let $w_x, w_v  > 0$ be a bound for the width of the bounding boxes and bounding box velocities we observe in the data.
+Let $\sigma_x$ be an estimate of the variance of our position measurement.
+It follows that if velocity is measured simply as the difference between two consecutive position measurements, then the variance of our velocity measurement is $2 \sigma_x$.
 Similarly, let $V_k: \mathbb{R}^2 \to \mathbb{R}$ be an energy function and $X_k \in \mathfrak{X}( \mathbb{R}^2)$ a director field we learn from the data. (see Appendix \ref{app:learning} )
 The atomic distributions, $\Pr(k)$, $\Pr(s)$, and $\Pr(\Lin)$ are actually computed in the Machine Learning module and then imported.
 Here are posteriors:
 \begin{align*}
-	\Pr( \hat{x}_0 \mid x_0 ) &\sim \mathcal{U}( x_0 ; w_x ) \\
-	\Pr( \hat{v}_0 \mid v_0 ) &\sim \mathcal{U}( v_0 ; w_v ) \\
+	\Pr( \hat{x}_0 \mid x_0 ) &\sim \mathcal{N}( x_0 ; \sigma_x ) \\
+	\Pr( \hat{v}_0 \mid v_0 ) &\sim \mathcal{N}( v_0 ; 2\sigma_x ) \\
 	\Pr( x_0 \mid k,s ) &= \Pr(x_0 \mid k) = \frac{1}{Z_k} \exp \left( -V_k( x_0 ) \right) \\
 	\Pr( v_0 \mid k,s,x_0) &= \delta( v_0 - s X_k(x_0) )
 \end{align*}
@@ -294,6 +255,44 @@ where $\sigma_{\Lin} > 0$ is learned from the data.
 \section{The Machine Learning Module}
 \label{app:learning}
 The machine learning module is responsible for clustering the trajectories, and providing the vector-fields and potential functions for each cluster, as well as the probability $\Pr(k), \Pr(s)$ and $\Pr( \Lin)$ and the parameter $\sigma_{\Lin}$.
+
+\section{Posteriors}
+Given our choices for the atomic expressions, we can derive expressions for some of the relevant posterior expressions.
+In particular,
+\begin{align*}
+	&\Pr( \vec{x}_t , \Lin \mid \mu ) = \int \Pr( \vec{x}_t, \vec{v}_0 , \Lin \mid \mu) dv_0 \\
+	&\quad= \frac{1}{ \Pr(\mu) } \int \Pr( \vec{x}_t, \vec{x}_0, \vec{v}_0 , \Lin, \mu) d\vec{v}_0\, d\vec{x}_0 \\
+	&\quad= \frac{\Pr(\Lin)}{ \Pr(\mu) } \int \Pr(\vec{x}_t \mid \vec{x}_0, \vec{v}_0 , \Lin ) \Pr( \hat{x}_0 \mid x_0)\\
+	&\hspace{20ex} \Pr(\hat{v}_0 \mid v_0 ) \Pr( v_0 \mid \Lin ) \Pr( x_0 \mid \Lin )d\vec{v}_0\, d\vec{x}_0 \\
+	&\quad= \frac{\Pr(\Lin)}{ \Pr(\mu) } \int \chi( \vec{x}_t - t\vec{v}_0 \in D) \Pr( \hat{\vec{x}}_0 \mid \vec{x}_0 = \vec{x}_t - t \vec{v}_0 ) \Pr(\hat{\vec{v}}_0 \mid \vec{v}_0 ) \Pr( \vec{v}_0 \mid \Lin ) d\vec{v}_0 \\
+	&\quad= A \cdot I_1 \cdot I_2
+\end{align*}
+where
+\begin{align*}
+	A &= \frac{\Pr(\Lin)}{ \Pr(\mu) }  \cdot (w\cdot h \cdot 8\pi^3 \sigma_{\Lin}^2 \sigma_x^2 \sigma_v^2 )^{-1} \\
+	I_1 &=  \int_{(x_t-w/2)/t}^{(x_t+w/2)/t}   \exp \left( \frac{-(\hat{x}_0 - x_t - t u )^2}{2 \sigma_x^2} -  \frac{(\hat{u}_0 - u)^2}{8\sigma_x^2} - \frac{ u^2}{2 \sigma_{\Lin}^2} \right) du \\
+	I_2 &=  \int_{(y_t-h/2)/t}^{(y_t+h/2)/t}   \exp \left( \frac{-(\hat{y}_0 - y_t - t v )^2}{2 \sigma_x^2} -  \frac{(\hat{v}_0 - v)^2}{8\sigma_x^2} - \frac{ v^2}{2 \sigma_{\Lin}^2} \right) dv
+\end{align*}
+
+We can express the integral terms, $I_1$ and $I_2$, in terms of the error function.
+In particular, the logarithm of the integrand is just a quadratic function of the integration variable.
+We can complete the square and write the exponent as
+$$
+	 - a( u - \bar{u} )^2 + k
+$$
+where
+\begin{align*}
+	a &= \frac{4t^2+1}{2 \sigma_x^2} + \frac{1}{2\sigma_L^2} \\
+	\bar{u} &= \frac{\hat{u} + 4 \hat{x} t - 4 t x_t }{4 t^2 + 1 + 4(\sigma_x / \sigma_L)^2} \\
+	k &= \frac{1}{\sigma_{x}^{2} \left(4 \sigma_{L}^{2} t^{2} + \sigma_{L}^{2} + 4 \sigma_{x}^{2}\right)} \cdot \\
+	&\quad \Big(- \frac{\hat{u}^{2} \sigma_{L}^{2}}{2} t^{2} - \frac{\hat{u}^{2} \sigma_{x}^{2}}{2} + \hat{u} \hat{x} \sigma_{L}^{2} t \\
+	&\qquad - \hat{u} \sigma_{L}^{2} t x_{t} - \frac{\hat{x}^{2} \sigma_{L}^{2}}{2} - 2 \hat{x}^{2} \sigma_{x}^{2} + \hat{x} \sigma_{L}^{2} x_{t} + 4 \hat{x} \sigma_{x}^{2} x_{t} - \frac{\sigma_{L}^{2} x_{t}^{2}}{2} - 2 \sigma_{x}^{2} x_{t}^{2}\Big)
+\end{align*}
+So that
+\begin{align*}
+	I_1 = \left[ \exp(k) \frac{ \sqrt{\pi}}{2 \sqrt{ a } } \erf( \sqrt{a} (u - \bar{u}) ) \right] \Big|_{u= (x_t-w/2)/t}^{(x_t+w/2)/t}\\
+\end{align*}
+A similar expression holds for $I_2$ by substituting $\hat{x}$ with $\hat{y}$ and $w$ with $h$, etc.
 
 \subsubsection{Learning clusters}
 For a fixed scene with a database of agent trajectories we cluster the trajectories by applying the Affinity propagation algorithm to the end-points.
@@ -418,7 +417,6 @@ They are typically drawing a Radon-Nikodym derivative with respect to the Lebesg
 In this case, before plotting, we should divide the values of each point by the amount of expansion witnessed at that point, $\det( D\Phi(x) )$.
 It's a subtle point, since there is a lot of human psychology going on here.
 The plotted object is a manipulated version of the object under scrutiny.}
-
 
 
 

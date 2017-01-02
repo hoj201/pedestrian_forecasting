@@ -15,7 +15,7 @@ class Scene():
         s_max: The top observed speed
         bbox_width: float
         bbox_velocity_width: Same as bbox_width but in velocity space.
-        sigma_v: standard deviation of velocity
+        sigma_L: standard deviation of velocity
     
     methods:
        director_field_vectorized:  A routine for computing a vector field.
@@ -54,7 +54,7 @@ class Scene():
         self.bbox_width = process_data.get_bbox_width( BB_ts_ls )
         self.bbox_velocity_width = process_data.get_bbox_velocity_width( BB_ts_ls )
         self.s_max = max( map( top_speed, curve_ls ) )
-        self.sigma_v = process_data.get_std_velocity( BB_ts_ls )
+        self.sigma_L = process_data.get_std_velocity( BB_ts_ls )
 
         #Learn the  agent_classes
         from cluster import get_classes

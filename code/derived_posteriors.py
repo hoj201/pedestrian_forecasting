@@ -13,251 +13,146 @@ s_max = 1
 s_max = scene.s_max
 #temporary dist_width
 dist_width = np.ones([2]) * scene.bbox_width
+sigma_x = scene.bbox_width / 4.0
 vel_width = np.ones([2]) * scene.bbox_velocity_width
-sigma_v = scene.sigma_v
+sigma_v = 2*sigma_x
+sigma_L = scene.sigma_L
 p_of_lin = scene.P_of_c[-1]
 scene_scale = np.array([scene.width, scene.height])
 
-
-def _prob_k_s_x0(k, s, x0, x, v):
+def joint_k_s_x_x_hat_v_hat(k, s, x, x_hat, v_hat):
     """
-    returns P(k,s,x0 | mu)
-    Takes:
-    k: float: class of agent
-    x0: np.array(N_points, 2): points to be evaluated
-    x: np.array(2): given measurement of x0
-    v: np.array(2): given measurement of v0
-    s: np.array(N_points): initial speed
-    """
-    prob_measurement = posteriors.measurement_given_x0(x0, x)
-
-    xs = [x[0] for x in x0]
-    ys = [x[1] for x in x0]
-    xy = np.array([xs, ys])
-    initial_velocity = scene.director_field_vectorized(k, xy)
-    initial_velocity = np.dstack([s, s])[0] * np.dstack(initial_velocity)[0]
-    measurement_given_velocity = posteriors.measurement_given_v0(initial_velocity, v)
-    x0_given_k = posteriors.x0_given_k(k, x0)
-    p_k = scene.P_of_c[k]
-    p_s = posteriors.prob_s_uniform(s)
-    ret = prob_measurement * measurement_given_velocity * p_k * p_s * x0_given_k
-    return ret
-
-def _prob_lin_x_mu(x0, x, v):
-    """
-    returns P(lin,x|mu)
-    Takes:
-    x0: np.array(N_points, 2): points to be evaluated
-    x: np.array(2): given measurement of x0
-    v: np.array(2): given measurement of v0
-    """
-    product = 1
-    product *= posteriors.measurement_given_x0(x0, x) * scene.P_of_c[-1] * posteriors.x0_given_lin(x0)
-    product /= 4 *  vel_width[0]**2 #* scene_scale[0] * scene_scale[1]
-    term1 = erf((v[0] + vel_width[0]/2)/(np.sqrt(2) * sigma_v))
-    term2 = erf((v[0] - vel_width[0]/2)/(np.sqrt(2) * sigma_v))
-    product *= term1 - term2
-    #problem is in large params to erf
-    term1 = erf((v[1] + vel_width[0]/2)/(np.sqrt(2) * sigma_v))
-    term2 = erf((v[1] - vel_width[0]/2)/(np.sqrt(2) * sigma_v))
-    product *= term1-term2
-    return product
-
-
-x_s = np.zeros([2])
-v_s = np.zeros([2])
-normalizing_constant_s = None
-def _normalizing_constant(x,v):
-    global x_s
-    global v_s
-    global normalizing_constant_s
-
-    res = 40
-
-    if np.array_equal(x,x_s) and np.array_equal(v, v_s) and normalizing_constant_s != None:
-        return normalizing_constant_s
+    returns the joint probability of k,x,x_hat,v_hat
     
-    bounds = (x[0] - dist_width[0]/2, x[0] + dist_width[0]/2,
-              x[1] - dist_width[0]/2, x[1] + dist_width[0]/2,
-              -0.5 * s_max, 0.5 * s_max)
-
-    normalizing_constant = 0
-    for i in range(max_k):
-        def temp(x1,y1,z):
-            x1 = x1.flatten()
-            y1 = y1.flatten()
-            #may be slow, possibly use dstack?
-            xy = np.array(zip(x1,y1))
-            z = z.flatten()
-            return _prob_k_s_x0(i, z, xy, x, v)
-        normalizing_constant += trap_quad(temp, bounds, res = (res, res, res))
-    bounds = (x[0] - dist_width[0]/2, x[0] + dist_width[0]/2,
-              x[1] - dist_width[0]/2, x[1] + dist_width[0]/2)
-              #v[0] - vel_width[0]/2, v[0] + vel_width[0]/2,
-              #v[1] - vel_width[1]/2, v[1] + vel_width[1]/2)
-    def temp(x1,y1):
-        x1 = x1.flatten()
-        y1 = y1.flatten()
-        #z = z.flatten()
-        #w = w.flatten()
-        #may be slow, possibly use dstack?
-        xy = np.array(zip(x1,y1))
-        #zw = np.array(zip(z, w))
-        return _prob_lin_x_mu( xy, x, v)
-    normalizing_constant += trap_quad(temp, bounds, res = (res, res))
-    normalizing_constant_s = normalizing_constant
-    x_s = x
-    v_s = v
-    return normalizing_constant
-
-#placeholder
-#meant to be summation over all k, s, x0
-#-smax to smax
-#all k
-#all x within bounding box of x0
-def prob_k_s_x0_given_mu(k, s, x0, x, v):
+    args:
+    k: int
+    s: float
+    x: numpy.ndarray, shape=(2,N)
+    x_hat: numpy.ndarray, shape=(2,)
+    v_hat: numpy.ndarray, shape=(2,)
     """
-    Takes
-    k: int: cluster
-    s: np.array(N_points), speeds of each initial point
-    x0: np.array(N_points, 2), initial points to be evaluated
-    x: np.array(2): given position measurement
-    v: np.array(2): given velocity measurement
-    """
+    r2 = (x[0]-x_hat[0])**2 + (x[1]-x_hat[1])**2
+    out = np.exp( -r2/(2*sigma_x**2) ) / (2*np.pi*sigma_x**2) #P(x_hat|x)
+    v = s*scene.director_field_vectorized(k, x)
+    r2 = (v[0]-v_hat[0])**2 + (v[1]-v_hat[1])**2
+    out *= np.exp( -r2/(2*sigma_v**2) ) / (2*np.pi*sigma_v**2) #P(v_hat|v)
+    out *= posteriors.x_given_k(x,k)
+    out *= scene.P_of_c[k]
+    out *= 1.0/(2*s_max) * (s <= s_max) * (s >= -s_max) #P(s)
+    return out
 
-    return 1.0/_normalizing_constant(x, v) * _prob_k_s_x0(k, s, x0, x, v)
-
-def _prob_lin_x_v_mu(x0, v0, x, v):
+def joint_lin_x_x_hat_v_hat(x, x_hat, v_hat):
     """
+    returns the joint probability P(lin,x,x_hat,v_hat)
     Takes:
-    x0: np.array(N_points, 2): positions to be evaluated
-    v0: np.array(N_points, 2): velocities to be evaluated
-    x: np.array(2): position measurement
-    v: np.array(2): velocity measurement
-    returns np.array(N_points): P(x0, v0, lin, x, v)
+    x: np.array(2,N): points to be evaluated
+    x_hat: np.array(2): position measurement
+    v_hat: np.array(2): velocity measurement
     """
-    product = 1
-    product *= posteriors.x0_given_lin(x0)
-    product *= posteriors.measurement_given_x0(x0, x)
-    product *= posteriors.measurement_given_v0(v0, v)
-    product *= posteriors.v0_given_x0_lin(v0)
-    product *= p_of_lin
-    return product
+    r2 = (x[0]-x_hat[0])**2 + (x[1]-x_hat[1])**2
+    out = np.exp( -r2/(2*sigma_x**2) ) / (2*np.pi*sigma_x**2) #P(x_hat|x)
+    out *= posteriors.x_given_lin(x)
+    out *= scene.P_of_c[-1]
+    v_hat2 = v_hat[0]**2 + v_hat[1]**2
+    out *= np.exp( -v_hat2 / (2*(sigma_L**2 + sigma_v**2)))
+    out /= 2*np.pi * (sigma_v**2 + sigma_L**2) #int P(\hat{v}|v) P(v|Lin) dv
+    return out
 
-def prob_lin_x_v_given_mu(x0, v0, x, v):
+def joint_lin_x_t_x_hat_v_hat(t, x_t, x_hat, v_hat):
     """
+    returns the joint probabiity P(lin, x_t, x_hat, v_hat)
     Takes:
-    x0: np.array(N_points, 2): points to be evaluated
-    v0: np.array(N_points, 2): velocities to be evaluated
-    x: np.array(2): measured position
-    v: np.array(2): measured velocity
-    Returns np.array(N_points): P(x0, v0, lin|x, v)
+    t: float: current time
+    x_t: np.array(2,N): points to be evaluated
+    x_hat: np.array(2): position measurement
+    v_hat: np.array(2): velocity measurement
     """
-    return _prob_lin_x_v_mu(x0, v0, x, v) / _normalizing_constant(x, v)
+    v_hat2 = np.dot(v_hat,v_hat)
+    x_hat2 = np.dot(x_hat,x_hat)
+    width = scene.width
+    height = scene.height
+    area = width*height
+    A = scene.P_of_c[-1]
+    A /= area * 8 * np.pi**3 * sigma_L**2 * sigma_x**2 * sigma_v**2
+    a = -t**2 / (2*sigma_x**2) - (2*sigma_v**2)**-1 - (2*sigma_L**2)**-1
+    h = np.zeros(x_t.shape)
+    k = np.zeros(x_t.shape)
+    for i in (0,1):
+        h[i] = (v_hat[i] * sigma_x**2 + (x_hat[i] - x_t[i])*t*sigma_v**2)
+        h[i] /= sigma_v**2 * t**2 + sigma_x**2 + sigma_v**2 * sigma_x**2 / sigma_L**2
+        k[i] = -v_hat2 * sigma_L**2 * t**2 / 2 - v_hat2 * sigma_x**2 / 2
+        k[i] += v_hat[i] * (x_hat[i] - x_t[i]) * sigma_L**2 * t
+        k[i] -= x_hat2 * (sigma_L**2-sigma_x**2) / 2
+        k[i] += x_hat[i]*x_t[i] * (sigma_L**2 + sigma_v**2)
+        k[i] -= x_t[i]**2 * (sigma_L**2 + sigma_v**2) / 2
+        k[i] /= sigma_L**2 * sigma_v**2 * t**2 + sigma_L**2 * sigma_x**2 + sigma_x**2 * sigma_v**2
+    from scipy.special import erf
+    def anti_derivative(u,i):
+        arg = u - h[i]
+        out = np.exp(k[i])*np.pi*erf(np.sqrt(-a)*(arg))
+        out /= (2*np.sqrt(-a)) 
+        return out
+    u_min = (x_t[0] - width/2) / t
+    u_max = (x_t[0] + width/2) / t
+    v_min = (x_t[1] - height/2) / t
+    v_max = (x_t[1] + height/2) / t
+    I0 = anti_derivative(u_max,0) - anti_derivative(u_min,0)
+    I1 = anti_derivative(u_max,1) - anti_derivative(u_min,1)
+    return A * I0 * I1
 
 if __name__ == "__main__":
-
-    sum_k = 0
-    x = np.array([0, 0])
-    v = np.array([0.0,0])
-
-    print "Starting sanity check"
-    print "should be same:"
-    x0 = [[0.01, 0.01]]
-    print _prob_lin_x_mu(x0, x, v)
-    bounds = [v[0] - vel_width[0]/2,  v[0] + vel_width[0]/2,
-               v[1] - vel_width[0]/2, v[1] + vel_width[0]/2]
-    def temp(x1, y1):
-        x1 = x1.flatten()
-        y1 = y1.flatten()
-        xy = np.array(zip(x1, y1))
-        xs = np.tile(x0, (len(xy), 1))
-        return _prob_lin_x_v_mu(xs, xy, x, v)
-    print trap_quad(temp, bounds)
-
-    print "starting k normalization"
-    bounds = (x[0] - dist_width[0]/2, x[0] + dist_width[0]/2,
-             x[1] - dist_width[0]/2, x[1] + dist_width[0]/2,
-             -0.5 * s_max, 0.5 * s_max)
-    for i in range(max_k):
-       print i
-       def temp(x1,y1,z):
-           x1 = x1.flatten()
-           y1 = y1.flatten()
-           #may be slow, possibly use dstack?
-           xy = np.array(zip(x1,y1))
-           z = z.flatten()
-           return prob_k_s_x0_given_mu(i, z, xy, x, v)
-       sum_k += trap_quad(temp, bounds, (40, 40, 40))
-    print "starting lin"
-    bounds = (x[0] - dist_width[0]/2, x[0] + dist_width[0]/2,
-              x[1] - dist_width[0]/2, x[1] + dist_width[0]/2,
-              v[0] - vel_width[0]/2, v[0] + vel_width[0]/2,
-              v[1] - vel_width[1]/2, v[1] + vel_width[1]/2
-              )
-    def temp(x1,y1, z, w):
-        x1 = x1.flatten()
-        y1 = y1.flatten()
-        z = z.flatten()
-        w = w.flatten()
-        xy = np.array(zip(x1,y1))
-        zw = np.array(zip(z, w))
-        return prob_lin_x_v_given_mu(xy, zw, x, v)
-    lin_term = trap_quad(temp, bounds, (40, 40, 40, 40))
-    sum_k += lin_term
-    print "Should be 1.0:"
-    print sum_k
-
-    print "should be close to 1:"
-    #print prob_k_s_x0_given_mu(0, [0], x0, x, v)
-    def temp(x, y):
-        x = x.flatten()
-        y = y.flatten()
-        #may be slow, possibly use dstack?
-        xy = np.array(zip(x,y))
-        return posteriors.measurement_given_v0(xy, np.array([0,0]))
-    bounds = (-1 * vel_width[0], 1 * vel_width[0], -1 * vel_width[0], 1 * vel_width[0])
-    print trap_quad(temp, bounds, res=(40,40))
-
-    print "should be close to 1:"
-    bounds = [-1 * s_max, s_max]
-    print trap_quad(posteriors.prob_s_uniform, bounds)
-
-    print "all should be close to 1:"
-    bounds = []
-    for i in range(max_k):
-       def temp(x,y):
-           x = x.flatten()
-           y = y.flatten()
-           xy = np.array(zip(x,y))
-           return posteriors.x0_given_k(i, xy)
-       width = posteriors.scene_scale[0]
-       height = posteriors.scene_scale[1]
-       bounds = [-2*width/2.0,2* width/2.0, -2*height/2.0, 2*height/2.0]
-       print trap_quad(temp, bounds)
-
-    print "should be close to 1:"
-    bounds = 3*scene.sigma_v*np.array([-1., 1., -1., 1.])
-    bounds = list(bounds)
-    def temp(x,y):
-       x = x.flatten()
-       y = y.flatten()
-       xy = np.array(zip(x,y))
-       return posteriors.v0_given_x0_lin(xy)
-    print trap_quad(temp, bounds, (100,100))
-
+    print "Test: \int P(k,s,x,\hat{x},\hat{v}) d\hat{v} = P(k,s,x,\hat{x})."
     k = 0
-    x0 = np.array([[0,0]])
-    x = np.array([0,0])
-    v = np.array([0,0])
-    s = np.array([-.002])
-    dx = np.array([0,0.02])
-    print "Should be the same:"
-    print _prob_k_s_x0(k, s, x0, x, v) / _prob_k_s_x0(k, s, x0 + dx, x, v)
-    print posteriors.x0_given_k(k, x0) / posteriors.x0_given_k(k, x0+dx)
+    s = np.random.rand()*s_max
 
-    x = np.array([0,0])
-    v = np.array([.005,0.005])
-    _normalizing_constant(x, v)
+    #FIND A POINT WHERE P(x|k) is large
+    x_arr = np.zeros((2,40))
+    x_arr[0,:20] = np.linspace(-scene.width/2, scene.width/2, 20)
+    x_arr[1,20:] = np.linspace(-scene.height/2,scene.height/2, 20)
+    store = posteriors.x_given_k(x_arr,k)
+    i_max = store.argmax()
+    x = x_arr[:,i_max]
+    x_hat = x + sigma_x*np.random.randn(2)
+    v = s*scene.director_field_vectorized(k,x)
 
-    pass
+    #Now we integrate over v_hat
+    u_arr = np.linspace( v[0]-5*sigma_v, v[0]+5*sigma_v, 100)
+    v_arr = np.linspace( v[1]-5*sigma_v, v[1]+5*sigma_v, 100)
+    dv_hat = (u_arr[1]-u_arr[0])*(v_arr[1]-v_arr[0])
+    Q = 0
+    from itertools import product
+    for u,v in product(u_arr, v_arr):
+        v_hat = np.array([u,v])
+        Q += joint_k_s_x_x_hat_v_hat(k,s,x,x_hat,v_hat)*dv_hat
+
+    print "computed answer = " + str(Q)
+    answer = scene.P_of_c[k] / (2*s_max) * posteriors.x_given_k(x,k)
+    from scipy.stats import multivariate_normal
+    answer *= multivariate_normal.pdf(x_hat, mean=x, cov=sigma_x**2)
+    print "expected answer = " + str(answer)
+
+    print "Test: \int P(Lin,x,\hat{x},\hat{v}) d\hat{v} = P(Lin,x,\hat{x})"
+    u_arr = np.linspace( -5*sigma_v, 5*sigma_v, 100)
+    v_arr = np.linspace( -5*sigma_v, 5*sigma_v, 100)
+    dv_hat = (u_arr[1]-u_arr[0])*(v_arr[1]-v_arr[0])
+    Q = 0
+    for u,v in product(u_arr, v_arr):
+        v_hat = np.array([u,v])
+        Q += joint_lin_x_x_hat_v_hat(x,x_hat,v_hat)*dv_hat
+
+    print "computed answer = " + str(Q)
+    answer = scene.P_of_c[-1] * (scene.width * scene.height)**-1
+    answer *= multivariate_normal.pdf(x_hat, mean=x, cov=sigma_x**2)
+    print "expected answer = " + str(answer)
+    
+    t = 100.0
+    x_hat = np.zeros(2)
+    v_hat = np.ones(2)*sigma_v/2
+    x_span = np.linspace(-scene.width/2, scene.width/2, 20)
+    y_span = np.linspace(-scene.height/2, scene.height/2, 20)
+    X,Y = np.meshgrid(x_span, y_span)
+    x_t  = np.vstack([X.flatten(), Y.flatten()])
+    Z = joint_lin_x_t_x_hat_v_hat(t, x_t, x_hat, v_hat).reshape( X.shape)
+    from matplotlib import pyplot as plt
+    plt.contourf(X,Y,Z,30)
+    plt.show()
