@@ -256,20 +256,19 @@ where $\sigma_{\Lin} > 0$ is learned from the data.
 \label{app:learning}
 The machine learning module is responsible for clustering the trajectories, and providing the vector-fields and potential functions for each cluster, as well as the probability $\Pr(k), \Pr(s)$ and $\Pr( \Lin)$ and the parameter $\sigma_{\Lin}$.
 
-\section{Posteriors}
+\section{Joint distributions}
 Given our choices for the atomic expressions, we can derive expressions for some of the relevant posterior expressions.
 In particular,
 \begin{align*}
-	&\Pr( \vec{x}_t , \Lin \mid \mu ) = \int \Pr( \vec{x}_t, \vec{v}_0 , \Lin \mid \mu) dv_0 \\
-	&\quad= \frac{1}{ \Pr(\mu) } \int \Pr( \vec{x}_t, \vec{x}_0, \vec{v}_0 , \Lin, \mu) d\vec{v}_0\, d\vec{x}_0 \\
-	&\quad= \frac{\Pr(\Lin)}{ \Pr(\mu) } \int \Pr(\vec{x}_t \mid \vec{x}_0, \vec{v}_0 , \Lin ) \Pr( \hat{x}_0 \mid x_0)\\
+	&\Pr( \vec{x}_t , \Lin,  \mu ) = \int \Pr( \vec{x}_t, \vec{x}_0, \vec{v}_0 , \Lin, \mu) d\vec{v}_0\, d\vec{x}_0 \\
+	&\quad= \Pr(\Lin) \int \Pr(\vec{x}_t \mid \vec{x}_0, \vec{v}_0 , \Lin ) \Pr( \hat{x}_0 \mid x_0)\\
 	&\hspace{20ex} \Pr(\hat{v}_0 \mid v_0 ) \Pr( v_0 \mid \Lin ) \Pr( x_0 \mid \Lin )d\vec{v}_0\, d\vec{x}_0 \\
-	&\quad= \frac{\Pr(\Lin)}{ \Pr(\mu) } \int \chi( \vec{x}_t - t\vec{v}_0 \in D) \Pr( \hat{\vec{x}}_0 \mid \vec{x}_0 = \vec{x}_t - t \vec{v}_0 ) \Pr(\hat{\vec{v}}_0 \mid \vec{v}_0 ) \Pr( \vec{v}_0 \mid \Lin ) d\vec{v}_0 \\
+	&\quad= \Pr(\Lin) \int \chi( \vec{x}_t - t\vec{v}_0 \in D) \Pr( \hat{\vec{x}}_0 \mid \vec{x}_0 = \vec{x}_t - t \vec{v}_0 ) \Pr(\hat{\vec{v}}_0 \mid \vec{v}_0 ) \Pr( \vec{v}_0 \mid \Lin ) d\vec{v}_0 \\
 	&\quad= A \cdot I_1 \cdot I_2
 \end{align*}
 where
 \begin{align*}
-	A &= \frac{\Pr(\Lin)}{ \Pr(\mu) }  \cdot (w\cdot h \cdot 8\pi^3 \sigma_{\Lin}^2 \sigma_x^2 \sigma_v^2 )^{-1} \\
+	A &= \Pr(\Lin) \cdot (w\cdot h \cdot 8\pi^3 \sigma_{\Lin}^2 \sigma_x^2 \sigma_v^2 )^{-1} \\
 	I_1 &=  \int_{(x_t-w/2)/t}^{(x_t+w/2)/t}   \exp \left( \frac{-(\hat{x}_0 - x_t - t u )^2}{2 \sigma_x^2} -  \frac{(\hat{u}_0 - u)^2}{8\sigma_x^2} - \frac{ u^2}{2 \sigma_{\Lin}^2} \right) du \\
 	I_2 &=  \int_{(y_t-h/2)/t}^{(y_t+h/2)/t}   \exp \left( \frac{-(\hat{y}_0 - y_t - t v )^2}{2 \sigma_x^2} -  \frac{(\hat{v}_0 - v)^2}{8\sigma_x^2} - \frac{ v^2}{2 \sigma_{\Lin}^2} \right) dv
 \end{align*}

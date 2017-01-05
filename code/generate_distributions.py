@@ -54,14 +54,14 @@ def particle_generator(scene, x_hat, v_hat, t_final, N_steps):
     num_nl_classes = len(scene.P_of_c)-1
     sigma_x = scene.bbox_width / 4.0
     s_max = scene.s_max
-    x_span = np.linspace( - sigma_x, sigma_x, 5 )
+    x_span = np.linspace( - 3*sigma_x, 3*sigma_x, 20 )
     X,Y = np.meshgrid(x_span + x_hat[0], x_span + x_hat[1] )
     x0 = np.vstack([X.flatten(), Y.flatten()])
     N_ptcl = x0.shape[1]
     x_arr = np.zeros((num_nl_classes, 2*N_steps+1, 2, N_ptcl))
     for k in range(num_nl_classes):
         x_arr[k] = integrate_class(scene, k, x0, t_final, N_steps)
-    #TODO: include the n=0 case
+    #TODO: include the n=0 case?
     for n in range(1,N_steps):
         ds = s_max / n 
         w_arr = np.zeros((num_nl_classes, 2*n+1, N_ptcl))
@@ -120,4 +120,3 @@ if __name__ == '__main__':
         plt.axis(domain)
         plt.show()
         plt.clf()
-
