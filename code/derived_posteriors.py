@@ -180,7 +180,8 @@ if __name__ == "__main__":
 
     print "Test \int P(Lin, x_t, \hat{x_0}, \hat{v_0})\,dx_t = \int P(Lin, x_0, \hat{x_0}, \hat{v_0})\,dx_0"
 
-    bounds = [-scene.width/2, scene.width/2, -scene.height/2, scene.height/2]
+    #We integrate over a larger region than the domain because much of the mass leaves the domain
+    bounds = [-scene.width, scene.width, -scene.height, scene.height] 
 
     print "All of the following should be equal"
 
@@ -196,8 +197,3 @@ if __name__ == "__main__":
             return joint_lin_x_t_x_hat_v_hat(t, pts, x, v)
         print "T={}: {}".format(t, trap_quad(temp, bounds, res=(100, 100)))
         t /= 10.0
-
-
-
-
-
