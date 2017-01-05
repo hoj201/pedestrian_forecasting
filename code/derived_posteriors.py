@@ -144,7 +144,7 @@ if __name__ == "__main__":
     answer = scene.P_of_c[-1] * (scene.width * scene.height)**-1
     answer *= multivariate_normal.pdf(x_hat, mean=x, cov=sigma_x**2)
     print "expected answer = " + str(answer)
-    
+
     t = 100.0
     x_hat = np.zeros(2)
     v_hat = np.ones(2)*sigma_v/2
@@ -156,3 +156,48 @@ if __name__ == "__main__":
     from matplotlib import pyplot as plt
     plt.contourf(X,Y,Z,30)
     plt.show()
+
+    print "Test: \lim_{t \to 0} P(Lin, x_t, \hat{x_0}, \hat{v_0}) = P(Lin, x_0, \hat{x_0}, \hat{v_0})"
+
+    x_xs = np.linspace(-scene.width/2, scene.width/2, 100)
+    x_ys = np.linspace(-scene.height/2, scene.height/2, 100)
+    xs, ys = np.meshgrid(x_xs, x_ys)
+    xs = xs.flatten()
+    ys = ys.flatten()
+    pts = np.array([xs, ys])
+    x = np.array([0, 0])
+    v = np.array([0, 2*sigma_v])
+
+    print "The following series depicts approaching t=0 from above\nand how it differs from at x_0\n\nThe average difference should approach zero"
+    t = 100.0
+    avg = lambda c, v: np.average(np.abs(c-v))
+    control = joint_lin_x_x_hat_v_hat(pts, x, v)
+    for i in range(9):
+        print "T = {}:".format(t)
+        vals = joint_lin_x_t_x_hat_v_hat(t, pts, x, v)
+        print "Average difference from x_0: {}".format(avg(control, vals))
+        t /= 10.0
+
+    print "Test \int P(Lin, x_t, \hat{x_0}, \hat{v_0})\,dx_t = \int P(Lin, x_0, \hat{x_0}, \hat{v_0})\,dx_0"
+
+    bounds = [-scene.width/2, scene.width/2, -scene.height/2, scene.height/2]
+
+    print "All of the following should be equal"
+
+    t = 100.0
+    avg = lambda c, v: np.average(np.abs(v-c))
+    def temp(xs, ys):
+        pts = np.array([xs.flatten(), ys.flatten()])
+        return joint_lin_x_x_hat_v_hat(pts, x, v)
+    print "x_0: {}".format(trap_quad(temp, bounds, res=(100, 100)))
+    for i in range(9):
+        def temp(xs, ys):
+            pts = np.array([xs.flatten(), ys.flatten()])
+            return joint_lin_x_t_x_hat_v_hat(t, pts, x, v)
+        print "T={}: {}".format(t, trap_quad(temp, bounds, res=(100, 100)))
+        t /= 10.0
+
+
+
+
+
