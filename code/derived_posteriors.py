@@ -168,14 +168,25 @@ if __name__ == "__main__":
     x = np.array([0, 0])
     v = np.array([0, 2*sigma_v])
 
-    print "The following series depicts approaching t=0 from above\nand how it differs from at x_0\n\nThe average difference should approach zero"
+    print """
+    The following series depicts approaching t=0 from above
+    and how it differs from at x_0
+
+    The average difference should approach zero"""
+
     t = 100.0
     avg = lambda c, v: np.average(np.abs(c-v))
+    oom = lambda c, v: avg(np.log(c), np.log(v))
+    mxoom = lambda c, v: np.amax(np.abs(np.log(c)-np.log(v)))
+    mnoom = lambda c, v: np.amin(np.abs(np.log(c)-np.log(v)))
     control = joint_lin_x_x_hat_v_hat(pts, x, v)
     for i in range(9):
         print "T = {}:".format(t)
         vals = joint_lin_x_t_x_hat_v_hat(t, pts, x, v)
         print "Average difference from x_0: {}".format(avg(control, vals))
+        print "Average difference in order of magnitude: {}".format(oom(control, vals))
+        print "Max diff in OoM: {}".format(mxoom(control, vals))
+        print "Min diff in OoM: {}".format(mnoom(control, vals))
         t /= 10.0
 
     print "Test \int P(Lin, x_t, \hat{x_0}, \hat{v_0})\,dx_t = \int P(Lin, x_0, \hat{x_0}, \hat{v_0})\,dx_0"
@@ -186,7 +197,6 @@ if __name__ == "__main__":
     print "All of the following should be equal"
 
     t = 100.0
-    avg = lambda c, v: np.average(np.abs(v-c))
     def temp(xs, ys):
         pts = np.array([xs.flatten(), ys.flatten()])
         return joint_lin_x_x_hat_v_hat(pts, x, v)
@@ -197,3 +207,41 @@ if __name__ == "__main__":
             return joint_lin_x_t_x_hat_v_hat(t, pts, x, v)
         print "T={}: {}".format(t, trap_quad(temp, bounds, res=(100, 100)))
         t /= 10.0
+
+    print """
+    Test that the closed-form solution for P(x_0, Lin, \mu)
+    is the same as a numerically integrated one.
+    """
+
+    bounds = [-3*sigma_v, 3*sigma_v,
+              -3*sigma_v, 3*sigma_v]
+    x = np.array([0, 0])
+    v = np.array([0, sigma_v])
+
+    xs = np.linspace(0, scene.width/2, 20)
+    ys = np.linspace(0, scene.height/4, 20)
+    pts = np.array([xs, ys])
+    results = []
+    results2 = []
+
+    for i in range(20):
+        pt = np.array([pts[0, i], pts[1, i]])
+        def temp(xs, ys):
+            pts = np.array([xs.flatten(), ys.flatten()]).transpose()
+            res = posteriors.x_given_lin(pt) * scene.P_of_c[-1]
+            res *= posteriors.x_hat_given_x(x, pt) * posteriors.v_hat_given_v(v, pts)
+            res *= posteriors.v_given_x_lin(pts) * 1.55618162566
+            return res
+        results.append(trap_quad(temp, bounds, res = (1000, 1000)))
+        results2.append(joint_lin_x_x_hat_v_hat(pt, x, v))
+    results = np.array(results)
+    results2 = np.array(results2)
+    print "Average difference between control and test:"
+    print avg(np.array(results), np.array(results2))
+    print "Average difference in order of magnitude:"
+    print oom(np.array(results), np.array(results2))
+    print "Max differences in OoM"
+    print mxoom(results, results2)
+    print "Min differences in OoM"
+    print mnoom(results, results2)
+
