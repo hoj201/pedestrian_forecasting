@@ -15,6 +15,9 @@ scene_scale = np.array([scene.width, scene.height])
 dist_width = np.ones([2]) * scene.bbox_width
 vel_width = np.ones([2]) * scene.bbox_velocity_width
 s_max = scene.s_max
+sigma_x = scene.sigma_x
+sigma_v = scene.sigma_v
+sigma_L = scene.sigma_L
 
 def legval_scale(x, y, coeffs):
     """
@@ -32,7 +35,7 @@ def legval_scale(x, y, coeffs):
     out -= out.min()
     return out
 
-def x_hat_given_x(x_hat, x, sigma=scene.bbox_width/4.0):
+def x_hat_given_x(x_hat, x):
     """
     Returns the probability of a measurement of x_hat given x.
 
@@ -42,10 +45,10 @@ def x_hat_given_x(x_hat, x, sigma=scene.bbox_width/4.0):
     Returns np.array(N_Points): probability that agent is at x given x0
 
     """
-    return multivariate_normal.pdf(x, mean=x_hat, cov=sigma**2) 
+    return multivariate_normal.pdf(x, mean=x_hat, cov=sigma_x**2) 
 
 
-def v_hat_given_v(v_hat, v, sigma=scene.bbox_width/2.0):
+def v_hat_given_v(v_hat, v):
     """
     Returns the probability of a measurement of v_hat given v.
 
@@ -55,7 +58,7 @@ def v_hat_given_v(v_hat, v, sigma=scene.bbox_width/2.0):
     Returns np.array(N_Points): probability that agent is at x given x0
 
     """
-    return multivariate_normal.pdf(v, mean=v_hat, cov=sigma**2) 
+    return multivariate_normal.pdf(v, mean=v_hat, cov=sigma_v**2) 
 
 
 def prob_s_uniform(s):
@@ -74,7 +77,6 @@ _bounds = (-0.5*scene_scale[0], 0.5*scene_scale[0], -0.5*scene_scale[1], 0.5*sce
 for coeffs in Vk:
     fn = lambda x, y: np.exp( -1*legval_scale(x, y, coeffs))
     _normalization_constants.append(trap_quad(fn, _bounds, res=(200,200)))
-print "Normalization constants = " + str(_normalization_constants)
 
 def x_given_k(x,k):
     """
@@ -110,9 +112,8 @@ def v_given_x_lin(v):
     """
     Takes:
     v: np.array(N_points, 2): points to be evaluated
-    Returns probability of v := N(0, sigma_v)
+    Returns probability density of v ~ N(0, sigma_L)
     """
-    sigma_L = scene.sigma_L
     return multivariate_normal.pdf(v, np.zeros([2]), sigma_L**2)
 
 if __name__ == "__main__":
@@ -121,11 +122,12 @@ if __name__ == "__main__":
 
     print "Actual answer: "
     print x_given_k(np.array([[1, 0], [0,0], [1, 2]]), 0)
-    print "testing x_given_lin"
+    
+    print "testing x_given_lin:"
     x = np.zeros((2,3))
     x[0,1] = scene.width/2.0 + 0.1
     x[1,2] = scene.height/2.0 + 0.01
-    print x_given_lin(x)
+    print "Computed answer = " + str(x_given_lin(x))
     expected_answer = [1.0/(scene.width*scene.height), 0.0, 0.0]
     print "Expected answer = " + str(expected_answer)
 

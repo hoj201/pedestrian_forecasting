@@ -1,8 +1,9 @@
 import numpy as np
+import pickle
+from scene import Scene
 from scipy import integrate
 import itertools
 import scipy as sp
-from scene import Scene
 from functools import partial
 import matplotlib.pyplot as plt
 
@@ -10,11 +11,22 @@ from derived_posteriors import joint_lin_x_x_hat_v_hat
 from derived_posteriors import joint_k_s_x_x_hat_v_hat
 from derived_posteriors import joint_lin_x_t_x_hat_v_hat
 
-def integrate_class(scene, k, x0, T, N_steps):
+with open("test_scene.pkl", "rb") as f:
+    scene = pickle.load(f)
+Vk = scene.alpha_arr
+scene_scale = np.array([scene.width, scene.height])
+#temporary
+dist_width = np.ones([2]) * scene.bbox_width
+vel_width = np.ones([2]) * scene.bbox_velocity_width
+s_max = scene.s_max
+sigma_x = scene.sigma_x
+sigma_v = scene.sigma_v
+sigma_L = scene.sigma_L
+
+def integrate_class(k, x0, T, N_steps):
     """
     integrates a director field over a range [-T,T]
     args:
-    scene: an instance of Scene
     x0: np.array.shape == (2,N)
     T: float
     N_steps: int
@@ -37,7 +49,7 @@ def integrate_class(scene, k, x0, T, N_steps):
     x_arr2 = odeint(f, x0.flatten() , t_arr).reshape((N_steps+1, 2, N))
     return np.concatenate([x_arr2, x_arr1[1:]], axis=0)
 
-def particle_generator(scene, x_hat, v_hat, t_final, N_steps):
+def particle_generator(x_hat, v_hat, t_final, N_steps):
     """
     a generator which gives particles and weights
     Takes:
@@ -52,15 +64,13 @@ def particle_generator(scene, x_hat, v_hat, t_final, N_steps):
         print w.sum() #This prints the total mass
     """
     num_nl_classes = len(scene.P_of_c)-1
-    sigma_x = scene.bbox_width / 4.0
-    s_max = scene.s_max
     x_span = np.linspace( - 3*sigma_x, 3*sigma_x, 20 )
     X,Y = np.meshgrid(x_span + x_hat[0], x_span + x_hat[1] )
     x0 = np.vstack([X.flatten(), Y.flatten()])
     N_ptcl = x0.shape[1]
     x_arr = np.zeros((num_nl_classes, 2*N_steps+1, 2, N_ptcl))
     for k in range(num_nl_classes):
-        x_arr[k] = integrate_class(scene, k, x0, t_final, N_steps)
+        x_arr[k] = integrate_class(k, x0, t_final, N_steps)
     #TODO: include the n=0 case?
     for n in range(1,N_steps):
         ds = s_max / n 
@@ -85,12 +95,8 @@ def pdf_generator():
     pass
 
 if __name__ == '__main__':
-    import pickle
-    from scene import Scene
     from integrate import trap_quad
     import matplotlib.pyplot as plt
-    with open('test_scene.pkl', 'rs') as f:
-        scene = pickle.load(f)
     with open('test_set.pkl', 'rs') as f:
         test_set = pickle.load(f)
     test_BB_ts = test_set[3]
@@ -115,7 +121,7 @@ if __name__ == '__main__':
     t_final = 60
     domain = [-scene.width/2, scene.width/2, -scene.height/2, scene.height/2]
 
-    for x_arr, w_arr in particle_generator(scene, x_hat, v_hat, t_final, N_steps):
+    for x_arr, w_arr in particle_generator(x_hat, v_hat, t_final, N_steps):
         plt.scatter(x_arr[0], x_arr[1], marker='.')
         plt.axis(domain)
         plt.show()
