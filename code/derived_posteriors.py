@@ -67,38 +67,39 @@ def joint_lin_x_t_x_hat_v_hat(t, x_t, x_hat, v_hat):
     x_hat: np.array(2): position measurement
     v_hat: np.array(2): velocity measurement
     """
-    v_hat2 = np.dot(v_hat,v_hat)
-    x_hat2 = np.dot(x_hat,x_hat)
+    sqr = lambda x_arr: x_arr[0]**2 + x_arr[1]**2
+    N = x_t.shape[1]
+    def subtr(a, b):
+        a = np.broadcast_to(a, (N,2)).transpose()
+        return a - b
+    v_hat2 = sqr(v_hat)
+    x_hat2 = sqr(x_hat)
+    Dx = subtr(x_hat, x_t) #Shape = (2,400)
     width = scene.width
     height = scene.height
     area = width*height
-    A = scene.P_of_c[-1]
-    A /= area * 8 * np.pi**3 * sigma_L**2 * sigma_x**2 * sigma_v**2
-    a = -t**2 / (2*sigma_x**2) - (2*sigma_v**2)**-1 - (2*sigma_L**2)**-1
-    h = np.zeros(x_t.shape)
-    k = np.zeros(x_t.shape)
-    for i in (0,1):
-        h[i] = (v_hat[i] * sigma_x**2 + (x_hat[i] - x_t[i])*t*sigma_v**2)
-        h[i] /= sigma_v**2 * t**2 + sigma_x**2 + sigma_v**2 * sigma_x**2 / sigma_L**2
-        k[i] = -v_hat2 * sigma_L**2 * t**2 / 2 - v_hat2 * sigma_x**2 / 2
-        k[i] += v_hat[i] * (x_hat[i] - x_t[i]) * sigma_L**2 * t
-        k[i] -= x_hat2 * (sigma_L**2-sigma_x**2) / 2
-        k[i] += x_hat[i]*x_t[i] * (sigma_L**2 + sigma_v**2)
-        k[i] -= x_t[i]**2 * (sigma_L**2 + sigma_v**2) / 2
-        k[i] /= sigma_L**2 * sigma_v**2 * t**2 + sigma_L**2 * sigma_x**2 + sigma_x**2 * sigma_v**2
+    a = sigma_v**2 * sigma_L**2 * t**2
+    a += sigma_L**2 * sigma_x**2
+    a += sigma_v**2 * sigma_x**2
+    u_off = subtr(v_hat*sigma_x**2, Dx*t*sigma_v**2)
+    u_off *= sigma_L**2 / a
+    k = -sqr( subtr(v_hat*sigma_x/sigma_v, t*Dx*sigma_v/sigma_x ))
+    k *= sigma_L**2 / a
+    k += v_hat2 / sigma_v**2 + sqr(Dx) / sigma_x**2
+    out = scene.P_of_c[-1] * np.exp( - k / 2.0 )
+    out /= 16 * np.pi**2 * area * a
     from scipy.special import erf
     def anti_derivative(u,i):
-        arg = u - h[i]
-        out = np.exp(k[i])*np.pi*erf(np.sqrt(-a)*(arg))
-        out /= (2*np.sqrt(-a)) 
-        return out
+        A = u - u_off[i]
+        B = np.sqrt(t**2 * sigma_x**-2 + sigma_v**-2 + sigma_L**-2)
+        return erf(A * B)
     u_min = (x_t[0] - width/2) / t
     u_max = (x_t[0] + width/2) / t
     v_min = (x_t[1] - height/2) / t
     v_max = (x_t[1] + height/2) / t
-    I0 = anti_derivative(u_max,0) - anti_derivative(u_min,0)
-    I1 = anti_derivative(u_max,1) - anti_derivative(u_min,1)
-    return A * I0 * I1
+    out *= anti_derivative(u_max,0) - anti_derivative(u_min,0)
+    out *= anti_derivative(u_max,1) - anti_derivative(u_min,1)
+    return out
 
 if __name__ == "__main__":
     print "Test: \int P(k,s,x,\hat{x},\hat{v}) d\hat{v} = P(k,s,x,\hat{x})."
@@ -230,7 +231,7 @@ if __name__ == "__main__":
             pts = np.array([xs.flatten(), ys.flatten()]).transpose()
             res = posteriors.x_given_lin(pt) * scene.P_of_c[-1]
             res *= posteriors.x_hat_given_x(x, pt) * posteriors.v_hat_given_v(v, pts)
-            res *= posteriors.v_given_x_lin(pts) * 1.55618162566
+            res *= posteriors.v_given_x_lin(pts) #* 1.55618162566
             return res
         results.append(trap_quad(temp, bounds, res = (1000, 1000)))
         results2.append(joint_lin_x_x_hat_v_hat(pt, x, v))
@@ -244,4 +245,3 @@ if __name__ == "__main__":
     print mxoom(results, results2)
     print "Min differences in OoM"
     print mnoom(results, results2)
-

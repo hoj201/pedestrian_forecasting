@@ -101,18 +101,19 @@ def x_given_lin(x):
         const_arr = 1.0
     else:
         const_arr = np.ones(x.shape[1])
-    out = 1.0/(scene_scale[0] * scene_scale[1]) * const_arr
+    out = const_arr/(scene_scale[0] * scene_scale[1])
     out *= (x[0] <= scene_scale[0]/2.0)*(x[0] >= -scene_scale[0]/2.0)
     out *= (x[1] <= scene_scale[1]/2.0)*(x[1] >= -scene_scale[1]/2.0)
     return out
 
-def v_given_x_lin(v, sigma = scene.bbox_width/2.0):
+def v_given_x_lin(v):
     """
     Takes:
     v: np.array(N_points, 2): points to be evaluated
     Returns probability of v := N(0, sigma_v)
     """
-    return multivariate_normal.pdf(v, np.zeros([2]), sigma**2)
+    sigma_L = scene.sigma_L
+    return multivariate_normal.pdf(v, np.zeros([2]), sigma_L**2)
 
 if __name__ == "__main__":
     pass
