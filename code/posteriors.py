@@ -106,13 +106,13 @@ def x_given_lin(x):
     out *= (x[1] <= scene_scale[1]/2.0)*(x[1] >= -scene_scale[1]/2.0)
     return out
 
-def v_given_x_lin(v):
+def v_given_x_lin(v, sigma = scene.bbox_width/2.0):
     """
     Takes:
     v: np.array(N_points, 2): points to be evaluated
     Returns probability of v := N(0, sigma_v)
     """
-    return multivariate_normal.pdf(v, np.zeros([2]), scene.sigma_v**2)
+    return multivariate_normal.pdf(v, np.zeros([2]), sigma**2)
 
 if __name__ == "__main__":
     pass
