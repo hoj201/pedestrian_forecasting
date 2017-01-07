@@ -13,9 +13,9 @@ s_max = 1
 s_max = scene.s_max
 #temporary dist_width
 dist_width = np.ones([2]) * scene.bbox_width
-sigma_x = scene.bbox_width / 4.0
 vel_width = np.ones([2]) * scene.bbox_velocity_width
-sigma_v = 2*sigma_x
+sigma_x = scene.sigma_x
+sigma_v = scene.sigma_v
 sigma_L = scene.sigma_L
 p_of_lin = scene.P_of_c[-1]
 scene_scale = np.array([scene.width, scene.height])
