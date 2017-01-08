@@ -7,6 +7,7 @@ import scipy as sp
 from functools import partial
 import matplotlib.pyplot as plt
 
+import posteriors
 from derived_posteriors import joint_lin_x_x_hat_v_hat
 from derived_posteriors import joint_k_s_x_x_hat_v_hat
 from derived_posteriors import joint_lin_x_t_x_hat_v_hat
@@ -38,16 +39,15 @@ def integrate_class(k, x0, T, N_steps):
     from scipy.integrate import odeint
     def f(x,t):
         x = x.reshape(2,len(x)/2)
-        s_max = scene.s_max
         return s_max * scene.director_field_vectorized(k,x).flatten()
 
     # Integrate the ODE backwards in time
     f_backwards = lambda x,t: -1*f(x,t)
     t_arr = np.linspace(0, T, N_steps+1)
-    x_arr1 = odeint(f_backwards, x0.flatten() , t_arr)[::-1]
-    x_arr1 = x_arr1.reshape((N_steps+1, 2, N))
-    x_arr2 = odeint(f, x0.flatten() , t_arr).reshape((N_steps+1, 2, N))
-    return np.concatenate([x_arr2, x_arr1[1:]], axis=0)
+    x_backward = odeint(f_backwards, x0.flatten() , t_arr)[::-1]
+    x_forward = odeint(f, x0.flatten() , t_arr)
+    x_arr = np.concatenate([x_forward, x_backward[1:]])
+    return x_arr.reshape( (2*N_steps+1, 2, N) )
 
 def particle_generator(x_hat, v_hat, t_final, N_steps):
     """
@@ -64,27 +64,55 @@ def particle_generator(x_hat, v_hat, t_final, N_steps):
         print w.sum() #This prints the total mass
     """
     num_nl_classes = len(scene.P_of_c)-1
-    x_span = np.linspace( - 3*sigma_x, 3*sigma_x, 20 )
-    X,Y = np.meshgrid(x_span + x_hat[0], x_span + x_hat[1] )
+    
+    #Initializes particles for nonlinear classes
+    x_span = np.linspace( - 3*sigma_x, 3*sigma_x, 20)
+    X,Y = np.meshgrid(x_span + x_hat[0], x_span + x_hat[1])
     x0 = np.vstack([X.flatten(), Y.flatten()])
+    
+    #Initializes a regular grid for evaluation of the linear class
+    x_span = np.linspace( -scene.width/2, scene.width/2, 10)
+    dx = x_span[1] - x_span[0]
+    y_span = np.linspace( -scene.height/2, scene.height/2, 10)
+    dy = y_span[1] - y_span[0]
+    X,Y = np.meshgrid(x_span, y_span)
+    x_lin = np.vstack( [X.flatten(), Y.flatten()])
+
     N_ptcl = x0.shape[1]
     x_arr = np.zeros((num_nl_classes, 2*N_steps+1, 2, N_ptcl))
     for k in range(num_nl_classes):
         x_arr[k] = integrate_class(k, x0, t_final, N_steps)
-    #TODO: include the n=0 case?
+    #At time t=0, rho(x,t=0) is nothing but P(x0 | x0_hat),
+    # which equals P(x0_hat | x0).
+    w_arr = posteriors.x_hat_given_x(x0, x_hat)
+    w_out = w_arr.flatten()
+    x_out = x0
+    yield x_out, w_out
+    #For later times, the class of the agent matters.
     for n in range(1,N_steps):
+        #The following computations handle the nonlinear classes
+        t = n * t_final / float(N_steps)
         ds = s_max / n 
         w_arr = np.zeros((num_nl_classes, 2*n+1, N_ptcl))
         for k in range(num_nl_classes):
             for m in range(-n,n+1):
-                w_arr[k,m] = ds * joint_k_s_x_x_hat_v_hat(k, s_max*m /n, x0, x_hat, v_hat) #TODO: Use memoization here
+                w_arr[k,m] = ds * joint_k_s_x_x_hat_v_hat(
+                        k, s_max*m /n, x0, x_hat, v_hat) #TODO: Memoize??
         w_out = w_arr.flatten()
-        x_out = np.zeros((2,N_ptcl*num_nl_classes*(2*n+1)))
+        x_out = np.zeros((2,N_ptcl*num_nl_classes*(2*n+1))) #TODO: There might be some indexing issues here
         x_out[0,:n*num_nl_classes*N_ptcl] = x_arr[:,2*N_steps+1-n:,0,:].flatten()
         x_out[0,n*N_ptcl*num_nl_classes:] = x_arr[:,:n+1,0,:].flatten()
         x_out[1,:n*num_nl_classes*N_ptcl] = x_arr[:,2*N_steps+1-n:,1,:].flatten()
         x_out[1,n*N_ptcl*num_nl_classes:] = x_arr[:,:n+1,1,:].flatten()
-        yield x_out, w_out
+
+        #The following computations handle the linear predictor class
+        w_lin = joint_lin_x_t_x_hat_v_hat(t, x_lin, x_hat, v_hat) * dy*dx
+        #TODO: append regular grid and weights to x_out, w_out
+        x_out = np.concatenate( [x_out, x_lin], axis=1)
+        w_out = np.concatenate( [w_out, w_lin])
+        if n==1:
+            prob_of_mu = w_out.sum()
+        yield x_out, w_out/ prob_of_mu
     pass
     
 
@@ -100,29 +128,32 @@ if __name__ == '__main__':
     with open('test_set.pkl', 'rs') as f:
         test_set = pickle.load(f)
     test_BB_ts = test_set[3]
-    def get_initial_condition(BB_ts):
-        fd_width = 4
-        BB0 = BB_ts[:,0]
-        BB2 = BB_ts[::,fd_width]
-        x = 0.5*(BB0[0]+BB0[2]+BB2[0]+BB2[2]) / fd_width
-        y = 0.5*(BB0[1]+BB0[3]+BB2[1]+BB2[3]) / fd_width
-        u = 0.5*(BB2[0]-BB0[0]+BB2[2]-BB0[2]) / fd_width
-        v = 0.5*(BB2[1]-BB0[1]+BB2[3]-BB0[3]) / fd_width
-        return np.array([x, y]), np.array([u, v])
 
-    x_hat, v_hat = get_initial_condition(test_BB_ts[:, 5:])
+    from process_data import BB_ts_to_curve
+    curve = BB_ts_to_curve( test_BB_ts)
+    x_hat = curve[:,1]
+    v_hat = (curve[:,2] - curve[:,0])/2
     print "x_hat = " + str(x_hat)
     print "v_hat = " + str(v_hat)
     speed = np.sqrt(np.sum(v_hat**2))
     print "Measured speed / sigma_L = {:f}".format( speed / scene.sigma_L )
     print "sigma_L = {:f}".format( scene.sigma_L)
     k=0
-    N_steps = 5
+    N_steps = 60
     t_final = 60
-    domain = [-scene.width/2, scene.width/2, -scene.height/2, scene.height/2]
+    #Domain is actually larger than the domain we care about
+    domain = [-scene.width, scene.width, -scene.height, scene.height]
 
-    for x_arr, w_arr in particle_generator(x_hat, v_hat, t_final, N_steps):
-        plt.scatter(x_arr[0], x_arr[1], marker='.')
-        plt.axis(domain)
-        plt.show()
-        plt.clf()
+    gen = particle_generator(x_hat, v_hat, t_final, N_steps)
+    from itertools import takewhile
+    n = 0
+    for x_arr, w_arr in gen:
+        if n%5==0:
+            c = np.zeros( (len(w_arr), 4) )
+            c[:,3] = 0.1*w_arr / w_arr.max()
+            plt.scatter(x_arr[0], x_arr[1], marker='.', color=c, edgecolors=c)
+            plt.plot( curve[0], curve[1])
+            plt.axis(domain)
+            plt.show()
+            plt.clf()
+        n += 1

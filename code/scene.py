@@ -57,7 +57,7 @@ class Scene():
         self.bbox_velocity_width = process_data.get_bbox_velocity_width( BB_ts_ls )
         self.s_max = max( map( top_speed, curve_ls ) )
         self.sigma_L = process_data.get_std_velocity( BB_ts_ls )
-        self.sigma_x = self.bbox_width
+        self.sigma_x = self.bbox_width / 3
         self.sigma_v = 2*self.sigma_x
 
         #Learn the  agent_classes

@@ -45,7 +45,9 @@ def x_hat_given_x(x_hat, x):
     Returns np.array(N_Points): probability that agent is at x given x0
 
     """
-    return multivariate_normal.pdf(x, mean=x_hat, cov=sigma_x**2) 
+    exponent = - (x_hat[0] - x[0])**2 - (x_hat[1] - x[1])**2
+    exponent /= 2*sigma_x**2
+    return np.exp(exponent) / (2*np.pi*sigma_x**2)
 
 
 def v_hat_given_v(v_hat, v):
@@ -58,7 +60,9 @@ def v_hat_given_v(v_hat, v):
     Returns np.array(N_Points): probability that agent is at x given x0
 
     """
-    return multivariate_normal.pdf(v, mean=v_hat, cov=sigma_v**2) 
+    evponent = - (v_hat[0] - v[0])**2 - (v_hat[1] - v[1])**2
+    exponent /= 2*sigma_v**2
+    return np.exp(exponent) / (2*np.pi*sigma_v**2)
 
 
 def prob_s_uniform(s):
