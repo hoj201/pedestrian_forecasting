@@ -98,12 +98,11 @@ def particle_generator(x_hat, v_hat, t_final, N_steps):
             for m in range(-n,n+1):
                 w_arr[k,m] = ds * joint_k_s_x_x_hat_v_hat(
                         k, s_max*m /n, x0, x_hat, v_hat) #TODO: Memoize??
+        x_out = np.zeros((num_nl_classes,2*n+1,2,N_ptcl))
+        x_out[:,-n:,:,:] = x_arr[:,-n:,:,:]
+        x_out[:,:n+1,:,:] = x_arr[:,:n+1,:,:]
         w_out = w_arr.flatten()
-        x_out = np.zeros((2,N_ptcl*num_nl_classes*(2*n+1))) #TODO: There might be some indexing issues here
-        x_out[0,:n*num_nl_classes*N_ptcl] = x_arr[:,2*N_steps+1-n:,0,:].flatten()
-        x_out[0,n*N_ptcl*num_nl_classes:] = x_arr[:,:n+1,0,:].flatten()
-        x_out[1,:n*num_nl_classes*N_ptcl] = x_arr[:,2*N_steps+1-n:,1,:].flatten()
-        x_out[1,n*N_ptcl*num_nl_classes:] = x_arr[:,:n+1,1,:].flatten()
+        x_out = np.vstack([x_out[:,:,0,:].flatten(), x_out[:,:,1,:].flatten()])
 
         #The following computations handle the linear predictor class
         w_lin = joint_lin_x_t_x_hat_v_hat(t, x_lin, x_hat, v_hat) * dy*dx
