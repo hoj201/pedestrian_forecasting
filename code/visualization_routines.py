@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scene import Scene
 
 def visualize_cluster( scene, k ):
     """ Displays a plot of all the clusters and there potential functions
@@ -38,22 +39,65 @@ def visualize_cluster( scene, k ):
     return -1
 
 
-if __name__ == '__main__':
-    import process_data
-    folder = '../annotations/coupa/video2/'
-    x_data, y_data, width, height= process_data.get_trajectories(folder,label="Biker")
+def singular_distribution_to_image(pts, weights, domain, res=(50,50)):
+    """ Converts a singular distribution into an image for plotting.
 
-    curve_ls = [ np.vstack([x,y]) for (x,y) in zip( x_data, y_data ) ]
-    from sklearn.cross_validation import train_test_split
-    train_set, test_set = train_test_split( curve_ls, random_state = 0 )
-    from scene import scene
-    coupa_scene = scene( train_set, V_scale )
-    coupa_scene.set_mu( np.zeros(2) )
-    coupa_scene.set_eta( np.ones(2) )
-    print "mu = "
-    print coupa_scene.mu
-    print "eta = "
-    print coupa_scene.eta
-    
-    out = visualize_cluster( coupa_scene, 0 )
+    args:
+        pts: np.array.shape = (2,N)
+        weights: np.array.shape = (N,)
+        domain: (x_min, x_max, y_min, y_max)
+        
+    kwargs:
+        res: (uint, uint)
+
+    returns:
+        np.array.shape = (res[0], res[1])
+    """
+    #Sort the points and weights by the x-component of each point
+    indices = np.argsort(pts[0])
+    pts = pts[:,indices]
+    weights = weights[indices]
+
+    #Partition space
+    partition_x = np.linspace(domain[0], domain[1], res[0]+1)
+    partition_y = np.linspace(domain[2], domain[3], res[1]+1)
+
+    #Initialize output array
+    im = np.zeros(res)
+
+    #For each box of the partition, find the points in the box
+    for i in range(res[0]):
+        lbx = partition_x[i]
+        ubx = partition_x[i+1]
+        start = pts[0].searchsorted(lbx)
+        end = pts[0].searchsorted(ubx)
+        pts_x = pts[:,start:end]
+        weights_x = weights[start:end]
+
+        #Sort with respect to y-component
+        indices = np.argsort(pts_x[1])
+        pts_x = pts_x[:,indices]
+        weights_x = weights_x[indices]
+        for j in range(res[1]):
+            lby = partition_y[j]
+            uby = partition_y[j+1]
+            start = pts_x[1].searchsorted(lby)
+            end = pts_x[1].searchsorted(uby)
+            im[i,j] = weights_x[start:end].sum()
+    return im
+
+if __name__ == '__main__':
+    with open("test_scene.pkl", "rb") as f:
+        import pickle
+        scene = pickle.load(f)
+    visualize_cluster( scene, 0)
+
+    print "Testing routine for visualizing singular distributions"
+    weights = np.ones(100000)
+    pts = np.random.randn(2, weights.size)
+    domain = (-2,2,-2,2)
+
+    im = singular_distribution_to_image( pts, weights, domain)
+    plt.imshow(im)
+    plt.show()
 
