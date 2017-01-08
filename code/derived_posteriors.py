@@ -228,7 +228,7 @@ if __name__ == "__main__":
     for i in range(20):
         pt = np.array([pts[0, i], pts[1, i]])
         def temp(xs, ys):
-            pts = np.array([xs.flatten(), ys.flatten()]).transpose()
+            pts = np.array([xs.flatten(), ys.flatten()])
             res = posteriors.x_given_lin(pt) * scene.P_of_c[-1]
             res *= posteriors.x_hat_given_x(x, pt) * posteriors.v_hat_given_v(v, pts)
             res *= posteriors.v_given_x_lin(pts) #* 1.55618162566

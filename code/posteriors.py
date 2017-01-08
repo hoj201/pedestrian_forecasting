@@ -60,7 +60,7 @@ def v_hat_given_v(v_hat, v):
     Returns np.array(N_Points): probability that agent is at x given x0
 
     """
-    evponent = - (v_hat[0] - v[0])**2 - (v_hat[1] - v[1])**2
+    exponent = - (v_hat[0] - v[0])**2 - (v_hat[1] - v[1])**2
     exponent /= 2*sigma_v**2
     return np.exp(exponent) / (2*np.pi*sigma_v**2)
 
@@ -118,7 +118,9 @@ def v_given_x_lin(v):
     v: np.array(N_points, 2): points to be evaluated
     Returns probability density of v ~ N(0, sigma_L)
     """
-    return multivariate_normal.pdf(v, np.zeros([2]), sigma_L**2)
+    exponent = - v[0]**2 - v[1]**2
+    exponent /= 2*sigma_L**2
+    return np.exp(exponent) / (2*np.pi*sigma_L**2)
 
 if __name__ == "__main__":
     pass
