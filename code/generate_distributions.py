@@ -144,15 +144,13 @@ if __name__ == '__main__':
     domain = [-scene.width, scene.width, -scene.height, scene.height]
 
     gen = particle_generator(x_hat, v_hat, t_final, N_steps)
-    from itertools import takewhile
     n = 0
+    from visualization_routines import singular_distribution_to_image
     for x_arr, w_arr in gen:
         if n%5==0:
-            c = np.zeros( (len(w_arr), 4) )
-            c[:,3] = 0.1*w_arr / w_arr.max()
-            plt.scatter(x_arr[0], x_arr[1], marker='.', color=c, edgecolors=c)
-            plt.plot( curve[0], curve[1])
-            plt.axis(domain)
+            im = singular_distribution_to_image(x_arr, w_arr, domain)
+            plt.imshow(im)
+            #plt.axis(domain)
             plt.show()
             plt.clf()
         n += 1
