@@ -67,13 +67,14 @@ def particle_generator(x_hat, v_hat, t_final, N_steps):
     
     #Initializes particles for nonlinear classes
     x_span = np.linspace( - 3*sigma_x, 3*sigma_x, 20)
+    dvol_nl = (x_span[1]-x_span[0])**2
     X,Y = np.meshgrid(x_span + x_hat[0], x_span + x_hat[1])
     x0 = np.vstack([X.flatten(), Y.flatten()])
     
     #Initializes a regular grid for evaluation of the linear class
-    x_span = np.linspace( -scene.width/2, scene.width/2, 10)
+    x_span = np.linspace( -scene.width/2, scene.width/2, 30)
     dx = x_span[1] - x_span[0]
-    y_span = np.linspace( -scene.height/2, scene.height/2, 10)
+    y_span = np.linspace( -scene.height/2, scene.height/2, 30)
     dy = y_span[1] - y_span[0]
     X,Y = np.meshgrid(x_span, y_span)
     x_lin = np.vstack( [X.flatten(), Y.flatten()])
@@ -84,7 +85,7 @@ def particle_generator(x_hat, v_hat, t_final, N_steps):
         x_arr[k] = integrate_class(k, x0, t_final, N_steps)
     #At time t=0, rho(x,t=0) is nothing but P(x0 | x0_hat),
     # which equals P(x0_hat | x0).
-    w_arr = posteriors.x_hat_given_x(x0, x_hat)
+    w_arr = posteriors.x_hat_given_x(x0, x_hat)*dvol_nl
     w_out = w_arr.flatten()
     x_out = x0
     yield x_out, w_out
@@ -96,8 +97,9 @@ def particle_generator(x_hat, v_hat, t_final, N_steps):
         w_arr = np.zeros((num_nl_classes, 2*n+1, N_ptcl))
         for k in range(num_nl_classes):
             for m in range(-n,n+1):
-                w_arr[k,m] = ds * joint_k_s_x_x_hat_v_hat(
+                w_arr[k,m] = joint_k_s_x_x_hat_v_hat(
                         k, s_max*m /n, x0, x_hat, v_hat) #TODO: Memoize??
+                w_arr[k,m] *= ds * dvol_nl
         x_out = np.zeros((num_nl_classes,2*n+1,2,N_ptcl))
         x_out[:,-n:,:,:] = x_arr[:,-n:,:,:]
         x_out[:,:n+1,:,:] = x_arr[:,:n+1,:,:]
