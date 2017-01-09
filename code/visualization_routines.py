@@ -10,7 +10,8 @@ def visualize_cluster( scene, k ):
         k: (int)
 
     returns:
-        plot of requested cluster, as well as a potential function and a vector field.
+        plot of requested cluster, as well as a potential function and a vector
+        field.
     """
     assert( k < scene.num_nl_classes )
     cluster = scene.clusters[k]
@@ -30,7 +31,8 @@ def visualize_cluster( scene, k ):
     for xy in cluster:
         ax_arr[0].plot( xy[0] , xy[1] , 'w-' )
     ax_arr[0].axis('equal')
-    UV = scene.director_field_vectorized( k, np.vstack([X_grid.flatten(), Y_grid.flatten() ] ) )
+    UV = scene.director_field_vectorized(
+            k, np.vstack([X_grid.flatten(), Y_grid.flatten()]))
     U_grid = UV[0].reshape( X_grid.shape)
     V_grid = UV[1].reshape( X_grid.shape)
     ax_arr[1].quiver( X_grid, Y_grid, U_grid, V_grid, scale = 30)
@@ -63,7 +65,12 @@ def singular_distribution_to_image(pts, weights, domain, res=(50,50)):
     partition_y = np.linspace(domain[2], domain[3], res[1]+1)
 
     #Initialize output array
-    im = np.zeros(res)
+    X,Y = np.meshgrid(
+            0.5*(partition_x[1:] + partition_x[:-1]),
+            0.5*(partition_y[1:] + partition_y[:-1]),
+            indexing='ij'
+            )
+    Z = np.zeros(res)
 
     #For each box of the partition, find the points in the box
     for i in range(res[0]):
@@ -83,8 +90,8 @@ def singular_distribution_to_image(pts, weights, domain, res=(50,50)):
             uby = partition_y[j+1]
             start = pts_x[1].searchsorted(lby)
             end = pts_x[1].searchsorted(uby)
-            im[i,j] = weights_x[start:end].sum()
-    return im
+            Z[i,j] = weights_x[start:end].sum()
+    return X,Y,Z
 
 if __name__ == '__main__':
     with open("test_scene.pkl", "rb") as f:
@@ -95,9 +102,12 @@ if __name__ == '__main__':
     print "Testing routine for visualizing singular distributions"
     weights = np.ones(100000)
     pts = np.random.randn(2, weights.size)
+    pts[1] *= 0.5
+    pts[0] += 0.5
     domain = (-2,2,-2,2)
-
-    im = singular_distribution_to_image( pts, weights, domain)
-    plt.imshow(im)
+    res = (30,20)
+    X,Y,Z = singular_distribution_to_image( pts, weights, domain, res=res)
+    plt.contourf(X,Y,Z, 30, cmap='viridis')
+    plt.title('Should be a Gaussian with $\mu = (0.5,0.0), \sigma_x=1.0, \sigma_y=0.5$')
     plt.show()
 

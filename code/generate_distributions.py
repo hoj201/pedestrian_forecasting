@@ -146,11 +146,12 @@ if __name__ == '__main__':
     gen = particle_generator(x_hat, v_hat, t_final, N_steps)
     n = 0
     from visualization_routines import singular_distribution_to_image
+    res = (50,60)
     for x_arr, w_arr in gen:
         if n%5==0:
-            im = singular_distribution_to_image(x_arr, w_arr, domain)
-            plt.imshow(im)
-            #plt.axis(domain)
+            X,Y,Z = singular_distribution_to_image(
+                    x_arr, w_arr, domain, res=res)
+            plt.contourf(X,Y,Z, 20, cmap='viridis')
             plt.show()
             plt.clf()
         n += 1
