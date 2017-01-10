@@ -2,7 +2,15 @@ from sklearn.cross_validation import train_test_split
 import pickle
 import process_data
 from scene import Scene
-folder = '../annotations/coupa/video2/'
+from sys import argv
+if len(argv) > 1:
+    folder = argv[1]
+else:
+    folder = '../annotations/coupa/video2/'
+if len(argv) > 2:
+    fname = argv[2]
+else:
+    fname = "test"
 print "Initializing a scene from " + folder
 BB_ts_list, width, height = process_data.get_BB_ts_list(folder,label="Biker")
 train_set, test_set = train_test_split( BB_ts_list, random_state = 0 )
@@ -17,10 +25,10 @@ print test_scene.P_of_c
 
 print "\sum_k P(k) = {}".format( test_scene.P_of_c.sum())
 print "Pickling scene and test set."
-with open("test_scene.pkl", "w") as f:
+with open("{}_scene.pkl".format(fname), "w") as f:
     pickle.dump( test_scene, f)
     print "Pickled scene"
 
-with open("test_set.pkl", "w") as f:
+with open("{}_set.pkl".format(fname), "w") as f:
     pickle.dump( test_set, f)
     print "Pickled the test set"

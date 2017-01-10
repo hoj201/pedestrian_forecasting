@@ -95,6 +95,7 @@ def x_given_k(x,k):
     out *= np.exp( -1*legval_scale(x[0], x[1], Vk[k]))
     out *= (x[0] <= scene_scale[0]/2.0)*(x[0] >= -scene_scale[0]/2.0)
     out *= (x[1] <= scene_scale[1]/2.0)*(x[1] >= -scene_scale[1]/2.0)
+    #out = np.ones(x.shape[1])
     return out
 
 def x_given_lin(x):
