@@ -123,7 +123,7 @@ def merge_small_clusters( clusters):
             new_clusters.append( cl )
     return n_discarded, new_clusters
 
-def learn_potential( cluster , width, height, k_max = 4, stride=30):
+def learn_potential( cluster , width, height, k_max=8, stride=30):
     """Returns the legendre coefficients of a potential function learned from a list of point in a 2D domain.
 
     args:
@@ -155,7 +155,7 @@ def learn_potential( cluster , width, height, k_max = 4, stride=30):
         #TODO: Consider using scipy.dblquad to compute I
         I = Area*np.exp( - legval2d( 2*x_grid/width, 2*y_grid/height , theta)).mean()
         regularization = np.sqrt( np.einsum( 'ij,i,j', theta**2 , k_span**2 , k_span**2 ) )
-        lambda_0 = 1e-4
+        lambda_0 = 0.01
         return V_mean + np.log(I) + lambda_0 * regularization
 
     # CONSTRAINTS
@@ -217,10 +217,13 @@ def get_classes( curves, width, height, k_max=4 ):
     #plt.show()
 
     #Compute P_of_c
-    P_of_c = np.zeros( len(clusters) + 1 )
+    P_of_c = np.ones( len(clusters) + 1 )
     n_agents = n_discarded + reduce( lambda x,y: x+y, map( len , clusters ) )
     P_of_c[-1] = n_discarded / float(n_agents )
     P_of_c[:len(clusters)] = map( lambda c: len(c)/float(n_agents) , clusters)
+    
+    #Resetting P_of_c to a uniform distirbution
+    #P_of_c /= P_of_c.size
 
     #Compute alphas
     alpha = np.zeros( (len(clusters)+1, k_max+1, k_max+1 ))

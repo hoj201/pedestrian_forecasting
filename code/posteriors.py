@@ -80,7 +80,7 @@ _bounds = (-0.5*scene_scale[0], 0.5*scene_scale[0], -0.5*scene_scale[1], 0.5*sce
 
 for coeffs in Vk:
     fn = lambda x, y: np.exp( -1*legval_scale(x, y, coeffs))
-    _normalization_constants.append(trap_quad(fn, _bounds, res=(200,200)))
+    _normalization_constants.append(trap_quad(fn, _bounds, res=(400,400)))
 
 def x_given_k(x,k):
     """

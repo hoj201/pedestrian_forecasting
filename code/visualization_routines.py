@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scene import Scene
+import posteriors
 
 def visualize_cluster( scene, k ):
     """ Displays a plot of all the clusters and there potential functions
@@ -23,9 +24,11 @@ def visualize_cluster( scene, k ):
     X_grid, Y_grid = np.meshgrid( np.linspace( -width/2, width/2, 20),
             np.linspace( -height/2, height/2, 20)
             )
-    V = legval2d( 2*X_grid / width, 2*Y_grid / height, alpha )
-    V -= V.min()
-    p_of_x = np.exp( - V)
+    x = np.vstack([X_grid.flatten(), Y_grid.flatten()])
+    p_of_x = posteriors.x_given_k(x,k).reshape( X_grid.shape)
+    #V = legval2d( 2*X_grid / width, 2*Y_grid / height, alpha )
+    #V -= V.min()
+    #p_of_x = np.exp( - V)
     ax_arr[0].contourf( X_grid, Y_grid, p_of_x, 40, cmap = 'plasma',
             interpolation='cubic')
     for xy in cluster:
@@ -110,4 +113,3 @@ if __name__ == '__main__':
     plt.contourf(X,Y,Z, 30, cmap='viridis')
     plt.title('Should be a Gaussian with $\mu = (0.5,0.0), \sigma_x=1.0, \sigma_y=0.5$')
     plt.show()
-

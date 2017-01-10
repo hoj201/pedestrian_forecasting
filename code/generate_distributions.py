@@ -128,12 +128,13 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     with open('test_set.pkl', 'rs') as f:
         test_set = pickle.load(f)
-    test_BB_ts = test_set[3]
+    test_BB_ts = test_set[0]
 
     from process_data import BB_ts_to_curve
     curve = BB_ts_to_curve( test_BB_ts)
-    x_hat = curve[:,1]
-    v_hat = (curve[:,2] - curve[:,0])/2
+    offset = 30
+    x_hat = curve[:,offset]
+    v_hat = (curve[:,offset+2] - curve[:,offset-2])/4
     print "x_hat = " + str(x_hat)
     print "v_hat = " + str(v_hat)
     speed = np.sqrt(np.sum(v_hat**2))
@@ -154,6 +155,8 @@ if __name__ == '__main__':
             X,Y,Z = singular_distribution_to_image(
                     x_arr, w_arr, domain, res=res)
             plt.contourf(X,Y,Z, 20, cmap='viridis')
+            plt.plot(curve[0], curve[1])
+            plt.scatter( curve[0,offset], curve[1,offset])
             plt.show()
             plt.clf()
         n += 1
