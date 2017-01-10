@@ -31,7 +31,7 @@ def legval_scale(x, y, coeffs):
     Returns np.array(N_Points)
 
     """
-    out = legendre.legval2d(x/scene_scale[0], y/scene_scale[1], coeffs)
+    out = legendre.legval2d(2*x/scene_scale[0], 2*y/scene_scale[1], coeffs)
     out -= out.min()
     return out
 
