@@ -76,6 +76,7 @@ if __name__ == "__main__":
         fig = plt.figure()
         for x_arr, w_arr in gen:
             if n%5==0:
+                print "{} steps processed for agent {}.".format(n, i)
                 #fig = plt.figure()
                 X,Y,Z = singular_distribution_to_image(
                         x_arr, w_arr, domain, res=res)

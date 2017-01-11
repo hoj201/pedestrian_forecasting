@@ -15,10 +15,10 @@ print "Initializing a scene from " + folder
 BB_ts_list, width, height = process_data.get_BB_ts_list(folder,label="Biker")
 train_set, test_set = train_test_split( BB_ts_list, random_state = 0 )
 test_scene = Scene( train_set, width, height )
-print "Display clusters"
-for k in range( test_scene.num_nl_classes ):
-    from visualization_routines import visualize_cluster
-    visualize_cluster( test_scene, k )
+#print "Display clusters"
+#for k in range( test_scene.num_nl_classes ):
+#    from visualization_routines import visualize_cluster
+#    visualize_cluster( test_scene, k )
 
 print "P(k) = "
 print test_scene.P_of_c

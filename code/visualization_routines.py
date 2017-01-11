@@ -15,6 +15,7 @@ def visualize_cluster( scene, k ):
         field.
     """
     assert( k < scene.num_nl_classes )
+    print scene.num_nl_classes
     cluster = scene.clusters[k]
     fig, ax_arr = plt.subplots( 1 , 2 , figsize=(15,5) )
     width = scene.width

@@ -77,7 +77,6 @@ def prob_s_uniform(s):
 
 _normalization_constants = []
 _bounds = (-0.5*scene_scale[0], 0.5*scene_scale[0], -0.5*scene_scale[1], 0.5*scene_scale[1])
-
 for coeffs in Vk:
     fn = lambda x, y: np.exp( -1*legval_scale(x, y, coeffs))
     _normalization_constants.append(trap_quad(fn, _bounds, res=(400,400)))
