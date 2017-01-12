@@ -78,10 +78,8 @@ if __name__ == "__main__":
         res = (50,60)
         ims = []
         fig = plt.figure()
-        result = []
         for x_arr, w_arr in gen:
             if n%5==0:
-                w_arr /= np.sum(w_arr)
                 print "{} steps processed for agent {}.".format(n, i)
                 #fig = plt.figure()
                 X,Y,Z = singular_distribution_to_image(
@@ -98,17 +96,8 @@ if __name__ == "__main__":
                 ####################################################################
                 plt.plot(curve[0], curve[1])
                 ims.append([im])
-
-                bounds = [test_scene.width, test_scene.height]
-                rho = (np.transpose(x_arr), w_arr)
-                width = test_scene.bbox_width/3
-
-                tau = 0
-
-                rt = lambda x: rho_true(i, n, test_set, x)
-
-                result.append(evaluate_plane(bounds, rho, rt, tau, width, debug=True))
             n += 1
+        ani = anim.ArtistAnimation(fig, ims, interval=70, blit=False,repeat_delay=1000)
+        ani.save('gifs/agent{}.gif'.format(i), writer='imagemagick', fps=30)
 
-        print result
-        #plt.show()
+        plt.show()

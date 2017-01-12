@@ -6,9 +6,8 @@ from scipy.stats import multivariate_normal
 import pickle
 from scene import Scene
 
+from data import scene
 
-with open("test_scene.pkl", "rb") as f:
-    scene = pickle.load(f)
 Vk = scene.alpha_arr
 scene_scale = np.array([scene.width, scene.height])
 #temporary

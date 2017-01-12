@@ -11,7 +11,7 @@ import numpy as np
 from integrate import trap_quad
 import matplotlib.pyplot as plt
 
-def classifier(E, rho, tau, lin_term):
+def classifier(E, rho, tau):
     E = np.array(E)
     #takes E: np.array(n_boxes, 2, 2)
     #looks like [[[box_width, box_height], [box_x, box_y]]]
@@ -26,15 +26,9 @@ def classifier(E, rho, tau, lin_term):
         print "{}%".format(100*asdf["counter"] / float(len(E)))
         return sum(p[np.where(map(fn, xy))[0]])
     res = np.array(map(filter, E))
-    integrals = []
-    for box in E:
-        bounds = [box[1][0] - box[0][0]/2, box[1][0] + box[0][0]/2,
-                  box[1][1] - box[0][1]/2, box[1][1] + box[0][1]/2]
-        integrals.append(trap_quad(lin_term, bounds, res=(40, 40)))
-    integrals = np.array(integrals)
     #print (res + integrals)[np.where(res + integrals > tau)[0]][36:]
     #print E[np.where(res + integrals > tau)[0]]
-    return res + integrals
+    return res
 
 def true_classifier(E, rho_true, tau):
     #takes:
@@ -55,15 +49,21 @@ def true_classifier(E, rho_true, tau):
 
 
 def precision(pred, truth):
-    return len(np.where(np.logical_and(pred, truth))[0]) / float(len(np.where(truth)[0]))
+    if float(len(np.where(truth)[0])) != 0:
+        return len(np.where(np.logical_and(pred, truth))[0]) / float(len(np.where(truth)[0]))
+    else:
+        return None
 
 def recall(pred, truth):
-    return len(np.where(np.logical_and(pred, truth))[0]) / float(len(np.where(pred)[0]))
+    if float(len(np.where(pred)[0])) != 0:
+        return len(np.where(np.logical_and(pred, truth))[0]) / float(len(np.where(pred)[0]))
+    else:
+        return None
 
 def accuracy(pred, truth):
     return len(np.where(pred == truth)[0]) / float(len(truth))
 
-def evaluate_plane(bbox, rho, rho_true, tau, lin_term, width, debug=False):
+def evaluate_plane(bbox, rho, rho_true, tau, width, debug=False):
     #Takes:
     #bbox: np.array(2): [scene_width, scene_height]
     #rho: (np.array(n_points, 2), np.array(n_points))
@@ -84,7 +84,7 @@ def evaluate_plane(bbox, rho, rho_true, tau, lin_term, width, debug=False):
                            [-1 * bbox[0]/2.0 + width/2.0 + width * x, -1 * bbox[1]/2.0 + width/2.0 + width * y]])
     bboxes = np.array(bboxes)
     #Create prediction
-    predic = classifier(bboxes, rho, tau, lin_term)
+    predic = classifier(bboxes, rho, tau)
     pred = predic > tau
     print "beginning true classifier"
     #create truth for comparison
@@ -126,15 +126,8 @@ def evaluate_plane(bbox, rho, rho_true, tau, lin_term, width, debug=False):
         plt.scatter(true_xs, true_ys, color="red", s=10)
         plt.scatter(pred_xs, pred_ys, color="blue", s=10)
 
-        bboxes_x = bboxes[:, :, 0].flatten()[1::2]
-        bboxes_y = bboxes[:, :, 1].flatten()[1::2]
-        #plt.scatter(bboxes_x, bboxes_y, color="yellow")
-        weights_x = rho[0][:, 0]
-        weights_y = rho[0][:, 1]
-        plt.scatter(weights_x, weights_y, c=p/np.amax(p), s = 3, cmap="viridis", edgecolors='none')
 
-
-    #plt.show()
+    plt.show()
 
     return (pres, rec, acc, pred, true)
 

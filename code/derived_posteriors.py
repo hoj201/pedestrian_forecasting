@@ -5,8 +5,7 @@ import numpy as np
 from integrate import trap_quad
 from scipy.special import erf
 
-with open("test_scene.pkl", "rb") as f:
-    scene = pickle.load(f)
+from data import scene
 max_k = len(scene.P_of_c)-1
 #temporary s_max
 s_max = 1
