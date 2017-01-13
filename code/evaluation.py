@@ -10,25 +10,57 @@
 import numpy as np
 from integrate import trap_quad
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
 
-def classifier(E, rho, tau):
-    E = np.array(E)
-    #takes E: np.array(n_boxes, 2, 2)
-    #looks like [[[box_width, box_height], [box_x, box_y]]]
+def classifier(bounds, width, rho, tau):
+    #takes:
+    #bounds: [width, height]
     #rho: (np.array(n_points, 2), np.array(n_points))
     #tau: float
     #returns: bool array #NOTE hoj:  This does not output a bool, as written
-    xy, p = rho
+    pts, weights = rho
     asdf = {"counter": 0}
-    def filter(e): #NOTE hoj:  Probably should rename this, as filter is a built-in func
-        fn = lambda x: (np.absolute((x[0]-e[1][0])) <= e[0][0]/2.0 + 10E-6) and (np.absolute(x[1] - e[1][1]) <= e[0][1]/2.0 + 10E-6)
-        asdf["counter"] += 1
-        print "{}%".format(100*asdf["counter"] / float(len(E)))
-        return sum(p[np.where(map(fn, xy))[0]])
-    res = np.array(map(filter, E))
-    #print (res + integrals)[np.where(res + integrals > tau)[0]][36:]
-    #print E[np.where(res + integrals > tau)[0]]
-    return res
+
+    indices = np.argsort(pts[0])
+    pts = pts[:,indices]
+    weights = weights[indices]
+
+    ctx = int(np.ceil(bounds[0]/width))
+    cty = int(np.ceil(bounds[1]/width))
+
+    x_lims = np.linspace(-bounds[0]/2, bounds[0]/2, ctx+1)
+    y_lims = np.linspace(-bounds[1]/2, bounds[1]/2, cty+1)
+
+    bboxes = []
+    sums = []
+
+    for i in range(ctx):
+        lbx = x_lims[i]
+        ubx = x_lims[i+1]
+        start = pts[0].searchsorted(lbx)
+        end = pts[0].searchsorted(ubx)
+        pts_x = pts[:,start:end]
+        weights_x = weights[start:end]
+
+        #Sort with respect to y-component
+        indices = np.argsort(pts_x[1])
+        pts_x = pts_x[:,indices]
+        weights_x = weights_x[indices]
+        for j in range(cty):
+            lby = y_lims[j]
+            uby = y_lims[j+1]
+            start = pts_x[1].searchsorted(lby)
+            end = pts_x[1].searchsorted(uby)
+            sums.append(weights_x[start:end].sum())
+            bboxes.append([[width, width],
+                           [-1 * bounds[0]/2.0 + width/2.0 + width * i, -1 * bounds[1]/2.0 + width/2.0 + width * j]])
+
+    #print(res + integrals)[np.where(res + integrals > tau)[0]][36:]
+    #printE[np.where(res + integrals > tau)[0]]
+    sums = np.array(sums)
+    bboxes = np.array(bboxes)
+    return sums, bboxes
 
 def true_classifier(E, rho_true, tau):
     #takes:
@@ -52,18 +84,18 @@ def precision(pred, truth):
     if float(len(np.where(truth)[0])) != 0:
         return len(np.where(np.logical_and(pred, truth))[0]) / float(len(np.where(truth)[0]))
     else:
-        return None
+        return 1
 
 def recall(pred, truth):
     if float(len(np.where(pred)[0])) != 0:
         return len(np.where(np.logical_and(pred, truth))[0]) / float(len(np.where(pred)[0]))
     else:
-        return None
+        return 1
 
 def accuracy(pred, truth):
     return len(np.where(pred == truth)[0]) / float(len(truth))
 
-def evaluate_plane(bbox, rho, rho_true, tau, width, debug=False):
+def evaluate_plane(bbox, rho, rho_true, tau, width, debug_level=0):
     #Takes:
     #bbox: np.array(2): [scene_width, scene_height]
     #rho: (np.array(n_points, 2), np.array(n_points))
@@ -74,22 +106,12 @@ def evaluate_plane(bbox, rho, rho_true, tau, width, debug=False):
     #returns (precision, recall, accuracy)
     xy,p = rho
     bboxes = []
-    print "beginning prediction classifier"
     #create all of the bounding boxes
-    ctx = int(np.ceil(bbox[0]/width))
-    cty = int(np.ceil(bbox[1]/width))
-    for x in range(ctx):
-        for y in range(cty):
-            bboxes.append([[width, width],
-                           [-1 * bbox[0]/2.0 + width/2.0 + width * x, -1 * bbox[1]/2.0 + width/2.0 + width * y]])
-    bboxes = np.array(bboxes)
     #Create prediction
-    predic = classifier(bboxes, rho, tau)
+    predic, bboxes = classifier(bbox, width, rho, tau)
     pred = predic > tau
-    print "beginning true classifier"
     #create truth for comparison
     truth = true_classifier(bboxes, rho_true, tau)
-    print np.amin(truth)
     true = truth > tau
     pres = precision(pred, true)
     rec = recall(pred, true)
@@ -97,7 +119,7 @@ def evaluate_plane(bbox, rho, rho_true, tau, width, debug=False):
     predic = predic[np.where(pred)[0]]
     truth = truth[np.where(true)[0]]
 
-    if debug:
+    if debug_level > 0:
         #plotting bollocks
         true_bboxes = bboxes[np.where(true)[0]]
         pred_bboxes = bboxes[np.where(pred)[0]]#[34:]
@@ -125,11 +147,10 @@ def evaluate_plane(bbox, rho, rho_true, tau, width, debug=False):
             plt.plot([x, x], [y0, y1], color='orange', linestyle='-', linewidth=.5)
         plt.scatter(true_xs, true_ys, color="red", s=10)
         plt.scatter(pred_xs, pred_ys, color="blue", s=10)
+        if debug_level > 1:
+            plt.show()
 
-
-    plt.show()
-
-    return (pres, rec, acc, pred, true)
+    return (pres, rec, acc)# pred, true)
 
 
 

@@ -118,9 +118,9 @@ def particle_generator(x_hat, v_hat, t_final, N_steps):
     pass
 
 def lin_generator(x_hat, v_hat, t_final, N_steps):
-    x_span = np.linspace( -scene.width/2, scene.width/2, 50)
+    x_span = np.linspace( -scene.width/2, scene.width/2, 70)
     dx = x_span[1] - x_span[0]
-    y_span = np.linspace( -scene.height/2, scene.height/2, 50)
+    y_span = np.linspace( -scene.height/2, scene.height/2, 70)
     dy = y_span[1] - y_span[0]
     X,Y = np.meshgrid(x_span, y_span)
     x_lin = np.vstack( [X.flatten(), Y.flatten()])
@@ -156,8 +156,8 @@ if __name__ == '__main__':
     print "Measured speed / sigma_L = {:f}".format( speed / scene.sigma_L )
     print "sigma_L = {:f}".format( scene.sigma_L)
     k=0
-    N_steps = 60
-    t_final = 60
+    N_steps = 100
+    t_final = 100
     #Domain is actually larger than the domain we care about
     domain = [-scene.width, scene.width, -scene.height, scene.height]
 

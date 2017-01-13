@@ -3,3 +3,6 @@ code/plt.py
 *.pkl
 *.pyc
 *.mp4
+code/frames
+code/tmp
+*.png

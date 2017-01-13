@@ -2,7 +2,8 @@ import pickle
 import numpy as np
 from evaluation import evaluate_plane
 import matplotlib.pyplot as plt
-from generate_distributions import particle_generator
+import matplotlib.image as image
+from generate_distributions import particle_generator, lin_generator
 from test_distribution import particle_generator as particle_generator_t
 
 from data import scene as test_scene
@@ -15,7 +16,6 @@ def rho_true(subj, T, test_set, bbox_ls):
     res = (20,20)
     x = 0.5*(test_set[subj][0,T] + test_set[subj][2,T])
     y = 0.5*(test_set[subj][1,T] + test_set[subj][3,T])
-    print "Rho TRUE"
     plt.scatter(x, y, s=60, color="grey")
     x_min = x-test_scene.bbox_width/2
     x_max = x+test_scene.bbox_width/2
@@ -57,8 +57,8 @@ if __name__ == "__main__":
         curve = BB_ts_to_curve( test_BB_ts)
         x_hat = curve[:,5]
         v_hat = (curve[:,100] - curve[:,0])/100
-        v_hat /= np.sqrt(v_hat[0] **2 + v_hat[1] ** 2)
-        v_hat *= test_scene.sigma_v * 0.5
+        #v_hat /= np.sqrt(v_hat[0] **2 + v_hat[1] ** 2)
+        #v_hat *= test_scene.sigma_v * 0.5
         print curve[:, 10]
         print curve[:, 0]
         print "x_hat = " + str(x_hat)
@@ -68,16 +68,16 @@ if __name__ == "__main__":
         print "sigma_L = {:f}".format( scene.sigma_L)
         k=0
         N_steps = 120
-        t_final = 120
+        t_final = len(curve[0])
         #Domain is actually larger than the domain we care about
         domain = [-scene.width, scene.width, -scene.height, scene.height]
 
-        gen = particle_generator_t(x_hat, v_hat, t_final, N_steps)
+        gen = particle_generator(x_hat, v_hat, t_final, N_steps)
         n = 0
         from visualization_routines import singular_distribution_to_image
         res = (50,60)
         ims = []
-        fig = plt.figure()
+        plt.clf()
         for x_arr, w_arr in gen:
             if n%5==0:
                 print "{} steps processed for agent {}.".format(n, i)
@@ -91,13 +91,29 @@ if __name__ == "__main__":
                 ## Bug fix for Quad Contour set not having attribute 'set_visible'
                 #def setvisible(self,vis):
                 #    for c in self.collections: c.set_visible(vis)
-                im.axes = plt.gca()
-                im.figure=fig
                 ####################################################################
-                plt.plot(curve[0], curve[1])
-                ims.append([im])
-            n += 1
-        ani = anim.ArtistAnimation(fig, ims, interval=70, blit=False,repeat_delay=1000)
-        ani.save('gifs/agent{}.gif'.format(i), writer='imagemagick', fps=30)
+                bounds = [test_scene.width, test_scene.height]
+                rho = (x_arr, w_arr)
+                rt = lambda x: rho_true(i, int(t_final/float(N_steps) * n), test_set, x)
+                tau = 0.001
+                width = test_scene.bbox_width/3
+                evaluate_plane(bounds, rho, rt, tau, width, debug_level=1)
+                plt.axis("off")
+                plt.plot(curve[0], curve[1], color="red")
+                plt.savefig("tmp/img{}_{}.png".format(n, i))
+                plt.savefig("frames/frame{}agent{}".format(int(t_final/float(N_steps) * n), i))
 
-        plt.show()
+                plt.clf()
+            n += 1
+        fig = plt.figure()
+        for t in range(N_steps):
+            if t%5==0:
+                img = image.imread("tmp/img{}_{}.png".format(t, i))
+                im = plt.imshow(img)
+                plt.axis("off")
+                ims.append([im])
+        ani = anim.ArtistAnimation(fig, ims, interval=70, blit=False,repeat_delay=1000)
+        ani.save('gifs/agent{}.gif'.format(i), writer='imagemagick', fps=10)
+        print "\a"
+
+        #plt.show()
