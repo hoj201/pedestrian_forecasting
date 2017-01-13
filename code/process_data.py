@@ -105,6 +105,19 @@ def BB_to_position_and_velocity( BB_0, BB_1, delta_t = 1 ):
     velocity = np.array( [dx, dy] )
     return position, velocity
 
+def get_std_measurement_noise(curve_ls):
+    """ Computes the standard deviation of the measurement noise
+    """
+    M = 4
+    kernel = np.ones(M)/M
+    from scipy import signal
+    smooth = lambda x: signal.convolve(x,kernel,mode='valid')
+    smooth_curve_ls = [np.vstack([smooth(c[0]),smooth(c[1])]) 
+            for c in curve_ls]
+    error_ls = [c[:,M/2:len(c[0])-M/2+1] - sc 
+            for c,sc in zip(curve_ls, smooth_curve_ls)]
+    return np.hstack(error_ls).std()
+
 def get_std_velocity( BB_ts_ls ):
     """  Computes the standard deviation of the velocity measurements
     """
