@@ -73,9 +73,9 @@ def particle_generator(x_hat, v_hat, t_final, N_steps):
     x0 = np.vstack([X.flatten(), Y.flatten()])
     
     #Initializes a regular grid for evaluation of the linear class
-    x_span = np.linspace( -scene.width/2, scene.width/2, 30)
+    x_span = np.linspace( -scene.width/2, scene.width/2, 50)
     dx = x_span[1] - x_span[0]
-    y_span = np.linspace( -scene.height/2, scene.height/2, 30)
+    y_span = np.linspace( -scene.height/2, scene.height/2, 50)
     dy = y_span[1] - y_span[0]
     X,Y = np.meshgrid(x_span, y_span)
     x_lin = np.vstack( [X.flatten(), Y.flatten()])
@@ -143,7 +143,7 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     with open('test_set.pkl', 'rs') as f:
         test_set = pickle.load(f)
-    test_BB_ts = test_set[0]
+    test_BB_ts = test_set[3]
 
     from process_data import BB_ts_to_curve
     curve = BB_ts_to_curve( test_BB_ts)
