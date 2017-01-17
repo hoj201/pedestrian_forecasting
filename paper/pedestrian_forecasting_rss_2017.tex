@@ -1,6 +1,13 @@
 \documentclass[conference]{IEEEtran}
 \usepackage{times}
 
+\usepackage{amsmath,amssymb}
+
+%  For drawing Bayesian networks
+\usepackage{tikz}
+\usetikzlibrary{arrows,positioning}
+\usepackage{tikz-cd}
+
 % numbers option provides compact numerical references in the text. 
 \usepackage[numbers]{natbib}
 \usepackage{multicol}
@@ -73,8 +80,47 @@ The abstract goes here.
 \section{Introduction}
 
 \section{Model}
-Describe scenario in english.
-Write down PGM.
+%Describe scenario in english.
+Our goal is to generate a time-dependent pdf over space, $\rho(x,t)$, which predicts the true location of an agent in the future.
+The input to the algorithm is a noisy measurement of position and velocity in the present, as well as an archive of past trajectories that have run through the scene.
+
+At time $t=0$, we obtain a noisy reading of position, $\hat{x}_0 \in \mathbb{R}^2$.
+We assume that our measurements come from Gaussian noise about the true location $x_0 \in \mathbb{R}^2$,
+so that $\Pr(\hat{x}_0 \mid x_0 ) = (2\pi \sigma_x^2)^{-1} \exp( - \| \hat{x}_0 - x_0 \|^2 / (2 \sigma_x^2) )$.
+Therefore, at time $0$, we have $\rho(x,0) = \Pr(\hat{x}_0 \mid x_0 )$.
+
+In order to solve $\rho(x,t)$ at later times, we need to assume a dynamical model.
+In our model, agents move through space under the dynamics of the form
+$$
+	\frac{dx}{dt}(t) = s \cdot X_k(x(t))
+$$
+where $X_k$ is a director-field from a finite collection $\{X_1, \dots, X_n\}$, and $s \in \mathbb{R}$.
+It is assumed that $k$ and $s$ are both constant in time.
+Under this model, if you know $x_0$ precisely, and you know $k$ and $s$, then you know the full curve $x(t)$ for all time.
+Generally, we do not know $x_0$ or $k$ or $s$ precisely.
+However, we can consider the Bayesian network
+\begin{center}
+\begin{tikzpicture}[thick, var/.style={circle,draw,thin,rounded corners,shade,top color=blue!50,minimum size = 4mm}]
+	\node[var] (s) {$s$};
+	\node[var] (k) [right=of s]{$k$};
+	\node[var] (x) [right=of k] {$x_0$};
+	\node[var] (v) [below=of x] {$v$};
+	\node[var] (x_hat) [right=of x] {$\hat{x}_0$};
+	\node[var] (v_hat) [right=of v] {$\hat{v}_0$};
+	\node[var] (rho) [above=of x] {$\rho(x,t)$};
+	
+	\draw[->] (s.east) to (rho.west);
+	\draw[->] (s.east) to (v.west);
+	\draw[->] (k.north east) to (rho.south west);
+	\draw[->] (k.east) to (x.west);
+	\draw[->] (k.south east) to (v.north west);
+	\draw[->] (x.north) to (rho.south);
+	\draw[->] (x.south) to (v.north);
+	\draw[->] (x.east) to (x_hat.west);
+	\draw[->] (v.east) to (v_hat.west);
+\end{tikzpicture}
+\end{center}
+Which allows us to derive $\rho(x,t)$ by appropriately marginalizing over the full joint probability $\Pr(x(t), x_0, v_0, \hat{x}_0, \hat{v}_0, k, s)$.
 
 \subsection{Inverse optimal control}
 This section is optional.  Describe how director-fields are solutions of optimization problems.
