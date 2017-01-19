@@ -84,9 +84,16 @@ The abstract goes here.
 Our goal is to generate a time-dependent pdf over space, $\rho(x,t)$, which predicts the true location of an agent in the future.
 The input to the algorithm is a noisy measurement of position and velocity in the present, as well as an archive of past trajectories that have run through the scene.
 
+\section{The sensor model}
 At time $t=0$, we obtain a noisy reading of position, $\hat{x}_0 \in \mathbb{R}^2$.
 We assume that our measurements come from Gaussian noise about the true location $x_0 \in \mathbb{R}^2$,
 so that $\Pr(\hat{x}_0 \mid x_0 ) = (2\pi \sigma_x^2)^{-1} \exp( - \| \hat{x}_0 - x_0 \|^2 / (2 \sigma_x^2) )$.
+Similarly, we have a velocity reading $\hat{v}_0 \in \mathbb{R}^2$ which is conditionally dependent on the true velocity $v_0 \in \mathbb{R}^2$
+via the posterior $\Pr( \hat{v}_0 \mid v_0 ) = (2\pi \sigma_v^2)^{-1} \exp( - \| \hat{v}_0 - v_0 \|^2 / (2 \sigma_v^2) )$.
+We should note that $\hat{v}_0$ is typically derived from multiple measurements of position via a finite difference.
+This induces a linear inequality between $\sigma_x$ and $\sigma_v$.
+For example, a first order finite difference would yield $\sigma_v \geq 2 \sigma_x / \Delta t$ where $\Delta t > 0$ is the time-step size between consecutive measurements of position.
+
 Therefore, at time $0$, we have $\rho(x,0) = \Pr(\hat{x}_0 \mid x_0 )$.
 
 In order to solve $\rho(x,t)$ at later times, we need to assume a dynamical model.
