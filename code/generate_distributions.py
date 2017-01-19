@@ -124,7 +124,7 @@ def lin_generator(x_hat, v_hat, t_final, N_steps):
     dy = y_span[1] - y_span[0]
     X,Y = np.meshgrid(x_span, y_span)
     x_lin = np.vstack( [X.flatten(), Y.flatten()])
-    for n in range(1, N_steps):
+    for n in range(1, N_steps+1):
         t = float(t_final / N_steps) * n
         w_lin = joint_lin_x_t_x_hat_v_hat(t, x_lin, x_hat, v_hat) * dy*dx
         yield (x_lin, w_lin)
@@ -160,7 +160,7 @@ if __name__ == '__main__':
     t_final = 100
     #Domain is actually larger than the domain we care about
     domain = [-scene.width, scene.width, -scene.height, scene.height]
-
+    
     gen = particle_generator(x_hat, v_hat, t_final, N_steps)
     n = 0
     from visualization_routines import singular_distribution_to_image

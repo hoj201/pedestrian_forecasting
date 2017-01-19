@@ -5,6 +5,10 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from generate_distributions import particle_generator, lin_generator
 from test_distribution import particle_generator as particle_generator_t
+from decimal import Decimal
+from adjustText import adjust_text
+from sklearn.metrics import roc_curve, auc
+from visualization_routines import singular_distribution_to_image
 
 from data import scene as test_scene
 from data import set as test_set
@@ -16,7 +20,6 @@ def rho_true(subj, T, test_set, bbox_ls):
     res = (20,20)
     x = 0.5*(test_set[subj][0,T] + test_set[subj][2,T])
     y = 0.5*(test_set[subj][1,T] + test_set[subj][3,T])
-    plt.scatter(x, y, s=60, color="grey")
     x_min = x-test_scene.bbox_width/2
     x_max = x+test_scene.bbox_width/2
     y_min = y-test_scene.bbox_width/2
@@ -37,18 +40,24 @@ def rho_true(subj, T, test_set, bbox_ls):
     return out
 
 
-def evaluate(gen, i, t_final, N_points, tau):
+def evaluate(gen, i, t_final, N_points):
     n = 0
     from visualization_routines import singular_distribution_to_image
     res = (50,60)
     ims = []
     #fig = plt.figure()
-    results = []
+    true = np.array([])
+    predic = np.array([])
+
+    rho_arr = []
+
     for x_arr, w_arr in gen:
-        if n%5==0:
-            whr = np.where(w_arr > 0)[0]
-            x_arr = x_arr.transpose()[whr].transpose()
-            w_arr = w_arr[whr]
+        if n%1==0:
+            rho_arr.append((x_arr, w_arr))
+            w_arr /= np.sum(w_arr) if  np.sum(w_arr) > 0 else 1
+            #whr = np.where(w_arr > 0)[0] 
+            #x_arr = x_arr.transpose()[whr].transpose()
+            #w_arr = w_arr[whr]
             #X,Y,Z = singular_distribution_to_image( x_arr, w_arr, domain, res=res)
             #plt.contourf(X,Y,Z, 30, cmap='viridis')
 
@@ -56,17 +65,42 @@ def evaluate(gen, i, t_final, N_points, tau):
             bounds = [test_scene.width, test_scene.height]
             rho = (x_arr, w_arr)
             rt = lambda x: rho_true(i, int(t_final/float(N_points) * n), test_set, x)
-            width = test_scene.bbox_width/3
-            results.append(evaluate_plane(bounds, rho, rt, tau, width, debug_level=0))
+            width = test_scene.width/100
+            pr, tr = evaluate_plane(bounds, rho, rt, width, debug_level=0)
+
+            if len(true) > 0:
+                true = np.vstack((true, tr))
+                predic = np.vstack((predic, pr))
+            else:
+                true = np.array([tr])
+                predic = np.array([pr])
         n += 1
 
-    ret = np.zeros(3)
-    for result in results:
-        ret += np.array(result)
+    return predic, true, rho_arr
 
-    ret /= len(results)
-
-    return list(ret), results
+def plot_roc(predics, trues, title, axes, f):
+    false_positive_rate, true_positive_rate, thresholds = roc_curve(trues, predics)
+    axes.scatter(false_positive_rate, true_positive_rate)
+    f.write(title + " \n")
+    for tau in thresholds:
+        f.write("tau = %.2E" % Decimal(tau) + "\n")
+        pred = predics > tau
+        fn = np.sum(np.logical_and(trues, np.logical_not(pred)))
+        f.write("FN: {}".format(fn) + "\n")
+        tn = np.sum(np.logical_not(trues))
+        f.write("TN: {}".format(tn) + "\n")
+        tp = np.sum(trues)
+        f.write( "TP: {}".format(tp) + "\n")
+        fp = np.sum(np.logical_and(pred, np.logical_not(trues)))
+        f.write( "FP: {}".format(fp) + "\n")
+        f.write( "FPR = {}".format(float(fp)/(fp + tn)) + "\n")
+        f.write( "TPR = {}".format(float(tp)/(tp + fn)) + "\n")
+    txts = []
+    #for i in range(len(false_positive_rate)):
+        #txts.append(axes.text(false_positive_rate[i], true_positive_rate[i], '%.2E' % Decimal(thresholds[i])))
+    #adjust_text(txts, ax=axes, arrowprops=dict(arrowstyle="-", color='k', lw=0.5))
+    axes.set_title(title)
+    return auc(false_positive_rate, true_positive_rate)
 
 
 
@@ -83,8 +117,9 @@ if __name__ == "__main__":
     with open("test_scene.pkl", "rb") as f:
         scene = pickle.load(f)
 
-    tau_arr = np.array([10**(-x) for x in range(2, 4)])
-    test_set = test_set[0:1]
+    tau_arr = np.array([10**(-x) for x in range(2, 5)])
+    tau_arr = np.exp( -np.log(10) * np.linspace(0, 6, 8))
+    test_set = test_set[0:6]
 
     xs_l = np.zeros(0)
 
@@ -99,192 +134,151 @@ if __name__ == "__main__":
     zs_prec_lin = np.zeros(0)
     zs_rec_lin = np.zeros(0)
 
+    prec_arr_ours = np.zeros(len(tau_arr))
+    rec_arr_ours = np.zeros(len(tau_arr))
 
-    for (ind, tau) in enumerate(tau_arr):
-        print """
+    prec_arr_lin = np.zeros(len(tau_arr))
+    rec_arr_lin = np.zeros(len(tau_arr))
 
-======================================
-BEGINNING TAU = {}
-======================================
 
-        """.format(tau)
-        res_ours = np.zeros(3)
-        res_mine = np.zeros(3)
-        res_lin = np.zeros(3)
-        f = open("results_coupa.txt", "w")
+    res_ours = np.zeros(3)
+    res_mine = np.zeros(3)
+    res_lin = np.zeros(3)
+    f = open("results_coupa.txt", "w")
 
-        ours_results = []
-        mine_results = []
-        linear_results = []
+    trueours = []
+    predicours = []
 
-        for i in range(0, len(test_set)):
-            test_BB_ts = test_set[i]
+    truemine = []
+    predicmine = []
 
-            from process_data import BB_ts_to_curve
-            curve = BB_ts_to_curve( test_BB_ts)
+    truelin = []
+    prediclin = []
+    f_lin = open("results/linear.txt", "w")
+    f_ours = open("results/ours.txt", "w")
 
-            x_hat = curve[:,1]
-            v_hat = (curve[:,100] - curve[:,0])/100
-            print "x_hat = " + str(x_hat)
-            print "v_hat = " + str(v_hat)
-            speed = np.sqrt(np.sum(v_hat**2))
-            print "Measured speed / sigma_L = {:f}".format( speed / scene.sigma_L )
-            print "sigma_L = {:f}".format( scene.sigma_L)
-            k=0
-            N_steps = 40
-            t_final = len(curve[0])
-            #Domain is actually larger than the domain we care about
-            domain = [-scene.width, scene.width, -scene.height, scene.height]
+    for i in range(0,1): # len(test_set)):
+        test_BB_ts = test_set[i]
 
-            ours = particle_generator(x_hat, v_hat, t_final, N_steps)
-            mine = particle_generator_t(x_hat, v_hat, t_final, N_steps)
-            lin = lin_generator(x_hat, v_hat, t_final, N_steps)
-            print "The following are (precision, recall, accuracy) triples:"
-            ours, reso = evaluate(ours, i, t_final, N_steps, tau)
-            ours_results.append(reso)
-            st = "Our algorithm for agent {}: {}".format(i, ours)
-            print st
-            f.write(st + "\n")
-            mine, resm = evaluate(mine, i, t_final, N_steps, tau)
-            mine_results.append(resm)
-            st = "My test for agent {}: {}".format(i, mine)
-            print st
-            f.write(st + "\n")
-            lin, resl = evaluate(lin, i, t_final, N_steps, tau)
-            linear_results.append(resl)
-            st = "Linear for agent {}: {}".format(i, lin)
-            print st
-            f.write(st + "\n")
+        from process_data import BB_ts_to_curve
+        curve = BB_ts_to_curve( test_BB_ts)
 
-            res_ours += np.array(ours)
-            res_mine += np.array(mine)
-            res_lin += np.array(lin)
+        x_hat = curve[:,1]
+        v_hat = (curve[:,100] - curve[:,0])/100
+        print "x_hat = " + str(x_hat)
+        print "v_hat = " + str(v_hat)
+        speed = np.sqrt(np.sum(v_hat**2))
+        print "Measured speed / sigma_L = {:f}".format( speed / scene.sigma_L )
+        print "sigma_L = {:f}".format( scene.sigma_L)
+        k=0
+        t_final = min(len(curve[0]), 150)
+        N_steps = t_final
+        #Domain is actually larger than the domain we care about
+        domain = [-scene.width/2, scene.width/2, -scene.height/2, scene.height/2]
 
-        res_ours /= len(test_set)
-        st = "Total average accuracy for ours {}".format(list(res_ours))
-        print st
-        f.write(st + "\n")
-        res_mine /= len(test_set)
-        st = "Total average accuracy for mine {}".format(list(res_mine))
-        print st
-        f.write(st + "\n")
-        res_lin /= len(test_set)
-        st = "Total average accuracy for lin {}".format(list(res_lin))
-        print st
-        f.write(st + "\n")
+        ours = particle_generator(x_hat, v_hat, t_final, N_steps)
+        mine = particle_generator_t(x_hat, v_hat, t_final, N_steps)
+        lin = lin_generator(x_hat, v_hat, t_final, N_steps)
 
-        #do analysis w.r.t. time
+        predico, trueo, rho_arro = evaluate(ours, i, t_final, N_steps)
+        predicours.append(predico)
+        trueours.append(trueo)
+        #predicm, truem = evaluate(mine, i, t_final, N_steps)
+        #predicmine.append(predicm)
+        #truemine.append(truem)
+        predicl, truel, rho_arrl = evaluate(lin, i, t_final, N_steps)
+        prediclin.append(predicl)
+        truelin.append(truel)
+        for k in range(len(predico)):
+
+            f, axarr = plt.subplots(2, 2, sharey=True)
+            for ax in axarr[0]:
+                ax.set_xlabel('False Positive Rate')
+                ax.set_ylabel('True Positive Rate')
+                ax.set_xlim([-.1, 1.2])
+                ax.set_ylim([-.1, 1.2])
+            
 
 
 
-        num_samples = min((len(ours_results[0]), len(mine_results[0]), len(linear_results[0])))
-        our_out = np.zeros((3, num_samples))
-        mine_out = np.zeros((3, num_samples))
-        lin_out = np.zeros((3, num_samples))
+            auco = plot_roc(predico[k], trueo[k], "Our Algorithm for agent {}, t={}".format(i, int(t_final/float(N_steps) * k)), axarr[0][0], f_ours)
 
-        for agent in range(len(ours_results)):
-            our_out += np.array(ours_results[agent]).transpose()[:, 0:num_samples]
-            mine_out += np.array(mine_results[agent]).transpose()[:, 0:num_samples]
-            lin_out += np.array(linear_results[agent]).transpose()[:, 0:num_samples]
-        our_out /= len(ours_results)
-        mine_out /= len(ours_results)
-        lin_out /= len(ours_results)
+            aucl = plot_roc(predicl[k], truel[k], "Linear Predictor for agent {}, t={}".format(i, int(t_final/float(N_steps) * k)), axarr[0][1], f_lin)
+
+            X,Y,Z = singular_distribution_to_image(
+                rho_arro[k][0], rho_arro[k][1], domain, res= (100,100))
+            #Z = Z > 1E-3
+            im = axarr[1][0].pcolormesh(X,Y,Z, cmap='viridis')
+            axarr[1][0].set_xlabel("AUC is {}".format(auco))
+
+            bounds = [[-scene.width/2, scene.width/2], [-scene.height/2, scene.height/2]]
+            axarr[1][0].set_xlim(bounds[0])
+            axarr[1][0].set_ylim(bounds[1])
+            axarr[1][1].set_xlim(bounds[0])
+            axarr[1][1].set_ylim(bounds[1])
 
 
-        plt.clf()
-        ax = plt.gca()
-        ax.set_ylim([-.1, 1.1])
+            x = curve[0][int(t_final/float(N_steps) * k )]
+            y = curve[1][int(t_final/float(N_steps) * k )]
 
-        xs = range(0, num_samples * 5, 5)
+            xs = [x - test_scene.bbox_width/2.0, x - test_scene.bbox_width/2.0, x + test_scene.bbox_width/2.0, x + test_scene.bbox_width/2.0, x - test_scene.bbox_width/2.0]
+            ys = [y - test_scene.bbox_width/2.0, y + test_scene.bbox_width/2.0, y+ test_scene.bbox_width/2.0, y - test_scene.bbox_width/2.0, y - test_scene.bbox_width/2.0]
 
-        if len(xs_l) == 0:
-            shape = (len(tau_arr), num_samples)
-            xs_l = np.zeros(shape)
+            axarr[1][0].scatter(x, y)
 
-            ys_l = np.zeros(shape)
+            axarr[1][0].plot(xs, ys)
 
-            zs_prec_ours = np.zeros(shape)
-            zs_rec_ours = np.zeros(shape)
+            X,Y,Z = singular_distribution_to_image(
+                rho_arrl[k][0], rho_arrl[k][1], domain, res= (100,100))
+            #Z = Z > 1E-3
+            im = axarr[1][1].pcolormesh(X,Y,Z, cmap='viridis')
+            axarr[1][1].set_xlabel("AUC is {}".format(aucl))
+            
+            axarr[1][1].scatter(rho_arrl[k][0][0], rho_arrl[k][0][1], c=rho_arrl[k][1], edgecolor="none")
 
-            zs_prec_mine = np.zeros(shape)
-            zs_rec_mine = np.zeros(shape)
 
-            zs_prec_lin = np.zeros(shape)
-            zs_rec_lin = np.zeros(shape)
-        xs_l[ind, :] = xs
+            axarr[1][1].scatter(x, y)
 
-        ys_l[ind, :] = np.ones(num_samples) * tau
+            axarr[1][1].plot(xs, ys)
 
-        zs_prec_ours[ind, :] = our_out[0]
-        zs_rec_ours[ind, :] = our_out[1]
+            axarr[1][1].set_aspect('equal', 'datalim')
 
-        zs_prec_mine[ind, :] = mine_out[0]
-        zs_rec_mine[ind, :] = mine_out[1]
-
-        zs_prec_lin[ind, :] = lin_out[0]
-        zs_rec_lin[ind, :] = lin_out[1]
-        
-        ax.set_ylim([-.1, 1.1])
-        plt.plot(xs, our_out[0], label='Our Algorithm', lw=5)
-        plt.plot(xs, mine_out[0], label='Perfect Velocity Predictor')
-        plt.plot(xs, lin_out[0], label='Linear Predictor')
-        plt.title("Precision")
-        legend = plt.legend(loc='lower left', shadow=True)
-        plt.savefig("precision_tau={}.png".format(str(tau).replace(".", ",")))
-        plt.show()
-
-        plt.clf()
-        ax = plt.gca()
-        ax.set_ylim([-.1, 1.1])
-        plt.plot(xs, our_out[1], label='Our Algorithm',lw=5)
-        plt.plot(xs, mine_out[1], label='Perfect Velocity Predictor')
-        plt.plot(xs, lin_out[1], label='Linear Predictor')
-        plt.title("Recall")
-        legend = plt.legend(loc='lower left', shadow=True)
-        plt.savefig("recall_tau={}.png".format(str(tau).replace(".", ",")))
-        plt.show()
-
-        plt.clf()
-
-        #plt.plot(xs, our_out[2], label='Our Algorithm',lw=5)
-        #plt.plot(xs, mine_out[2], label='Perfect Velocity Predictor')
-        #plt.plot(xs, lin_out[2], label='Linear Predictor')
-        #legend = plt.legend(loc='lower left', shadow=True)
-        #plt.title("Accuracy")
-        #plt.savefig("accuracy.png")
-        #plt.show()
+            plt.savefig("images/precision_recall/roc_agent{}_T{}.png".format(i, int(t_final/float(N_steps) * k)))
+            #plt.show()
+            plt.close('all')
 
 
 
-        f.close()
 
-    #plot 3d surfaces
-    fig = plt.figure()
-    plt.title("Our Algorithm")
-    ax = fig.gca(projection='3d')
-    xLabel = ax.set_xlabel('Precision', linespacing=3.2)
-    yLabel = ax.set_ylabel('Tau', linespacing=3.1)
-    zLabel = ax.set_zlabel('Recall', linespacing=3.4)
-    surf = ax.plot_surface(zs_prec_ours, ys_l, zs_rec_ours, rstride=1, cstride=1, cmap=cm.viridis,
-                       linewidth=0, antialiased=False)
-    plt.show()
+    #plt.show()
 
-    fig = plt.figure()
-    plt.title("My Algorithm")
-    ax = fig.gca(projection='3d')
-    xLabel = ax.set_xlabel('Precision', linespacing=3.2)
-    yLabel = ax.set_ylabel('Tau', linespacing=3.1)
-    zLabel = ax.set_zlabel('Recall', linespacing=3.4)
-    surf = ax.plot_surface(zs_prec_mine, ys_l, zs_rec_mine, rstride=1, cstride=1, cmap=cm.viridis,
-                       linewidth=0, antialiased=False)
-    plt.show()
+    #ax = plt.gca()
+    #ax.set_ylim([-.1, 1.1])
+    #plt.plot(xs, our_out[1], label='Our Algorithm',lw=5)
+    #plt.plot(xs, mine_out[1], label='Perfect Velocity Predictor')
+    #plt.plot(xs, lin_out[1], label='Linear Predictor')
+    #plt.title("Recall")
+    #legend = plt.legend(loc='lower left', shadow=True)
+    #plt.savefig("recall_tau={}.png".format(str(tau).replace(".", ",")))
+    #plt.show()
 
-    fig = plt.figure()
-    plt.title("Lin Algorithm")
-    ax = fig.gca(projection='3d')
-    xLabel = ax.set_xlabel('Precision', linespacing=3.2)
-    yLabel = ax.set_ylabel('Tau', linespacing=3.1)
-    zLabel = ax.set_zlabel('Recall', linespacing=3.4)
-    surf = ax.plot_surface(zs_prec_lin, ys_l, zs_rec_lin, rstride=1, cstride=1, cmap=cm.viridis,
-                       linewidth=0, antialiased=False)
-    plt.show()
+    #plt.clf()
+
+    #plt.plot(xs, our_out[2], label='Our Algorithm',lw=5)
+    #plt.plot(xs, mine_out[2], label='Perfect Velocity Predictor')
+    #plt.plot(xs, lin_out[2], label='Linear Predictor')
+    #legend = plt.legend(loc='lower left', shadow=True)
+    #plt.title("Accuracy")
+    #plt.savefig("accuracy.png")
+    #plt.show()
+    print "\a" * 100
+
+
+
+#plot 2d surfaces
+
+
+
+
+
+
