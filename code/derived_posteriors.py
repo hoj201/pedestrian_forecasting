@@ -151,14 +151,15 @@ if __name__ == "__main__":
     t = 100.0
     x_hat = np.zeros(2)
     v_hat = np.ones(2)*sigma_v/2
-    x_span = np.linspace(-scene.width/2, scene.width/2, 20)
-    y_span = np.linspace(-scene.height/2, scene.height/2, 20)
-    X,Y = np.meshgrid(x_span, y_span)
-    x_t  = np.vstack([X.flatten(), Y.flatten()])
-    Z = joint_lin_x_t_x_hat_v_hat(t, x_t, x_hat, v_hat).reshape( X.shape)
-    from matplotlib import pyplot as plt
-    plt.contourf(X,Y,Z,30)
-    plt.show()
+    #THE FOLLOWING IS TO PLOT
+    #x_span = np.linspace(-scene.width/2, scene.width/2, 20)
+    #y_span = np.linspace(-scene.height/2, scene.height/2, 20)
+    #X,Y = np.meshgrid(x_span, y_span)
+    #x_t  = np.vstack([X.flatten(), Y.flatten()])
+    #Z = joint_lin_x_t_x_hat_v_hat(t, x_t, x_hat, v_hat).reshape( X.shape)
+    #from matplotlib import pyplot as plt
+    #plt.contourf(X,Y,Z,30)
+    #plt.show()
 
     print "Test: \lim_{t \to 0} P(Lin, x_t, \hat{x_0}, \hat{v_0}) = P(Lin, x_0, \hat{x_0}, \hat{v_0})"
 
@@ -192,20 +193,26 @@ if __name__ == "__main__":
     print "Test \int P(Lin, x_t, \hat{x_0}, \hat{v_0})\,dx_t = \int P(Lin, x_0, \hat{x_0}, \hat{v_0})\,dx_0"
 
     #We integrate over a larger region than the domain because much of the mass leaves the domain
-    bounds = [-scene.width, scene.width, -scene.height, scene.height] 
 
     print "All of the following should be equal"
-
+    bounds = np.array([x[0],x[0],x[1],x[1]])
+    offset = np.array([-1,1,-1,1])*7.0*sigma_x
+    bounds = bounds + offset
     t = 100.0
+    res = (1000,1000)
     def temp(xs, ys):
         pts = np.array([xs.flatten(), ys.flatten()])
         return joint_lin_x_x_hat_v_hat(pts, x, v)
-    print "x_0: {}".format(trap_quad(temp, bounds, res=(100, 100)))
-    for i in range(9):
+    print "x_0: {}".format(trap_quad(temp, bounds, res=res))
+    for i in range(6):
         def temp(xs, ys):
             pts = np.array([xs.flatten(), ys.flatten()])
             return joint_lin_x_t_x_hat_v_hat(t, pts, x, v)
-        print "T={}: {}".format(t, trap_quad(temp, bounds, res=(100, 100)))
+        offset_t = np.array([v[0],v[0],v[1],v[1]]) * t
+        doffset_t = np.array([-1,1,-1,1]) * 5*sigma_v * t
+        offset_t = offset_t + doffset_t
+        bounds_t = bounds + offset_t
+        print "T={}: {}".format(t, trap_quad(temp, bounds_t, res=res))
         t /= 10.0
 
     print """
@@ -213,8 +220,8 @@ if __name__ == "__main__":
     is the same as a numerically integrated one.
     """
 
-    bounds = [-3*sigma_v, 3*sigma_v,
-              -3*sigma_v, 3*sigma_v]
+    bounds = [-7*sigma_v, 7*sigma_v,
+              -7*sigma_v, 7*sigma_v]
     x = np.array([0, 0])
     v = np.array([0, sigma_v])
 
@@ -232,7 +239,7 @@ if __name__ == "__main__":
             res *= posteriors.x_hat_given_x(x, pt) * posteriors.v_hat_given_v(v, pts)
             res *= posteriors.v_given_x_lin(pts) 
             return res
-        results.append(trap_quad(temp, bounds, res = (1000, 1000)))
+        results.append(trap_quad(temp, bounds, res = res))
         results2.append(joint_lin_x_x_hat_v_hat(pt, x, v))
     results = np.array(results)
     results2 = np.array(results2)
