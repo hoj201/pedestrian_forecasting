@@ -4,7 +4,7 @@ p0
 (dp1
 S'sigma_x'
 p2
-F0.01
+F0.1
 sS'bbox_velocity_width'
 p3
 cnumpy.core.multiarray
