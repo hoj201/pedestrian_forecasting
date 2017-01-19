@@ -1,6 +1,13 @@
 import pickle
-with open("test_scene.pkl", "rb") as f:
-    scene = pickle.load(f)
-
-with open('test_set.pkl','r') as f:
-    set = pickle.load(f)
+import os
+scenes = []
+sets = []
+for file in os.listdir("pickles"):
+    if file.endswith("scene.pkl"):
+        with open("pickles/" + file, "rb") as f:
+            scenes.append(pickle.load(f))
+    elif file.endswith("set.pkl"):
+        with open("pickles/" + file,'r') as f:
+            sets.append(pickle.load(f))
+scene = scenes[0]
+set = sets[0]

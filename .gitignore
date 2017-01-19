@@ -1,6 +1,5 @@
 code/plt.py
 .DS_Store
-*.pkl
 *.pyc
 *.mp4
 code/tmp

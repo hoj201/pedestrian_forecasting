@@ -20,6 +20,8 @@ sigma_L = scene.sigma_L
 p_of_lin = scene.P_of_c[-1]
 scene_scale = np.array([scene.width, scene.height])
 
+
+#"mathematically correct" version
 def joint_k_s_x_x_hat_v_hat(k, s, x, x_hat, v_hat):
     """
     returns the joint probability of k,x,x_hat,v_hat
@@ -39,6 +41,27 @@ def joint_k_s_x_x_hat_v_hat(k, s, x, x_hat, v_hat):
     out *= posteriors.x_given_k(x,k)
     out *= scene.P_of_c[k]
     out *= 1.0/(2*s_max) * (s <= s_max) * (s >= -s_max) #P(s)
+    return out
+
+#fast version
+def joint_k_x_x_hat_v_hat(k, x, x_hat, v_hat):
+    """
+    returns the joint probability of k,x,x_hat,v_hat
+    
+    args:
+    k: int
+    x: numpy.ndarray, shape=(2,N)
+    x_hat: numpy.ndarray, shape=(2,)
+    v_hat: numpy.ndarray, shape=(2,)
+    """
+    r2 = (x[0]-x_hat[0])**2 + (x[1]-x_hat[1])**2
+    out = np.exp( -r2/(2*sigma_x**2) ) / (2*np.pi*sigma_x**2) #P(x_hat|x)
+    #v = s*scene.director_field_vectorized(k, x)
+    #r2 = (v[0]-v_hat[0])**2 + (v[1]-v_hat[1])**2
+    #out *= np.exp( -r2/(2*sigma_v**2) ) / (2*np.pi*sigma_v**2) #P(v_hat|v)
+    out *= posteriors.x_given_k(x,k)
+    out *= scene.P_of_c[k]
+    #out *= 1.0/(2*s_max) * (s <= s_max) * (s >= -s_max) #P(s)
     return out
 
 def joint_lin_x_x_hat_v_hat(x, x_hat, v_hat):
