@@ -2,21 +2,24 @@ import pickle
 import numpy as np
 from evaluation import evaluate_plane
 import matplotlib.pyplot as plt
-from generate_distributions import particle_generator
+from matplotlib import cm
+from generate_distributions import particle_generator, lin_generator
+from test_distribution import particle_generator as particle_generator_t
+from decimal import Decimal
+from adjustText import adjust_text
+from sklearn.metrics import roc_curve, auc, precision_recall_curve
+from visualization_routines import singular_distribution_to_image
 
-with open('test_scene.pkl','r') as f:
-    test_scene = pickle.load(f)
+from data import scene as test_scene
+from data import set as test_set
 
-with open('test_set.pkl','r') as f:
-    test_set = pickle.load(f)
+
 
 def rho_true(subj, T, test_set, bbox_ls):
     """ Computes the integral of rho_true over a bounding box"""
     res = (20,20)
     x = 0.5*(test_set[subj][0,T] + test_set[subj][2,T])
     y = 0.5*(test_set[subj][1,T] + test_set[subj][3,T])
-    print "Rho TRUE"
-    plt.scatter(x, y, s=60, color="grey")
     x_min = x-test_scene.bbox_width/2
     x_max = x+test_scene.bbox_width/2
     y_min = y-test_scene.bbox_width/2
@@ -37,6 +40,70 @@ def rho_true(subj, T, test_set, bbox_ls):
     return out
 
 
+def evaluate(gen, i, t_final, N_points):
+    n = 0
+    from visualization_routines import singular_distribution_to_image
+    res = (50,60)
+    ims = []
+    #fig = plt.figure()
+    true = np.array([])
+    predic = np.array([])
+
+    rho_arr = []
+
+    for x_arr, w_arr in gen:
+        if n%1==0:
+            rho_arr.append((x_arr, w_arr))
+            w_arr /= np.sum(w_arr) if  np.sum(w_arr) > 0 else 1
+            #whr = np.where(w_arr > 0)[0] 
+            #x_arr = x_arr.transpose()[whr].transpose()
+            #w_arr = w_arr[whr]
+            #X,Y,Z = singular_distribution_to_image( x_arr, w_arr, domain, res=res)
+            #plt.contourf(X,Y,Z, 30, cmap='viridis')
+
+            print "{} steps into agent {}".format(n, i)
+            bounds = [test_scene.width, test_scene.height]
+            rho = (x_arr, w_arr)
+            rt = lambda x: rho_true(i, int(t_final/float(N_points) * n), test_set, x)
+            width = test_scene.width/100
+            pr, tr = evaluate_plane(bounds, rho, rt, width, debug_level=0)
+
+            if len(true) > 0:
+                true = np.vstack((true, tr))
+                predic = np.vstack((predic, pr))
+            else:
+                true = np.array([tr])
+                predic = np.array([pr])
+        n += 1
+
+    return predic, true, rho_arr
+
+def plot_roc(predics, trues, title, axes, f):
+    false_positive_rate, true_positive_rate, thresholds = precision_recall_curve(trues, predics)
+    axes.scatter(false_positive_rate, true_positive_rate)
+    f.write(title + " \n")
+    for tau in thresholds:
+        f.write("tau = %.2E" % Decimal(tau) + "\n")
+        pred = predics > tau
+        fn = np.sum(np.logical_and(trues, np.logical_not(pred)))
+        f.write("FN: {}".format(fn) + "\n")
+        tn = np.sum(np.logical_not(trues))
+        f.write("TN: {}".format(tn) + "\n")
+        tp = np.sum(trues)
+        f.write( "TP: {}".format(tp) + "\n")
+        fp = np.sum(np.logical_and(pred, np.logical_not(trues)))
+        f.write( "FP: {}".format(fp) + "\n")
+        f.write( "FPR = {}".format(float(fp)/(fp + tn)) + "\n")
+        f.write( "TPR = {}".format(float(tp)/(tp + fn)) + "\n")
+    txts = []
+    #for i in range(len(false_positive_rate)):
+        #txts.append(axes.text(false_positive_rate[i], true_positive_rate[i], '%.2E' % Decimal(thresholds[i])))
+    #adjust_text(txts, ax=axes, arrowprops=dict(arrowstyle="-", color='k', lw=0.5))
+    axes.set_title(title)
+    return auc(false_positive_rate, true_positive_rate)
+
+
+
 if __name__ == "__main__":
     import cProfile, pstats, StringIO
     import matplotlib.pyplot as plt
@@ -50,52 +117,164 @@ if __name__ == "__main__":
     with open("test_scene.pkl", "rb") as f:
         scene = pickle.load(f)
 
-    for i in range(4, len(test_set)):
+    tau_arr = np.array([10**(-x) for x in range(2, 5)])
+    tau_arr = np.exp( -np.log(10) * np.linspace(0, 6, 8))
+    test_set = test_set[0:6]
+
+    xs_l = np.zeros(0)
+
+    ys_l = np.zeros(0)
+
+    zs_prec_ours = np.zeros(0)
+    zs_rec_ours = np.zeros(0)
+
+    zs_prec_mine = np.zeros(0)
+    zs_rec_mine = np.zeros(0)
+
+    zs_prec_lin = np.zeros(0)
+    zs_rec_lin = np.zeros(0)
+
+    prec_arr_ours = np.zeros(len(tau_arr))
+    rec_arr_ours = np.zeros(len(tau_arr))
+
+    prec_arr_lin = np.zeros(len(tau_arr))
+    rec_arr_lin = np.zeros(len(tau_arr))
+
+
+    res_ours = np.zeros(3)
+    res_mine = np.zeros(3)
+    res_lin = np.zeros(3)
+    f = open("results_coupa.txt", "w")
+
+    trueours = []
+    predicours = []
+
+    truemine = []
+    predicmine = []
+
+    truelin = []
+    prediclin = []
+    f_lin = open("results/linear.txt", "w")
+    f_ours = open("results/ours.txt", "w")
+
+    for i in range(0,5): # len(test_set)):
         test_BB_ts = test_set[i]
 
         from process_data import BB_ts_to_curve
         curve = BB_ts_to_curve( test_BB_ts)
+
         x_hat = curve[:,1]
-        v_hat = (curve[:,2] - curve[:,0])/2
+        v_hat = (curve[:,100] - curve[:,0])/100
         print "x_hat = " + str(x_hat)
         print "v_hat = " + str(v_hat)
         speed = np.sqrt(np.sum(v_hat**2))
         print "Measured speed / sigma_L = {:f}".format( speed / scene.sigma_L )
         print "sigma_L = {:f}".format( scene.sigma_L)
         k=0
-        N_steps = 120
-        t_final = 120
+        t_final = min(len(curve[0]), 300)
+        N_steps = t_final
         #Domain is actually larger than the domain we care about
-        domain = [-scene.width, scene.width, -scene.height, scene.height]
+        domain = [-scene.width/2, scene.width/2, -scene.height/2, scene.height/2]
 
-        gen = particle_generator(x_hat, v_hat, t_final, N_steps)
-        n = 0
-        from visualization_routines import singular_distribution_to_image
-        res = (50,60)
-        ims = []
-        fig = plt.figure()
-        for x_arr, w_arr in gen:
-            if n%5==0:
-                print "{} steps processed for agent {}.".format(n, i)
-                #fig = plt.figure()
-                X,Y,Z = singular_distribution_to_image(
-                        x_arr, w_arr, domain, res=res)
-                im = plt.pcolormesh(X,Y,Z, cmap='viridis')
-                t_step = int(n/5)
+        ours = particle_generator(x_hat, v_hat, t_final, N_steps)
+        mine = particle_generator_t(x_hat, v_hat, t_final, N_steps)
+        lin = lin_generator(x_hat, v_hat, t_final, N_steps)
 
-                #################################################################
-                ## Bug fix for Quad Contour set not having attribute 'set_visible'
-                #def setvisible(self,vis):
-                #    for c in self.collections: c.set_visible(vis)
-                im.axes = plt.gca()
-                im.figure=fig
-                ####################################################################
-                plt.plot(curve[0], curve[1])
+        predico, trueo, rho_arro = evaluate(ours, i, t_final, N_steps)
+        predicours.append(predico)
+        trueours.append(trueo)
+        #predicm, truem = evaluate(mine, i, t_final, N_steps)
+        #predicmine.append(predicm)
+        #truemine.append(truem)
+        predicl, truel, rho_arrl = evaluate(lin, i, t_final, N_steps)
+        prediclin.append(predicl)
+        truelin.append(truel)
+        for k in range(len(predico)):
 
-                ims.append([im])
-            n += 1
+            f, axarr = plt.subplots(2, 2)
+            for ax in axarr[0]:
+                ax.set_xlabel('False Positive Rate')
+                ax.set_ylabel('True Positive Rate')
+                ax.set_xlim([-.1, 1.2])
+                ax.set_ylim([-.1, 1.2])
+            
 
-        ani = anim.ArtistAnimation(fig, ims, interval=70, blit=False,repeat_delay=1000)
-        ani.save('gifs/agent{}.gif'.format(i), writer='imagemagick', fps=30)
 
-        plt.show()
+
+            auco = plot_roc(predico[k], trueo[k], "Our Algorithm for agent {}, t={}".format(i, int(t_final/float(N_steps) * k)), axarr[0][0], f_ours)
+
+            aucl = plot_roc(predicl[k], truel[k], "Linear Predictor for agent {}, t={}".format(i, int(t_final/float(N_steps) * k)), axarr[0][1], f_lin)
+
+            X,Y,Z = singular_distribution_to_image(
+                rho_arro[k][0], rho_arro[k][1], domain, res= (100,100))
+            #Z = Z > 1E-3
+            im = axarr[1][0].pcolormesh(X,Y,Z, cmap='viridis')
+            #axarr[1][0].set_xlabel("AUC is {}".format(auco))
+
+            bounds = [[-scene.width/2, scene.width/2], [-scene.height/2, scene.height/2]]
+            bounds2 = [[-.1, 1.2], [-.1, 1.2]]
+            axarr[1][0].set_xlim(bounds[0])
+            axarr[1][0].set_ylim(bounds[1])
+            axarr[1][1].set_xlim(bounds[0])
+            axarr[1][1].set_ylim(bounds[1])
+
+
+            x = curve[0][int(t_final/float(N_steps) * k )]
+            y = curve[1][int(t_final/float(N_steps) * k )]
+
+            xs = [x - test_scene.bbox_width/2.0, x - test_scene.bbox_width/2.0, x + test_scene.bbox_width/2.0, x + test_scene.bbox_width/2.0, x - test_scene.bbox_width/2.0]
+            ys = [y - test_scene.bbox_width/2.0, y + test_scene.bbox_width/2.0, y+ test_scene.bbox_width/2.0, y - test_scene.bbox_width/2.0, y - test_scene.bbox_width/2.0]
+
+            axarr[1][0].scatter(x, y)
+
+            axarr[1][0].plot(xs, ys)
+
+            X,Y,Z = singular_distribution_to_image(
+                rho_arrl[k][0], rho_arrl[k][1], domain, res= (100,100))
+            #Z = Z > 1E-3
+            im = axarr[1][1].pcolormesh(X,Y,Z, cmap='viridis')
+            #axarr[1][1].set_xlabel("AUC is {}".format(aucl))
+
+            axarr[1][1].scatter(x, y)
+
+            axarr[1][1].plot(xs, ys)
+
+            plt.savefig("images/precision_recall/{}/pr_agent{}_T{}.png".format(i,i, int(t_final/float(N_steps) * k)))
+            #plt.show()
+            plt.close('all')
+
+
+
+
+    #plt.show()
+
+    #ax = plt.gca()
+    #ax.set_ylim([-.1, 1.1])
+    #plt.plot(xs, our_out[1], label='Our Algorithm',lw=5)
+    #plt.plot(xs, mine_out[1], label='Perfect Velocity Predictor')
+    #plt.plot(xs, lin_out[1], label='Linear Predictor')
+    #plt.title("Recall")
+    #legend = plt.legend(loc='lower left', shadow=True)
+    #plt.savefig("recall_tau={}.png".format(str(tau).replace(".", ",")))
+    #plt.show()
+
+    #plt.clf()
+
+    #plt.plot(xs, our_out[2], label='Our Algorithm',lw=5)
+    #plt.plot(xs, mine_out[2], label='Perfect Velocity Predictor')
+    #plt.plot(xs, lin_out[2], label='Linear Predictor')
+    #legend = plt.legend(loc='lower left', shadow=True)
+    #plt.title("Accuracy")
+    #plt.savefig("accuracy.png")
+    #plt.show()
+    print "\a" * 100
+
+
+
+#plot 2d surfaces
+
+
+
+
+
+

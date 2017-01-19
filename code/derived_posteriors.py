@@ -4,9 +4,9 @@ import pickle
 import numpy as np
 from integrate import trap_quad
 from scipy.special import erf
+import matplotlib.pyplot as plt
 
-with open("test_scene.pkl", "rb") as f:
-    scene = pickle.load(f)
+from data import scene
 max_k = len(scene.P_of_c)-1
 #temporary s_max
 s_max = 1
@@ -87,6 +87,7 @@ def joint_lin_x_t_x_hat_v_hat(t, x_t, x_hat, v_hat):
     k *= sigma_L**2 / a
     k += v_hat2 / sigma_v**2 + sqr(Dx) / sigma_x**2
     out = scene.P_of_c[-1] * np.exp( - k / 2.0 )
+    
     out /= 16 * np.pi**2 * area * a
     from scipy.special import erf
     def anti_derivative(u,i):
@@ -98,7 +99,8 @@ def joint_lin_x_t_x_hat_v_hat(t, x_t, x_hat, v_hat):
     v_min = (x_t[1] - height/2) / t
     v_max = (x_t[1] + height/2) / t
     out *= anti_derivative(u_max,0) - anti_derivative(u_min,0)
-    out *= anti_derivative(u_max,1) - anti_derivative(u_min,1)
+
+    out *= anti_derivative(v_max,1) - anti_derivative(v_min,1)
     return out
 
 if __name__ == "__main__":
@@ -185,9 +187,6 @@ if __name__ == "__main__":
         print "T = {}:".format(t)
         vals = joint_lin_x_t_x_hat_v_hat(t, pts, x, v)
         print "Average difference from x_0: {}".format(avg(control, vals))
-        print "Average difference in order of magnitude: {}".format(oom(control, vals))
-        print "Max diff in OoM: {}".format(mxoom(control, vals))
-        print "Min diff in OoM: {}".format(mnoom(control, vals))
         t /= 10.0
 
     print "Test \int P(Lin, x_t, \hat{x_0}, \hat{v_0})\,dx_t = \int P(Lin, x_0, \hat{x_0}, \hat{v_0})\,dx_0"
@@ -231,7 +230,7 @@ if __name__ == "__main__":
             pts = np.array([xs.flatten(), ys.flatten()])
             res = posteriors.x_given_lin(pt) * scene.P_of_c[-1]
             res *= posteriors.x_hat_given_x(x, pt) * posteriors.v_hat_given_v(v, pts)
-            res *= posteriors.v_given_x_lin(pts) #* 1.55618162566
+            res *= posteriors.v_given_x_lin(pts) 
             return res
         results.append(trap_quad(temp, bounds, res = (1000, 1000)))
         results2.append(joint_lin_x_x_hat_v_hat(pt, x, v))
@@ -239,9 +238,3 @@ if __name__ == "__main__":
     results2 = np.array(results2)
     print "Average difference between control and test:"
     print avg(np.array(results), np.array(results2))
-    print "Average difference in order of magnitude:"
-    print oom(np.array(results), np.array(results2))
-    print "Max differences in OoM"
-    print mxoom(results, results2)
-    print "Min differences in OoM"
-    print mnoom(results, results2)
