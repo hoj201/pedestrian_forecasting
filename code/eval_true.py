@@ -10,8 +10,19 @@ from adjustText import adjust_text
 from sklearn.metrics import roc_curve, auc, precision_recall_curve
 from visualization_routines import singular_distribution_to_image
 
-from data import scene as test_scene
-from data import set as test_set
+from data import scenes as test_scenes
+from data import sets as test_sets
+
+
+from sys import argv
+if len(argv) < 2:
+    test_scene = test_scenes[0]
+    scene = test_scene
+    test_set = test_sets[0]
+else:
+    test_scene = test_scenes[int(argv[1])]
+    scene = test_scene
+    test_set = test_sets[int(argv[1])]
 
 
 
@@ -79,7 +90,7 @@ def evaluate(gen, i, t_final, N_points):
     return predic, true, rho_arr
 
 def plot_roc(predics, trues, title, axes, f):
-    false_positive_rate, true_positive_rate, thresholds = precision_recall_curve(trues, predics)
+    false_positive_rate, true_positive_rate, thresholds = roc_curve(trues, predics)
     axes.scatter(false_positive_rate, true_positive_rate)
     f.write(title + " \n")
     for tau in thresholds:
@@ -112,10 +123,6 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import matplotlib.animation as anim
     import types
-    with open('test_set.pkl', 'rs') as f:
-        test_set = pickle.load(f)
-    with open("test_scene.pkl", "rb") as f:
-        scene = pickle.load(f)
 
     tau_arr = np.array([10**(-x) for x in range(2, 5)])
     tau_arr = np.exp( -np.log(10) * np.linspace(0, 6, 8))
@@ -157,7 +164,7 @@ if __name__ == "__main__":
     f_lin = open("results/linear.txt", "w")
     f_ours = open("results/ours.txt", "w")
 
-    for i in range(0,5): # len(test_set)):
+    for i in range(0, len(test_set)):
         test_BB_ts = test_set[i]
 
         from process_data import BB_ts_to_curve
@@ -171,24 +178,31 @@ if __name__ == "__main__":
         print "Measured speed / sigma_L = {:f}".format( speed / scene.sigma_L )
         print "sigma_L = {:f}".format( scene.sigma_L)
         k=0
-        t_final = min(len(curve[0]), 300)
+        t_final = min(len(curve[0]), 400)
         N_steps = t_final
         #Domain is actually larger than the domain we care about
         domain = [-scene.width/2, scene.width/2, -scene.height/2, scene.height/2]
-
         ours = particle_generator(x_hat, v_hat, t_final, N_steps)
         mine = particle_generator_t(x_hat, v_hat, t_final, N_steps)
         lin = lin_generator(x_hat, v_hat, t_final, N_steps)
 
         predico, trueo, rho_arro = evaluate(ours, i, t_final, N_steps)
-        predicours.append(predico)
-        trueours.append(trueo)
         #predicm, truem = evaluate(mine, i, t_final, N_steps)
         #predicmine.append(predicm)
         #truemine.append(truem)
         predicl, truel, rho_arrl = evaluate(lin, i, t_final, N_steps)
-        prediclin.append(predicl)
-        truelin.append(truel)
+        if len(predicours) == 0:
+            predicours = predico
+            trueours = trueo
+            prediclin = predicl
+            truelin = truel
+        else:
+            ind = min(len(predicours), len(predico))
+            predicours = np.hstack((predicours[:ind], predico[:ind]))
+            trueours = np.hstack((trueours[:ind], trueo[:ind]))
+            prediclin = np.hstack((prediclin[:ind], predicl[:ind]))
+            truelin = np.hstack((truelin[:ind], truel[:ind]))
+
         for k in range(len(predico)):
 
             f, axarr = plt.subplots(2, 2)
@@ -209,7 +223,7 @@ if __name__ == "__main__":
                 rho_arro[k][0], rho_arro[k][1], domain, res= (100,100))
             #Z = Z > 1E-3
             im = axarr[1][0].pcolormesh(X,Y,Z, cmap='viridis')
-            #axarr[1][0].set_xlabel("AUC is {}".format(auco))
+            axarr[1][0].set_xlabel("AUC is {}".format(auco))
 
             bounds = [[-scene.width/2, scene.width/2], [-scene.height/2, scene.height/2]]
             bounds2 = [[-.1, 1.2], [-.1, 1.2]]
@@ -233,7 +247,7 @@ if __name__ == "__main__":
                 rho_arrl[k][0], rho_arrl[k][1], domain, res= (100,100))
             #Z = Z > 1E-3
             im = axarr[1][1].pcolormesh(X,Y,Z, cmap='viridis')
-            #axarr[1][1].set_xlabel("AUC is {}".format(aucl))
+            axarr[1][1].set_xlabel("AUC is {}".format(aucl))
 
             axarr[1][1].scatter(x, y)
 
@@ -243,6 +257,54 @@ if __name__ == "__main__":
             #plt.show()
             plt.close('all')
 
+    for t in range(len(predicours)):
+
+        f, axarr = plt.subplots(1, 2)
+        for ax in axarr:
+            ax.set_xlabel('False Positive Rate')
+            ax.set_ylabel('True Positive Rate')
+            ax.set_aspect('equal')
+            ax.set_xlim([-.1, 1.2])
+            ax.set_ylim([-.1, 1.2])
+
+
+
+
+        auco = plot_roc(predicours[t], trueours[t], "Our algorithm over all agents, t={}".format(int(t_final/float(N_steps) * t)), axarr[0], f_ours)
+
+        aucl = plot_roc(prediclin[t], truelin[t], "Linear Predictor over all agents, t={}".format(int(t_final/float(N_steps) * t)), axarr[1], f_lin)
+
+        axarr[0].set_xlabel('False Positive Rate\nAUC={}'.format(auco))
+        axarr[1].set_xlabel('False Positive Rate\nAUC={}'.format(aucl))
+
+        plt.savefig("images/precision_recall/Over All Agents_T{}.png".format(int(t_final/float(N_steps) * t)))
+        #plt.show()
+        plt.close('all')
+
+    fig = plt.figure()
+    f, axarr = plt.subplots(1, 2)
+    for ax in axarr:
+        ax.set_xlabel('False Positive Rate')
+        ax.set_ylabel('True Positive Rate')
+        ax.set_aspect('equal')
+        ax.set_xlim([-.1, 1.2])
+        ax.set_ylim([-.1, 1.2])
+
+
+
+
+    auco = plot_roc(predicours.flatten(), trueours.flatten(), "Our algorithm over all agents, time", axarr[0], f_ours)
+
+    aucl = plot_roc(prediclin.flatten(), truelin.flatten(), "Linear Predictor over all agents, time", axarr[1], f_lin)
+
+    axarr[0].set_xlabel('False Positive Rate\nAUC={}'.format(auco))
+    axarr[1].set_xlabel('False Positive Rate\nAUC={}'.format(aucl))
+
+    plt.savefig("images/precision_recall/Over All Agents_Time.png".format(int(t_final/float(N_steps) * t)))
+    #plt.show()
+    plt.close('all')
+
+    
 
 
 

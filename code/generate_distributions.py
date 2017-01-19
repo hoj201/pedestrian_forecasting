@@ -11,6 +11,7 @@ import posteriors
 from derived_posteriors import joint_lin_x_x_hat_v_hat
 from derived_posteriors import joint_k_s_x_x_hat_v_hat
 from derived_posteriors import joint_lin_x_t_x_hat_v_hat
+from derived_posteriors import joint_k_x_x_hat_v_hat
 
 
 from data import scene
@@ -91,22 +92,34 @@ def particle_generator(x_hat, v_hat, t_final, N_steps):
     x_out = x0
     yield x_out, w_out
     #For later times, the class of the agent matters.
+    w_arr_base = np.zeros((num_nl_classes, 2*N_steps+1, N_ptcl))
+    for k in range(num_nl_classes):
+        for m in range(-N_steps,N_steps+1):
+            w_arr_base[k,m] = joint_k_s_x_x_hat_v_hat(
+                k, s_max*m /N_steps, x0, x_hat, v_hat) #TODO: Memoize??
+
+    veloc = [scene.director_field_vectorized(k, x0) for k in range(num_nl_classes)]
+
     for n in range(1,N_steps):
         #The following computations handle the nonlinear classes
         t = n * t_final / float(N_steps)
-        ds = s_max / n 
+        ds = s_max / n
         w_arr = np.zeros((num_nl_classes, 2*n+1, N_ptcl))
+
         for k in range(num_nl_classes):
             for m in range(-n,n+1):
-                w_arr[k,m] = joint_k_s_x_x_hat_v_hat(
-                        k, s_max*m /n, x0, x_hat, v_hat) #TODO: Memoize??
+                w_arr[k,m] = w_arr_base[k, m]
+                s = s_max * m / n
+                v = s * veloc[k]
+                r2 = (v[0]-v_hat[0])**2 + (v[1]-v_hat[1])**2
+                w_arr[k, m] *= np.exp( -r2/(2*sigma_v**2) ) / (2*np.pi*sigma_v**2)
+                w_arr[k, m] *= 1.0/(2*s_max) * (s <= s_max) * (s >= -s_max)
                 w_arr[k,m] *= ds * dvol_nl
         x_out = np.zeros((num_nl_classes,2*n+1,2,N_ptcl))
         x_out[:,-n:,:,:] = x_arr[:,-n:,:,:]
         x_out[:,:n+1,:,:] = x_arr[:,:n+1,:,:]
         w_out = w_arr.flatten()
         x_out = np.vstack([x_out[:,:,0,:].flatten(), x_out[:,:,1,:].flatten()])
-
         #The following computations handle the linear predictor class
         w_lin = joint_lin_x_t_x_hat_v_hat(t, x_lin, x_hat, v_hat) * dy*dx
         #TODO: append regular grid and weights to x_out, w_out
