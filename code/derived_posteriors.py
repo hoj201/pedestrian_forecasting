@@ -88,7 +88,6 @@ def joint_lin_x_t_x_hat_v_hat(t, x_t, x_hat, v_hat):
     k += v_hat2 / sigma_v**2 + sqr(Dx) / sigma_x**2
     out = scene.P_of_c[-1] * np.exp( - k / 2.0 )
     
-    fig = plt.figure()
     out /= 16 * np.pi**2 * area * a
     from scipy.special import erf
     def anti_derivative(u,i):
@@ -101,7 +100,7 @@ def joint_lin_x_t_x_hat_v_hat(t, x_t, x_hat, v_hat):
     v_max = (x_t[1] + height/2) / t
     out *= anti_derivative(u_max,0) - anti_derivative(u_min,0)
 
-    out *= anti_derivative(u_max,1) - anti_derivative(u_min,1)
+    out *= anti_derivative(v_max,1) - anti_derivative(v_min,1)
     return out
 
 if __name__ == "__main__":

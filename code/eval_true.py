@@ -7,7 +7,7 @@ from generate_distributions import particle_generator, lin_generator
 from test_distribution import particle_generator as particle_generator_t
 from decimal import Decimal
 from adjustText import adjust_text
-from sklearn.metrics import roc_curve, auc
+from sklearn.metrics import roc_curve, auc, precision_recall_curve
 from visualization_routines import singular_distribution_to_image
 
 from data import scene as test_scene
@@ -79,7 +79,7 @@ def evaluate(gen, i, t_final, N_points):
     return predic, true, rho_arr
 
 def plot_roc(predics, trues, title, axes, f):
-    false_positive_rate, true_positive_rate, thresholds = roc_curve(trues, predics)
+    false_positive_rate, true_positive_rate, thresholds = precision_recall_curve(trues, predics)
     axes.scatter(false_positive_rate, true_positive_rate)
     f.write(title + " \n")
     for tau in thresholds:
@@ -157,7 +157,7 @@ if __name__ == "__main__":
     f_lin = open("results/linear.txt", "w")
     f_ours = open("results/ours.txt", "w")
 
-    for i in range(0,1): # len(test_set)):
+    for i in range(0,5): # len(test_set)):
         test_BB_ts = test_set[i]
 
         from process_data import BB_ts_to_curve
@@ -171,7 +171,7 @@ if __name__ == "__main__":
         print "Measured speed / sigma_L = {:f}".format( speed / scene.sigma_L )
         print "sigma_L = {:f}".format( scene.sigma_L)
         k=0
-        t_final = min(len(curve[0]), 150)
+        t_final = min(len(curve[0]), 300)
         N_steps = t_final
         #Domain is actually larger than the domain we care about
         domain = [-scene.width/2, scene.width/2, -scene.height/2, scene.height/2]
@@ -191,7 +191,7 @@ if __name__ == "__main__":
         truelin.append(truel)
         for k in range(len(predico)):
 
-            f, axarr = plt.subplots(2, 2, sharey=True)
+            f, axarr = plt.subplots(2, 2)
             for ax in axarr[0]:
                 ax.set_xlabel('False Positive Rate')
                 ax.set_ylabel('True Positive Rate')
@@ -209,9 +209,10 @@ if __name__ == "__main__":
                 rho_arro[k][0], rho_arro[k][1], domain, res= (100,100))
             #Z = Z > 1E-3
             im = axarr[1][0].pcolormesh(X,Y,Z, cmap='viridis')
-            axarr[1][0].set_xlabel("AUC is {}".format(auco))
+            #axarr[1][0].set_xlabel("AUC is {}".format(auco))
 
             bounds = [[-scene.width/2, scene.width/2], [-scene.height/2, scene.height/2]]
+            bounds2 = [[-.1, 1.2], [-.1, 1.2]]
             axarr[1][0].set_xlim(bounds[0])
             axarr[1][0].set_ylim(bounds[1])
             axarr[1][1].set_xlim(bounds[0])
@@ -232,18 +233,13 @@ if __name__ == "__main__":
                 rho_arrl[k][0], rho_arrl[k][1], domain, res= (100,100))
             #Z = Z > 1E-3
             im = axarr[1][1].pcolormesh(X,Y,Z, cmap='viridis')
-            axarr[1][1].set_xlabel("AUC is {}".format(aucl))
-            
-            axarr[1][1].scatter(rho_arrl[k][0][0], rho_arrl[k][0][1], c=rho_arrl[k][1], edgecolor="none")
-
+            #axarr[1][1].set_xlabel("AUC is {}".format(aucl))
 
             axarr[1][1].scatter(x, y)
 
             axarr[1][1].plot(xs, ys)
 
-            axarr[1][1].set_aspect('equal', 'datalim')
-
-            plt.savefig("images/precision_recall/roc_agent{}_T{}.png".format(i, int(t_final/float(N_steps) * k)))
+            plt.savefig("images/precision_recall/{}/pr_agent{}_T{}.png".format(i,i, int(t_final/float(N_steps) * k)))
             #plt.show()
             plt.close('all')
 

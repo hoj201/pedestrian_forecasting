@@ -118,9 +118,9 @@ def particle_generator(x_hat, v_hat, t_final, N_steps):
     pass
 
 def lin_generator(x_hat, v_hat, t_final, N_steps):
-    x_span = np.linspace( -scene.width/2, scene.width/2, 70)
+    x_span = np.linspace( -scene.width/2, scene.width/2, 250)
     dx = x_span[1] - x_span[0]
-    y_span = np.linspace( -scene.height/2, scene.height/2, 70)
+    y_span = np.linspace( -scene.height/2, scene.height/2, 250)
     dy = y_span[1] - y_span[0]
     X,Y = np.meshgrid(x_span, y_span)
     x_lin = np.vstack( [X.flatten(), Y.flatten()])
