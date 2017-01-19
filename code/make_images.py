@@ -50,7 +50,7 @@ if __name__ == "__main__":
     with open("test_scene.pkl", "rb") as f:
         scene = pickle.load(f)
 
-    for i in range(0, len(test_set)):
+    for i in range(0,1): # len(test_set)):
         test_BB_ts = test_set[i]
 
         from process_data import BB_ts_to_curve
@@ -67,8 +67,8 @@ if __name__ == "__main__":
         print "Measured speed / sigma_L = {:f}".format( speed / scene.sigma_L )
         print "sigma_L = {:f}".format( scene.sigma_L)
         k=0
-        N_steps = 120
-        t_final = len(curve[0])
+        t_final = min(len(curve[0]), 150)
+        N_steps = t_final
         #Domain is actually larger than the domain we care about
         domain = [-scene.width, scene.width, -scene.height, scene.height]
 
@@ -82,6 +82,7 @@ if __name__ == "__main__":
             if n%5==0:
                 print "{} steps processed for agent {}.".format(n, i)
                 #fig = plt.figure()
+
                 X,Y,Z = singular_distribution_to_image(
                         x_arr, w_arr, domain, res=res)
                 im = plt.pcolormesh(X,Y,Z, cmap='viridis')
@@ -95,25 +96,25 @@ if __name__ == "__main__":
                 bounds = [test_scene.width, test_scene.height]
                 rho = (x_arr, w_arr)
                 rt = lambda x: rho_true(i, int(t_final/float(N_steps) * n), test_set, x)
-                tau = 0.001
+                tau = 1.39E-4
                 width = test_scene.bbox_width/3
-                evaluate_plane(bounds, rho, rt, tau, width, debug_level=1)
+                evaluate_plane(bounds, rho, rt, width, debug_level=1)
                 plt.axis("off")
                 plt.plot(curve[0], curve[1], color="red")
-                plt.savefig("tmp/img{}_{}.png".format(n, i))
-                plt.savefig("frames/frame{}agent{}".format(int(t_final/float(N_steps) * n), i))
+                plt.savefig("images/tmp/img{}_{}.png".format(n, i))
+                plt.savefig("images/frames/frame{}agent{}".format(int(t_final/float(N_steps) * n/5), i))
 
                 plt.clf()
             n += 1
         fig = plt.figure()
         for t in range(N_steps):
             if t%5==0:
-                img = image.imread("tmp/img{}_{}.png".format(t, i))
+                img = image.imread("images/tmp/img{}_{}.png".format(t, i))
                 im = plt.imshow(img)
                 plt.axis("off")
                 ims.append([im])
         ani = anim.ArtistAnimation(fig, ims, interval=70, blit=False,repeat_delay=1000)
-        ani.save('gifs/agent{}.gif'.format(i), writer='imagemagick', fps=10)
+        ani.save('images/gifs/agent{}.gif'.format(i), writer='imagemagick', fps=10)
         print "\a"
 
         #plt.show()

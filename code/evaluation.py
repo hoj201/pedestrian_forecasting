@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 
-def classifier(bounds, width, rho, tau):
+def classifier(bounds, width, rho):
     #takes:
     #bounds: [width, height]
     #rho: (np.array(n_points, 2), np.array(n_points))
@@ -43,6 +43,7 @@ def classifier(bounds, width, rho, tau):
         pts_x = pts[:,start:end]
         weights_x = weights[start:end]
 
+
         #Sort with respect to y-component
         indices = np.argsort(pts_x[1])
         pts_x = pts_x[:,indices]
@@ -62,7 +63,7 @@ def classifier(bounds, width, rho, tau):
     bboxes = np.array(bboxes)
     return sums, bboxes
 
-def true_classifier(E, rho_true, tau):
+def true_classifier(E, rho_true):
     #takes:
     #E: [[[box_width, box_height], [box_x, box_y]]]
     #rho_true: function
@@ -81,21 +82,21 @@ def true_classifier(E, rho_true, tau):
 
 
 def precision(pred, truth):
-    if float(len(np.where(truth)[0])) != 0:
-        return len(np.where(np.logical_and(pred, truth))[0]) / float(len(np.where(truth)[0]))
+    if float(len(np.where(pred)[0])) != 0:
+        return len(np.where(np.logical_and(pred, truth))[0]) / float(len(np.where(pred)[0]))
     else:
         return 1
 
 def recall(pred, truth):
-    if float(len(np.where(pred)[0])) != 0:
-        return len(np.where(np.logical_and(pred, truth))[0]) / float(len(np.where(pred)[0]))
+    if float(len(np.where(truth)[0])) != 0:
+        return len(np.where(np.logical_and(pred, truth))[0]) / float(len(np.where(truth)[0]))
     else:
         return 1
 
 def accuracy(pred, truth):
     return len(np.where(pred == truth)[0]) / float(len(truth))
 
-def evaluate_plane(bbox, rho, rho_true, tau, width, debug_level=0):
+def evaluate_plane(bbox, rho, rho_true, width, debug_level=0):
     #Takes:
     #bbox: np.array(2): [scene_width, scene_height]
     #rho: (np.array(n_points, 2), np.array(n_points))
@@ -108,49 +109,12 @@ def evaluate_plane(bbox, rho, rho_true, tau, width, debug_level=0):
     bboxes = []
     #create all of the bounding boxes
     #Create prediction
-    predic, bboxes = classifier(bbox, width, rho, tau)
-    pred = predic > tau
+    predic, bboxes = classifier(bbox, width, rho)
     #create truth for comparison
-    truth = true_classifier(bboxes, rho_true, tau)
-    true = truth > tau
-    pres = precision(pred, true)
-    rec = recall(pred, true)
-    acc = accuracy(pred, true)
-    predic = predic[np.where(pred)[0]]
-    truth = truth[np.where(true)[0]]
+    truth = true_classifier(bboxes, rho_true)
+    true = truth > 0
 
-    if debug_level > 0:
-        #plotting bollocks
-        true_bboxes = bboxes[np.where(true)[0]]
-        pred_bboxes = bboxes[np.where(pred)[0]]#[34:]
-        true_xs = true_bboxes[:, :, 0].flatten()[1::2]
-        true_ys = true_bboxes[:, :, 1].flatten()[1::2]
-        pred_xs = pred_bboxes[:, :, 0].flatten()[1::2]
-        pred_ys = pred_bboxes[:, :, 1].flatten()[1::2]
-        for box in pred_bboxes:
-            x0 = box[1][0] - box[0][0]/2.0
-            x1 = box[1][0] + box[0][0]/2.0
-            y = box[1][1] - box[0][1]/2.0
-            plt.plot([x0, x1], [y, y], color='purple', linestyle='-', linewidth=.5)
-            x = box[1][0] + box[0][0]/2.0
-            y0 = box[1][1] - box[0][1]/2.0
-            y1 = box[1][1] + box[0][1]/2.0
-            plt.plot([x, x], [y0, y1], color='purple', linestyle='-', linewidth=.5)
-        for box in true_bboxes:
-            x0 = box[1][0] - box[0][0]/2.0
-            x1 = box[1][0] + box[0][0]/2.0
-            y = box[1][1] - box[0][1]/2.0
-            plt.plot([x0, x1], [y, y], color='orange', linestyle='-', linewidth=.5)
-            x = box[1][0] + box[0][0]/2.0
-            y0 = box[1][1] - box[0][1]/2.0
-            y1 = box[1][1] + box[0][1]/2.0
-            plt.plot([x, x], [y0, y1], color='orange', linestyle='-', linewidth=.5)
-        plt.scatter(true_xs, true_ys, color="red", s=10)
-        plt.scatter(pred_xs, pred_ys, color="blue", s=10)
-        if debug_level > 1:
-            plt.show()
-
-    return (pres, rec, acc)# pred, true)
+    return  (predic, true)
 
 
 
