@@ -16,10 +16,12 @@ from data import sets as test_sets
 
 from sys import argv
 if len(argv) < 2:
+    scene_number = 0
     test_scene = test_scenes[0]
     scene = test_scene
     test_set = test_sets[0]
 else:
+    scene_number = int(argv[1])
     test_scene = test_scenes[int(argv[1])]
     scene = test_scene
     test_set = test_sets[int(argv[1])]
@@ -92,20 +94,6 @@ def evaluate(gen, i, t_final, N_points):
 def plot_roc(predics, trues, title, axes, f):
     false_positive_rate, true_positive_rate, thresholds = roc_curve(trues, predics)
     axes.scatter(false_positive_rate, true_positive_rate)
-    f.write(title + " \n")
-    for tau in thresholds:
-        f.write("tau = %.2E" % Decimal(tau) + "\n")
-        pred = predics > tau
-        fn = np.sum(np.logical_and(trues, np.logical_not(pred)))
-        f.write("FN: {}".format(fn) + "\n")
-        tn = np.sum(np.logical_not(trues))
-        f.write("TN: {}".format(tn) + "\n")
-        tp = np.sum(trues)
-        f.write( "TP: {}".format(tp) + "\n")
-        fp = np.sum(np.logical_and(pred, np.logical_not(trues)))
-        f.write( "FP: {}".format(fp) + "\n")
-        f.write( "FPR = {}".format(float(fp)/(fp + tn)) + "\n")
-        f.write( "TPR = {}".format(float(tp)/(tp + fn)) + "\n")
     txts = []
     #for i in range(len(false_positive_rate)):
         #txts.append(axes.text(false_positive_rate[i], true_positive_rate[i], '%.2E' % Decimal(thresholds[i])))
@@ -253,7 +241,7 @@ if __name__ == "__main__":
 
             axarr[1][1].plot(xs, ys)
 
-            plt.savefig("images/precision_recall/{}/pr_agent{}_T{}.png".format(i,i, int(t_final/float(N_steps) * k)))
+            #plt.savefig("images/precision_recall/{}/pr_agent{}_T{}.png".format(scene_number,i, int(t_final/float(N_steps) * k)))
             #plt.show()
             plt.close('all')
 
@@ -270,14 +258,14 @@ if __name__ == "__main__":
 
 
 
-        auco = plot_roc(predicours[t], trueours[t], "Our algorithm over all agents, t={}".format(int(t_final/float(N_steps) * t)), axarr[0], f_ours)
+        auco = plot_roc(predicours[t], trueours[t], "Our algorithm over all agents, scene={}, t={}".format(scene_number, int(t_final/float(N_steps) * t)), axarr[0], f_ours)
 
-        aucl = plot_roc(prediclin[t], truelin[t], "Linear Predictor over all agents, t={}".format(int(t_final/float(N_steps) * t)), axarr[1], f_lin)
+        aucl = plot_roc(prediclin[t], truelin[t], "Linear Predictor over all agents, scene={},  t={}".format(scene_number, int(t_final/float(N_steps) * t)), axarr[1], f_lin)
 
         axarr[0].set_xlabel('False Positive Rate\nAUC={}'.format(auco))
         axarr[1].set_xlabel('False Positive Rate\nAUC={}'.format(aucl))
 
-        plt.savefig("images/precision_recall/Over All Agents_T{}.png".format(int(t_final/float(N_steps) * t)))
+        plt.savefig("images/precision_recall/{}/Over All Agents_T{}.png".format(scene_number, int(t_final/float(N_steps) * t)))
         #plt.show()
         plt.close('all')
 
@@ -300,7 +288,7 @@ if __name__ == "__main__":
     axarr[0].set_xlabel('False Positive Rate\nAUC={}'.format(auco))
     axarr[1].set_xlabel('False Positive Rate\nAUC={}'.format(aucl))
 
-    plt.savefig("images/precision_recall/Over All Agents_Time.png".format(int(t_final/float(N_steps) * t)))
+    plt.savefig("images/precision_recall/Scene {} Over All Agents_Time.png".format(scene_number, int(t_final/float(N_steps) * t)))
     #plt.show()
     plt.close('all')
 
