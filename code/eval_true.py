@@ -16,7 +16,7 @@ from data import sets as test_sets
 
 from sys import argv
 if len(argv) < 2:
-    scene_number = 0
+    qscene_number = 0
     test_scene = test_scenes[0]
     scene = test_scene
     test_set = test_sets[0]
@@ -152,7 +152,7 @@ if __name__ == "__main__":
     f_lin = open("results/linear.txt", "w")
     f_ours = open("results/ours.txt", "w")
 
-    for i in range(0, 5):#len(test_set)):
+    for i in range(0, len(test_set)):
         test_BB_ts = test_set[i]
 
         from process_data import BB_ts_to_curve
@@ -166,7 +166,7 @@ if __name__ == "__main__":
         print "Measured speed / sigma_L = {:f}".format( speed / scene.sigma_L )
         print "sigma_L = {:f}".format( scene.sigma_L)
         k=0
-        t_final = min(len(curve[0]), 400)
+        t_final = min(len(curve[0]), 100)
         N_steps = t_final
         #Domain is actually larger than the domain we care about
         domain = [-scene.width/2, scene.width/2, -scene.height/2, scene.height/2]
@@ -178,6 +178,8 @@ if __name__ == "__main__":
         #predicm, truem = evaluate(mine, i, t_final, N_steps)
         #predicmine.append(predicm)
         #truemine.append(truem)
+        auc_ours = []
+        auc_lin = []
         predicl, truel, rho_arrl = evaluate(lin, i, t_final, N_steps)
         if len(predicours) == 0:
             predicours = predico
@@ -199,14 +201,14 @@ if __name__ == "__main__":
                 ax.set_ylabel('True Positive Rate')
                 ax.set_xlim([-.1, 1.2])
                 ax.set_ylim([-.1, 1.2])
-            
+
 
 
 
             auco = plot_roc(predico[k], trueo[k], "Our Algorithm for agent {}, t={}".format(i, int(t_final/float(N_steps) * k)), axarr[0][0], f_ours)
-
+            auc_ours.append(auco)
             aucl = plot_roc(predicl[k], truel[k], "Linear Predictor for agent {}, t={}".format(i, int(t_final/float(N_steps) * k)), axarr[0][1], f_lin)
-
+            auc_lin.append(aucl)
             X,Y,Z = singular_distribution_to_image(
                 rho_arro[k][0], rho_arro[k][1], domain, res= (100,100))
             #Z = Z > 1E-3
@@ -245,6 +247,21 @@ if __name__ == "__main__":
             #plt.show()
             plt.close('all')
 
+        fig = plt.figure()
+        ax = plt.gca()
+        ax.set_ylim([-.1, 1.2])
+        plt.title("AUC for agent {}".format(i))
+        ax.plot([x for x in range(len(auc_ours))], auc_ours, label = "Ours")
+        ax.plot([x for x in range(len(auc_lin))], auc_lin, label = "Linear")
+        ax.set_xlabel('Frames')
+        ax.set_ylabel('AUC')
+        ax.legend()
+        plt.savefig("images/precision_recall/{}/AUC_for_agent_{}.png".format(scene_number, i))
+        plt.close('all')
+
+
+
+
     for t in range(len(predicours)):
 
         f, axarr = plt.subplots(1, 2)
@@ -259,7 +276,7 @@ if __name__ == "__main__":
 
 
         auco = plot_roc(predicours[t], trueours[t], "Our algorithm over all agents, scene={}, t={}".format(scene_number, int(t_final/float(N_steps) * t)), axarr[0], f_ours)
-
+        auc
         aucl = plot_roc(prediclin[t], truelin[t], "Linear Predictor over all agents, scene={},  t={}".format(scene_number, int(t_final/float(N_steps) * t)), axarr[1], f_lin)
 
         axarr[0].set_xlabel('False Positive Rate\nAUC={}'.format(auco))
