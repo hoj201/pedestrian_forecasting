@@ -2,7 +2,7 @@ import pickle
 import os
 scenes = []
 sets = []
-for file in os.listdir("pickles"):
+for file in sorted(os.listdir("pickles")):
     if file.endswith("scene.pkl"):
         with open("pickles/" + file, "rb") as f:
             scenes.append(pickle.load(f))
