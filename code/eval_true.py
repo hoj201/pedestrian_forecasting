@@ -152,7 +152,7 @@ if __name__ == "__main__":
     f_lin = open("results/linear.txt", "w")
     f_ours = open("results/ours.txt", "w")
 
-    for i in range(0, len(test_set)):
+    for i in range(0, 5):#len(test_set)):
         test_BB_ts = test_set[i]
 
         from process_data import BB_ts_to_curve
