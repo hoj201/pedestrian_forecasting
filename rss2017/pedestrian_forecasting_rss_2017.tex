@@ -14,7 +14,7 @@
 \usepackage[bookmarks=true]{hyperref}
 
 \pdfinfo{
-   /Author (Henry O. Jacobs)
+   /Author (Hal 9000)
    /Title  (Robots: Our new overlords)
    /CreationDate (D:20101201120000)
    /Subject (Robots)
@@ -81,10 +81,28 @@ The abstract goes here.
 
 \section{Model}
 %Describe scenario in english.
-Our goal is to generate a time-dependent pdf over space, $\rho(x,t)$, which predicts the true location of an agent in the future.
-The input to the algorithm is a noisy measurement of position and velocity in the present, as well as an archive of past trajectories that have run through the scene.
+Our goal is to generate a time-dependent probability density over $\mathbb{R}^2$, which predicts the true location of an agent in the future.
+The input to the algorithm at runtime is a noisy measurement of position and velocity, $\hat{x}_0, \hat{v}_0 \in \mathbb{R}^2$.
+If the (unknown) location of agent at time $t$ is given by $x_t \in \mathbb{R}^2$, then the distribution we seek is the posterior $\rho_t(x_t) := \Pr( x_t \mid \hat{x}_0, \hat{v}_0 )$.
 
-\section{The sensor model}
+In order to derive an expression for $\rho$ we will build a probabilistic graphical model.
+Our model has two parts.
+First, we specify how measurements of position and velocity, $\hat{x}_0$ and $\hat{v}_0$, are related to the true position and velocity, $x_0$ and $v_0 := \left. \frac{d}{dt} \right|_{t=0} x_t$.
+This determines posteriors such as $\Pr(\hat{x}_0 \mid x_0)$.
+Secondly, we must know how the true initial conditions, $x_0$ and $v_0$ determine the final condition of $x_t$.
+This determines posteriors like $\Pr(x_t \mid x_0, v_0, f )$, where $f$ refers to other parameters which will be introduced later.
+
+It is a simple exercise in probability to derive
+\begin{align*}
+	\rho_t(x_t) &= \Pr( x_t \mid \hat{x}_0, \hat{v}_0 ) \\
+	&\propto \Pr( x_t, \hat{x}_0, \hat{v}_0 ) \\
+	&= \int \Pr( x_t \mid  x_0, v_0, f ) \\
+	 &\qquad \Pr( \hat{x}_0  \mid x_0 ) \Pr( \hat{v}_0 \mid v_0 ) dx_0 \, dv_0 \, df
+\end{align*}
+
+In the next few subsections we will describe the posteriors used in the above calculation.
+
+\subsection{The sensor model}
 At time $t=0$, we obtain a noisy reading of position, $\hat{x}_0 \in \mathbb{R}^2$.
 We assume that our measurements come from Gaussian noise about the true location $x_0 \in \mathbb{R}^2$,
 so that $\Pr(\hat{x}_0 \mid x_0 ) = (2\pi \sigma_x^2)^{-1} \exp( - \| \hat{x}_0 - x_0 \|^2 / (2 \sigma_x^2) )$.
@@ -94,45 +112,105 @@ We should note that $\hat{v}_0$ is typically derived from multiple measurements 
 This induces a linear inequality between $\sigma_x$ and $\sigma_v$.
 For example, a first order finite difference would yield $\sigma_v \geq 2 \sigma_x / \Delta t$ where $\Delta t > 0$ is the time-step size between consecutive measurements of position.
 
-Therefore, at time $0$, we have $\rho(x,0) = \Pr(\hat{x}_0 \mid x_0 )$.
+\subsection{The motion model}
+All agents are initialized within some rectangular region $D \subset \mathbb{R}^2$.
+Once initialized, agents come in two flavors: linear and nonlinear.
+Linear agents move in straight lines at constant velocity.
+Thus $x_t = x_0 + t v_0$ and so we have the posterior
+\begin{align*}
+	\Pr( x_t \mid x_0, v_0, lin) = \delta( x_t - x_0 - t v_0 ).
+\end{align*}
+We will assume linear agents also satisfy the posteriors
+\begin{align*}
+	\Pr( x_0 \mid lin ) \sim \mathcal{U}( D)\quad,\quad \Pr( v_0 \mid lin ) \sim \mathcal{N}( 0 , \sigma_L).
+\end{align*}
 
-In order to solve $\rho(x,t)$ at later times, we need to assume a dynamical model.
-In our model, agents move through space under the dynamics of the form
-$$
-	\frac{dx}{dt}(t) = s \cdot X_k(x(t))
-$$
-where $X_k$ is a director-field from a finite collection $\{X_1, \dots, X_n\}$, and $s \in \mathbb{R}$.
-It is assumed that $k$ and $s$ are both constant in time.
-Under this model, if you know $x_0$ precisely, and you know $k$ and $s$, then you know the full curve $x(t)$ for all time.
-Generally, we do not know $x_0$ or $k$ or $s$ precisely.
-However, we can consider the Bayesian network
+If the agent is of nonlinear type, then we assume the dynamics take the form
+\begin{align}
+	\frac{dx_t}{dt} \equiv v_t = s \cdot X_k(x_t) \label{eq:ode}
+\end{align}
+where $X_k$ is a vector-field from a finite collection $\{X_1, \dots, X_n\}$, and $s \in \mathbb{R}$.
+This collection is learned from the data-set.
+It is assumed that $k$ and $s$ are both constant in time, so that the position $x_t$ is determined from the
+tripe $(x_0,k,s)$ by integrating \eqref{eq:ode}.
+In other words, we have the posterior
+\begin{align*}
+	\Pr( x_t \mid x_0 , k , s) = \delta( x_t - \Phi^{t}_{k,s}(x_0) )
+\end{align*}
+where $\Phi^{t}_{k,s}$ is the flow-map of the vector field $s \cdot X_k$ up to time $t$.
+It is notable, that the variables $k,s$ and $x_0$ determine $v_0$.
+Thus we also have the posterior
+\begin{align*}
+	\Pr( v_0 \mid k,s,x_0) = \delta( v_0 -s X_k(x_0) ).
+\end{align*}
+In summary, the agent flavors are parametrized by the set
+\begin{align*}
+	F = \{ lin \} \cup \left( \mathbb{R} \times \{ 1 , \dots, n \} \right)
+\end{align*}
+and each flavor determines the sort of motion we should expect from that agent.
+
+\subsection{The full model}
+Concatenating the measurement model with our motion model yields the Bayesian network
 \begin{center}
 \begin{tikzpicture}[thick, var/.style={circle,draw,thin,rounded corners,shade,top color=blue!50,minimum size = 4mm}]
-	\node[var] (s) {$s$};
-	\node[var] (k) [right=of s]{$k$};
-	\node[var] (x) [right=of k] {$x_0$};
-	\node[var] (v) [below=of x] {$v$};
+	\node[var] (f) {$f$};
+	\node[var] (x) [right=of f] {$x_0$};
+	\node[var] (v) [below=of x] {$v_0$};
 	\node[var] (x_hat) [right=of x] {$\hat{x}_0$};
 	\node[var] (v_hat) [right=of v] {$\hat{v}_0$};
-	\node[var] (rho) [above=of x] {$\rho(x,t)$};
+	\node[var] (x_t) [left=of v] {$x_t$};
 	
-	\draw[->] (s.east) to (rho.west);
-	\draw[->] (s.east) to (v.west);
-	\draw[->] (k.north east) to (rho.south west);
-	\draw[->] (k.east) to (x.west);
-	\draw[->] (k.south east) to (v.north west);
-	\draw[->] (x.north) to (rho.south);
+	\draw[->] (f.east) to (x.west);
+	\draw[->] (f.south east) to (v.north west);
+	\draw[->] (f.south) to (x_t.north);
+	\draw[->] (v.west) to (x_t.east);
+	\draw[->] (x.south west) to (x_t.north east);
 	\draw[->] (x.south) to (v.north);
 	\draw[->] (x.east) to (x_hat.west);
 	\draw[->] (v.east) to (v_hat.west);
 \end{tikzpicture}
 \end{center}
-Which allows us to derive $\rho(x,t)$ by appropriately marginalizing over the full joint probability $\Pr(x(t), x_0, v_0, \hat{x}_0, \hat{v}_0, k, s)$.
+Which allows us to derive $\rho_t$ by appropriately marginalizing over the full joint probability $\Pr(x_t, x_0, v_0, \hat{x}_0, \hat{v}_0, f)$. [Reference]
+Specifically, the vector-fields $\{X_1,\dots,X_n\}$ as well as the probabilities $\Pr( x_0 \mid k )$, $\Pr(lin)$, and $\Pr( k )$ will be learned from the data.
+We will also assume $\Pr(s,k) = \Pr(s \mid k ) \Pr(k)$ where 
+\begin{align*}
+	\Pr(s \mid k ) \sim \mathcal{U}([-s_{\max}, s_{\max} ] ) \quad \text{for } k=1,\dots,n
+\end{align*}
+and $s_{\max} > 0$ is learned from the data.
+We describe the learning step in more detail in section \ref{sec:learning}.
+
+The desired posterior, $\rho_t$ is a posterior over $D$ given by
+\begin{align*}
+	&\rho_t(x_t) = \Pr(x_t \mid \hat{x}_0, \hat{v}_0) \\
+		&= \frac{ \Pr( x_t, \hat{x}_0, \hat{v}_0) }{ \Pr( \hat{x}_0, \hat{v}_0 ) } \\
+		&= \frac{1}{ \Pr( \hat{x}_0, \hat{v}_0 ) } \int \Pr( x_t , x_0, v_0, \hat{x}_0, \hat{v}_0 , f ) dx_0\, dv_0\, df
+\end{align*}
+and the integrand is given, via the Bayesian network.
+In particular, for $f = (k,s)$ we have
+\begin{align*}
+	 &\Pr( x_t , x_0, v_0, \hat{x}_0, \hat{v}_0 , k,s) =\\
+	 &\quad \Pr( x_t \mid x_0 , k, s) \cdot \Pr( v_0 \mid x_0, k , s ) \cdot \\
+	 &\quad \Pr( \hat{x}_0 \mid x_0 ) \cdot \Pr( \hat{v}_0 \mid v_0 ) \cdot \Pr(k) \cdot \Pr(s \mid k),
+\end{align*}
+and for $f = lin$ we have
+\begin{align*}
+	 &\Pr( x_t , x_0, v_0, \hat{x}_0, \hat{v}_0 , lin) =\\
+	 &\quad \Pr( x_t \mid x_0 , v_0, lin) \cdot \Pr( v_0 \mid x_0, lin ) \cdot \\
+	 &\quad \Pr( \hat{x}_0 \mid x_0 ) \cdot \Pr( \hat{v}_0 \mid v_0 ) \cdot \Pr(lin).
+\end{align*}
+
+The abundance of Dirac deltas and Gaussians allows the integrals involved in computing $\rho_t$ to be solved in closed form
+as smooth functions over $\mathbb{R}^2$.
 
 \subsection{Inverse optimal control}
-This section is optional.  Describe how director-fields are solutions of optimization problems.
+In this optional subsection, we illustrate how we can restrict the vector-fields $X_k$, so that the nonlinear agents move along trajectories which solve relavant optimal control problems.
+In particular, if we force $X_k$ to be of unit magnitude, in that $\| X_k(x) \|_2 = 1$ for all $x \in \mathbb{R}^2$.
+Then a solution $x(t)$ solves the optimal control problem
+\begin{align*}
+	
+\end{align*}
 
-\section{Learning}
+\section{Learning} \label{sec:learning}
   Describe how $\Pr(x \mid k)$, the director-fields, and $\sigma_x$ are learned without using math.
   Math will be relegated to the appendix.
   
