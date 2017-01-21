@@ -254,7 +254,7 @@ if __name__ == "__main__":
         ax.set_xlabel('Frames')
         ax.set_ylabel('AUC')
         ax.legend()
-        plt.savefig("images/precision_recall/{}/AUC_for_agent_{}.png".format(scene_number, i))
+        plt.savefig("images/precision_recall/{}/{}AUC_for_agent_{}.png".format(scene_number, scene_number, i))
         plt.close('all')
 
 
