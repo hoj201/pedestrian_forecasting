@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scene import Scene
 import posteriors
 
-def visualize_cluster( scene, k ):
+def visualize_cluster(scene_instance, k):
     """ Displays a plot of all the clusters and there potential functions
 
     args:
@@ -15,7 +15,6 @@ def visualize_cluster( scene, k ):
         field.
     """
     assert( k < scene.num_nl_classes )
-    print scene.num_nl_classes
     cluster = scene.clusters[k]
     fig, ax_arr = plt.subplots( 1 , 2 , figsize=(15,5) )
     width = scene.width
@@ -98,10 +97,9 @@ def singular_distribution_to_image(pts, weights, domain, res=(50,50)):
     return X,Y,Z
 
 if __name__ == '__main__':
-    with open("test_scene.pkl", "rb") as f:
-        import pickle
-        scene = pickle.load(f)
-    visualize_cluster( scene, 0)
+    from data import scene
+    for k in range(scene.num_nl_classes):
+        visualize_cluster(scene, k)
 
     print "Testing routine for visualizing singular distributions"
     weights = np.ones(100000)
