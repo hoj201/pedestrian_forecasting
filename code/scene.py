@@ -105,11 +105,12 @@ class Scene():
                 forward_curve = odeint(ode_forward, x0, t_span).transpose()
                 backward_curve = odeint(ode_backward, x0, t_span).transpose()
                 #Compute variance of (generated-given)/t -> kappa_k
-                forward_std = ((forward_curve)/(t_span+1)).std()
-                backward_std = ((backward_curve)/(t_span+1)).std()
+                forward_std = ((curve-forward_curve)/(t_span+1)).std()
+                backward_std = ((curve-backward_curve)/(t_span+1)).std()
                 kappa_per_class[k] = min( forward_std, backward_std )
             kappa_per_curve[i] = kappa_per_class.min()
         self.kappa = kappa_per_curve.mean()
+        print "kappa = %f" % self.kappa
 
     #--------------------------------------------------------------------------
     # METHODS

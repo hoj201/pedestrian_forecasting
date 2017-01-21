@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scene import Scene
 import posteriors
 
-def visualize_cluster(scene_instance, k):
+def visualize_cluster(scene, k):
     """ Displays a plot of all the clusters and there potential functions
 
     args:
