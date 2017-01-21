@@ -133,6 +133,7 @@ class Scene():
                 x[1]/self.height,
                 self.theta_coeffs[k]
                 )
+        #NOTE:  Yes, I know this scaling seems off by a factor of 2.  At the moment, this is correct. However, this should be refactored so that we use a scaling convention that is consistent with the rest of the code-base (e.g. posteriors.x_given_k
         out1 = np.array([np.cos(theta), np.sin(theta)])
         if jac:
             dtheta_dx = legval2d(

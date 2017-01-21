@@ -1,6 +1,6 @@
 import numpy as np
 from numpy.polynomial.legendre import legval2d, legder
-
+#NOTE:  This needs to be refactored so that scaling conventions are consistent with the rest of the code base
 regularization_coefficient = 1.0
 
 def get_angle( points, alpha, k_max, width, height):
