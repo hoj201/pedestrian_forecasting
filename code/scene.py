@@ -18,6 +18,7 @@ class Scene():
         sigma_L: standard deviation of velocity
         sigma_x: standard deviation of position measurements
         sigma_v: standard deviation of velocity measurements
+        kappa: indicates how much to blur the output of generate_distributions.py
     
     methods:
        director_field_vectorized:  A routine for computing a vector field.
