@@ -86,6 +86,30 @@ class Scene():
                     )
         self.theta_coeffs = theta_coeffs
 
+        #Learn yet another variance
+        kappa_per_curve = np.zeros(len(curve_ls))
+        kappa_per_class = np.zeros(self.num_nl_classes)
+        for i, curve in enumerate(curve_ls):
+            #For each training compute x0, avg_speed
+            x0 = curve[:,0]
+            n = curve.shape[1]
+            dx = curve[:,1:] - curve[:,:n-1]
+            speed = sum(np.sqrt(dx[0]**2+dx[1]**2)) / (n-1)
+            t_span = np.arange(n)
+            #for each k, generate a curve.
+            for k in range(self.num_nl_classes):
+                ode_forward = lambda x,t: speed * self.director_field(k,x)
+                ode_backward = lambda x,t: -speed * self.director_field(k,x)
+                from scipy.integrate import odeint
+                forward_curve = odeint(ode_forward, x0, t_span).transpose()
+                backward_curve = odeint(ode_backward, x0, t_span).transpose()
+                #Compute variance of (generated-given)/t -> kappa_k
+                forward_std = ((forward_curve)/(t_span+1)).std()
+                backward_std = ((backward_curve)/(t_span+1)).std()
+                kappa_per_class[k] = min( forward_std, backward_std )
+            kappa_per_curve[i] = kappa_per_class.min()
+        self.kappa = kappa_per_curve.mean()
+
     #--------------------------------------------------------------------------
     # METHODS
     #--------------------------------------------------------------------------
