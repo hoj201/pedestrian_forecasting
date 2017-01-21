@@ -1,17 +1,23 @@
 \documentclass[conference]{IEEEtran}
 \usepackage{times}
 
-\usepackage{amsmath,amssymb}
+\usepackage{amsmath,amssymb,amsthm}
 
 %  For drawing Bayesian networks
 \usepackage{tikz}
 \usetikzlibrary{arrows,positioning}
 \usepackage{tikz-cd}
 
+%  For theorems, etc
+\newtheorem{thm}{Theorem}
+
 % numbers option provides compact numerical references in the text. 
 \usepackage[numbers]{natbib}
 \usepackage{multicol}
 \usepackage[bookmarks=true]{hyperref}
+
+% Custom commands
+\newcommand{\pder}[2]{\ensuremath{\frac{\partial #1}{\partial #1}}}
 
 \pdfinfo{
    /Author (Hal 9000)
@@ -86,21 +92,16 @@ The input to the algorithm at runtime is a noisy measurement of position and vel
 If the (unknown) location of agent at time $t$ is given by $x_t \in \mathbb{R}^2$, then the distribution we seek is the posterior $\rho_t(x_t) := \Pr( x_t \mid \hat{x}_0, \hat{v}_0 )$.
 
 In order to derive an expression for $\rho$ we will build a probabilistic graphical model.
-Our model has two parts.
-First, we specify how measurements of position and velocity, $\hat{x}_0$ and $\hat{v}_0$, are related to the true position and velocity, $x_0$ and $v_0 := \left. \frac{d}{dt} \right|_{t=0} x_t$.
-This determines posteriors such as $\Pr(\hat{x}_0 \mid x_0)$.
-Secondly, we must know how the true initial conditions, $x_0$ and $v_0$ determine the final condition of $x_t$.
-This determines posteriors like $\Pr(x_t \mid x_0, v_0, f )$, where $f$ refers to other parameters which will be introduced later.
+Our model assumes we have noisy information about agents, and each agent moves with some intention through the world according to there own noisy perception.
+This allows our model to be divided into three parts:
+\begin{enumerate}
+	\item Reality:  This is parametrized by the true position and velocity of the observed agent $x_t, v_0$.
+	\item Our sensor model:  This is represented by our sensor readings $\hat{x}_0$ and $\hat{v}_0$.
+	\item The agent model:  This is represented by a trajectory $\check{x}_t$, which is the agent's own estimate of her position, as well as numerous other variables which will be introduced in upcoming subsections.
+\end{enumerate}
 
-It is a simple exercise in probability to derive
-\begin{align*}
-	\rho_t(x_t) &= \Pr( x_t \mid \hat{x}_0, \hat{v}_0 ) \\
-	&\propto \Pr( x_t, \hat{x}_0, \hat{v}_0 ) \\
-	&= \int \Pr( x_t \mid  x_0, v_0, f ) \\
-	 &\qquad \Pr( \hat{x}_0  \mid x_0 ) \Pr( \hat{v}_0 \mid v_0 ) dx_0 \, dv_0 \, df
-\end{align*}
-
-In the next few subsections we will describe the posteriors used in the above calculation.
+The measurements and the agent's internal state are dependent on reality.  This couples all the variables in a Bayesian network, which we will describe in the following subsections.
+The resulting Bayesian network can be used to compute the desired posterior.
 
 \subsection{The sensor model}
 At time $t=0$, we obtain a noisy reading of position, $\hat{x}_0 \in \mathbb{R}^2$.
@@ -112,36 +113,44 @@ We should note that $\hat{v}_0$ is typically derived from multiple measurements 
 This induces a linear inequality between $\sigma_x$ and $\sigma_v$.
 For example, a first order finite difference would yield $\sigma_v \geq 2 \sigma_x / \Delta t$ where $\Delta t > 0$ is the time-step size between consecutive measurements of position.
 
-\subsection{The motion model}
+\subsection{The agent model}
 All agents are initialized within some rectangular region $D \subset \mathbb{R}^2$.
-Once initialized, agents come in two flavors: linear and nonlinear.
-Linear agents move in straight lines at constant velocity.
-Thus $x_t = x_0 + t v_0$ and so we have the posterior
+We denote the true position and velocity of an agent by $x_t$ and $v_t$.
+Each agent has an internal estimate of it's own position, given by $\check{x}_t$, which is related to the true position by $x_t$
 \begin{align*}
-	\Pr( x_t \mid x_0, v_0, lin) = \delta( x_t - x_0 - t v_0 ).
+	\Pr( x_t \mid \check{x}_t ) \sim \mathcal{N}( \check{x}_t, \sigma_{int}(t)),
+\end{align*}
+where $\sigma_{int}(t) = \kappa t$ for some learned constant $\kappa > 0$.
+This insures the consistency condition $\check{x}_0 = x_0$, while acknowledging the existence of uncertainty over long times.
+
+Once initialized, agents come in two flavors: linear and nonlinear.
+Linear agents imagine that they move in straight lines at constant velocity.
+Thus $\check{x}_t = \check{x}_0 + t \check{v}_0$ and so we have the posterior
+\begin{align*}
+	\Pr( \check{x}_t \mid \check{x}_0, \check{v}_0, lin) = \delta( \check{x}_t - \check{x}_0 - t \check{v}_0 ).
 \end{align*}
 We will assume linear agents also satisfy the posteriors
 \begin{align*}
-	\Pr( x_0 \mid lin ) \sim \mathcal{U}( D)\quad,\quad \Pr( v_0 \mid lin ) \sim \mathcal{N}( 0 , \sigma_L).
+	\Pr( \check{x}_0 \mid lin ) \sim \mathcal{U}( D)\quad,\quad \Pr( \check{v}_0 \mid lin ) \sim \mathcal{N}( 0 , \sigma_L).
 \end{align*}
 
 If the agent is of nonlinear type, then we assume the dynamics take the form
 \begin{align}
-	\frac{dx_t}{dt} \equiv v_t = s \cdot X_k(x_t) \label{eq:ode}
+	\frac{d \check{x}_t}{dt} \equiv \check{v}_t = s \cdot X_k(\check{x}_t) \label{eq:ode}
 \end{align}
 where $X_k$ is a vector-field from a finite collection $\{X_1, \dots, X_n\}$, and $s \in \mathbb{R}$.
 This collection is learned from the data-set.
 It is assumed that $k$ and $s$ are both constant in time, so that the position $x_t$ is determined from the
-tripe $(x_0,k,s)$ by integrating \eqref{eq:ode}.
+tripe $(\check{x}_0,k,s)$ by integrating \eqref{eq:ode}.
 In other words, we have the posterior
 \begin{align*}
-	\Pr( x_t \mid x_0 , k , s) = \delta( x_t - \Phi^{t}_{k,s}(x_0) )
+	\Pr( \check{x}_t \mid \check{x}_0 , k , s) = \delta( \check{x}_t - \Phi^{t}_{k,s}( \check{x}_0) )
 \end{align*}
 where $\Phi^{t}_{k,s}$ is the flow-map of the vector field $s \cdot X_k$ up to time $t$.
-It is notable, that the variables $k,s$ and $x_0$ determine $v_0$.
+It is notable, that the variables $k,s$ and $\check{x}_0$ determine $\check{v}_0$.
 Thus we also have the posterior
 \begin{align*}
-	\Pr( v_0 \mid k,s,x_0) = \delta( v_0 -s X_k(x_0) ).
+	\Pr( \check{v}_0 \mid k,s, \check{x}_0) = \delta( \check{v}_0 -s X_k( \check{x}_0) ).
 \end{align*}
 In summary, the agent flavors are parametrized by the set
 \begin{align*}
@@ -154,23 +163,28 @@ Concatenating the measurement model with our motion model yields the Bayesian ne
 \begin{center}
 \begin{tikzpicture}[thick, var/.style={circle,draw,thin,rounded corners,shade,top color=blue!50,minimum size = 4mm}]
 	\node[var] (f) {$f$};
-	\node[var] (x) [right=of f] {$x_0$};
-	\node[var] (v) [below=of x] {$v_0$};
+	\node[var] (x_check) [right=of f] {$\check{x}_0$};
+	\node[var] (v_check) [below=of x_check] {$\check{v}_0$};
+	\node[var] (x)[right=of x_check] {$x_0$};
+	\node[var] (v)[right=of v_check] {$v_0$};
 	\node[var] (x_hat) [right=of x] {$\hat{x}_0$};
 	\node[var] (v_hat) [right=of v] {$\hat{v}_0$};
-	\node[var] (x_t) [left=of v] {$x_t$};
-	
-	\draw[->] (f.east) to (x.west);
-	\draw[->] (f.south east) to (v.north west);
-	\draw[->] (f.south) to (x_t.north);
-	\draw[->] (v.west) to (x_t.east);
-	\draw[->] (x.south west) to (x_t.north east);
-	\draw[->] (x.south) to (v.north);
+	\node[var] (x_check_t) [left=of v_check] {$\check{x}_t$};
+	\node[var] (x_t) [below=of x_check_t] {$x_t$};
+	\draw[->] (x_check) to (x);
+	\draw[->] (v_check) to (v);
+	\draw[->] (f) to (x_check);
+	\draw[->] (f) to (v_check);
+	\draw[->] (f.south) to (x_check_t.north);
+	\draw[->] (v_check.west) to (x_check_t.east);
+	\draw[->] (x_check.south west) to (x_check_t.north east);
+	\draw[->] (x_check.south) to (v_check.north);
 	\draw[->] (x.east) to (x_hat.west);
 	\draw[->] (v.east) to (v_hat.west);
+	\draw[->] (x_check_t) to (x_t); 
 \end{tikzpicture}
 \end{center}
-Which allows us to derive $\rho_t$ by appropriately marginalizing over the full joint probability $\Pr(x_t, x_0, v_0, \hat{x}_0, \hat{v}_0, f)$. [Reference]
+Which allows us to derive $\rho_t$ by appropriately marginalizing over the full joint probability over all $9$ variables. [Reference]
 Specifically, the vector-fields $\{X_1,\dots,X_n\}$ as well as the probabilities $\Pr( x_0 \mid k )$, $\Pr(lin)$, and $\Pr( k )$ will be learned from the data.
 We will also assume $\Pr(s,k) = \Pr(s \mid k ) \Pr(k)$ where 
 \begin{align*}
@@ -203,16 +217,41 @@ The abundance of Dirac deltas and Gaussians allows the integrals involved in com
 as smooth functions over $\mathbb{R}^2$.
 
 \subsection{Inverse optimal control}
-In this optional subsection, we illustrate how we can restrict the vector-fields $X_k$, so that the nonlinear agents move along trajectories which solve relavant optimal control problems.
-In particular, if we force $X_k$ to be of unit magnitude, in that $\| X_k(x) \|_2 = 1$ for all $x \in \mathbb{R}^2$.
-Then a solution $x(t)$ solves the optimal control problem
+One of the valuable aspect of the motion model of \cite{Kitani2012} was that the trajectories were solutions of optimal control problems.
+This is a desirable property for a motion model of pedestrians/cyclists/vehicles in that it seems reasonable to assume that we all move through the world with an intent to get somewhere.
+This framework where one determines an optimal control problem from trajectories (as opposed to solving for trajectories of an optimal control problem) was dubbed \emph{inverse optimal control} (IOC).
+In this optional subsection, we illustrate how solutions of \ref{eq:ode} can fit within the IOC framework.
+
+\begin{thm}
+	Let $X_k$ be such that $\| X_k(x) \|_2 = 1$ for all $x \in \mathbb{R}^2$.
+Then, for each initial condition $x_0 \in \mathbb{R}^2$, there exists a neighborhood $U$, a Riemannian metric, $g$, and a cost function, $f$, 
+such that solutions of \eqref{eq:ode} are also solutions of the optimal control problem
 \begin{align*}
-	
+	p^* = \inf_{ \| v_t \|_g = s } \int_0^T f( x_t) dt
 \end{align*}
+where $v_t = \frac{d x_t}{dt}$, $\| \cdot \|_g$ is the norm with respect to $g$ and the infimum is taken over all differentiable curves in $U$ which originate from $x_0$.
+\end{thm}
+
+\begin{proof}
+	Because $\| X_k \| = 1$ globally, it has no fixed points.
+	From the flow-box theorem we can assert that for any open set, $U \subset \mathbb{R}^2$ there exists a local diffeomorphism which transforms $X_k$ into a flat vector-field.
+	Mathematically, this asserts the existence of a map $\Phi : U \to V$ such that $ \left. D\Phi \right|_{\Phi^{-1}(x) } \cdot X_k(  \Phi^{-1}(x) ) = \pder{}{x}$.
+	We could view the coordinate function $\tilde{f}(x,y) = x$ as a cost function on $V$.
+	In this case we see that
+	...
+\end{proof}
 
 \section{Learning} \label{sec:learning}
   Describe how $\Pr(x \mid k)$, the director-fields, and $\sigma_x$ are learned without using math.
   Math will be relegated to the appendix.
+  
+  NOTE:  Learning $\kappa$.
+  \begin{enumerate}
+  	\item Learn vector-fields
+	\item Generate approximate curves for each v.f.
+	\item Compute $\kappa_k$ of best fit for each v.f.
+	\item $\kappa = \min_k \{ \kappa_1,\dots,\kappa_n\}$.
+  \end{enumerate}
   
 \section{Results}
  Precision, accuracy, etc.
