@@ -31,4 +31,4 @@ with open("{}_scene.pkl".format(fname), "w") as f:
 
 with open("{}_set.pkl".format(fname), "w") as f:
     pickle.dump( test_set, f)
-    print "Pickled the test set"
+    print "Pickled the test set with {} agents".format(len(test_set))
