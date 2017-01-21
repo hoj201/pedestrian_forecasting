@@ -14,19 +14,6 @@ from data import scenes as test_scenes
 from data import sets as test_sets
 
 
-from sys import argv
-if len(argv) < 2:
-    qscene_number = 0
-    test_scene = test_scenes[0]
-    scene = test_scene
-    test_set = test_sets[0]
-else:
-    scene_number = int(argv[1])
-    test_scene = test_scenes[int(argv[1])]
-    scene = test_scene
-    test_set = test_sets[int(argv[1])]
-
-
 
 def rho_true(subj, T, test_set, bbox_ls):
     """ Computes the integral of rho_true over a bounding box"""
@@ -112,9 +99,20 @@ if __name__ == "__main__":
     import matplotlib.animation as anim
     import types
 
+    from sys import argv
+    if len(argv) < 2:
+        qscene_number = 0
+        test_scene = test_scenes[0]
+        scene = test_scene
+        test_set = test_sets[0]
+    else:
+        scene_number = int(argv[1])
+        test_scene = test_scenes[int(argv[1])]
+        scene = test_scene
+        test_set = test_sets[int(argv[1])]
+
     tau_arr = np.array([10**(-x) for x in range(2, 5)])
     tau_arr = np.exp( -np.log(10) * np.linspace(0, 6, 8))
-    test_set = test_set[0:6]
 
     xs_l = np.zeros(0)
 
@@ -153,7 +151,6 @@ if __name__ == "__main__":
     f_ours = open("results/ours.txt", "w")
 
     for i in range(0, len(test_set)):
-	print len(test_set)
         test_BB_ts = test_set[i]
 
         from process_data import BB_ts_to_curve
