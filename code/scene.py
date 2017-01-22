@@ -18,6 +18,7 @@ class Scene():
         sigma_L: standard deviation of velocity
         sigma_x: standard deviation of position measurements
         sigma_v: standard deviation of velocity measurements
+        kappa: indicates how much to blur the output of generate_distributions.py
     
     methods:
        director_field_vectorized:  A routine for computing a vector field.
@@ -104,11 +105,12 @@ class Scene():
                 forward_curve = odeint(ode_forward, x0, t_span).transpose()
                 backward_curve = odeint(ode_backward, x0, t_span).transpose()
                 #Compute variance of (generated-given)/t -> kappa_k
-                forward_std = ((forward_curve)/(t_span+1)).std()
-                backward_std = ((backward_curve)/(t_span+1)).std()
+                forward_std = ((curve-forward_curve)/(t_span+1)).std()
+                backward_std = ((curve-backward_curve)/(t_span+1)).std()
                 kappa_per_class[k] = min( forward_std, backward_std )
             kappa_per_curve[i] = kappa_per_class.min()
         self.kappa = kappa_per_curve.mean()
+        print "kappa = %f" % self.kappa
 
     #--------------------------------------------------------------------------
     # METHODS
@@ -133,6 +135,7 @@ class Scene():
                 x[1]/self.height,
                 self.theta_coeffs[k]
                 )
+        #NOTE:  Yes, I know this scaling seems off by a factor of 2.  At the moment, this is correct. However, this should be refactored so that we use a scaling convention that is consistent with the rest of the code-base (e.g. posteriors.x_given_k
         out1 = np.array([np.cos(theta), np.sin(theta)])
         if jac:
             dtheta_dx = legval2d(
