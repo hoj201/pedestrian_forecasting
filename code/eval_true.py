@@ -159,7 +159,7 @@ if __name__ == "__main__":
         curve = BB_ts_to_curve( test_BB_ts)
 
         x_hat = curve[:,1]
-        v_hat = (curve[:,100] - curve[:,0])/100
+        v_hat = (curve[:,10] - curve[:,0])/10
         print "x_hat = " + str(x_hat)
         print "v_hat = " + str(v_hat)
         speed = np.sqrt(np.sum(v_hat**2))
