@@ -80,10 +80,10 @@ if __name__ == "__main__":
         ims = []
         plt.clf()
         for x_arr, w_arr in gen:
-            if n%5==0:
+            if n%5 == 0:
                 print "{} steps processed for agent {}.".format(n, i)
                 #fig = plt.figure()
-
+                print len(w_arr)
                 X,Y,Z = singular_distribution_to_image(
                         x_arr, w_arr, domain, res=res)
                 im = plt.pcolormesh(X,Y,Z, cmap='viridis')
@@ -101,7 +101,14 @@ if __name__ == "__main__":
                 width = test_scene.bbox_width/3
                 evaluate_plane(bounds, rho, rt, width, debug_level=1)
                 plt.axis("off")
-                plt.plot(curve[0], curve[1], color="red")
+                import matplotlib.cm as cm
+                cmap = cm.ScalarMappable(cmap="viridis")
+                colors = cmap.to_rgba(w_arr/np.amax(w_arr))
+                colors[:, 3] = w_arr/np.amax(w_arr)
+
+                #plt.scatter(x_arr[0], x_arr[1], c=colors, cmap="viridis", edgecolors="none")
+                #plt.plot(curve[0], curve[1], color="red")
+
                 plt.savefig("images/tmp/img{}_{}.png".format(n, i))
                 plt.savefig("images/frames/frame{}agent{}".format(int(t_final/float(N_steps) * n/5), i))
 
