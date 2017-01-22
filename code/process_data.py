@@ -60,8 +60,6 @@ def get_BB_ts_list( folder , label='Pedestrian' ):
 
     length_list = map( length , BB_ts_list )
     length_list.sort()
-    from matplotlib import pyplot as plt
-    plt.hist( length_list )
     n = len( length_list )
     print "n = {n}".format(n=n)
     Q1, Q3 = length_list[ n / 4], length_list[ 3*n / 4]
