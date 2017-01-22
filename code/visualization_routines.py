@@ -98,9 +98,7 @@ def singular_distribution_to_image(pts, weights, domain, res=(50,50)):
     return X,Y,Z
 
 if __name__ == '__main__':
-    with open("test_scene.pkl", "rb") as f:
-        import pickle
-        scene = pickle.load(f)
+    from data import scene
     visualize_cluster( scene, 0)
 
     print "Testing routine for visualizing singular distributions"
