@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scene import Scene
 import posteriors
 
-def visualize_cluster( scene, k ):
+def visualize_cluster(scene, k):
     """ Displays a plot of all the clusters and there potential functions
 
     args:
@@ -15,7 +15,6 @@ def visualize_cluster( scene, k ):
         field.
     """
     assert( k < scene.num_nl_classes )
-    print scene.num_nl_classes
     cluster = scene.clusters[k]
     fig, ax_arr = plt.subplots( 1 , 2 , figsize=(15,5) )
     width = scene.width
