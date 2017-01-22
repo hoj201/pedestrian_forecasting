@@ -5,12 +5,17 @@ import matplotlib.pyplot as plt
 import matplotlib.image as image
 from generate_distributions import particle_generator, lin_generator
 from test_distribution import particle_generator as particle_generator_t
+from sys import argv
 
 from data import scene as test_scene
 from data import set as test_set
 
-
-
+if len(argv) > 1:
+	from data import scenes
+	from data import sets
+	test_scene = scenes[int(argv[1])]
+	test_set = sets[int(argv[1])]
+scene = test_scene
 def rho_true(subj, T, test_set, bbox_ls):
     """ Computes the integral of rho_true over a bounding box"""
     res = (20,20)
@@ -45,12 +50,8 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import matplotlib.animation as anim
     import types
-    with open('test_set.pkl', 'rs') as f:
-        test_set = pickle.load(f)
-    with open("test_scene.pkl", "rb") as f:
-        scene = pickle.load(f)
 
-    for i in range(0,1): # len(test_set)):
+    for i in range(0, len(test_set)):
         test_BB_ts = test_set[i]
 
         from process_data import BB_ts_to_curve
