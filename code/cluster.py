@@ -36,7 +36,7 @@ def cluster_trajectories(curves):
         return min( d(a,b) , d(T(a),b) )
     from sklearn.cluster import AffinityPropagation
     clusterer = AffinityPropagation(affinity='precomputed', convergence_iter=100)
-    aff = np.zeros((n_curves, n_curves))
+    aff = np.zeros((n_curves, n_curves), dtype=float)
     for i in range(n_curves):
         for j in range(i+1,n_curves):
             aff[i,j] = np.exp(-distance_metric( X_2B_clstrd[i], X_2B_clstrd[j])**2)
@@ -80,7 +80,6 @@ def prune_cluster(cluster):
     
     return n_discarded, filter( keep_it , cluster )
 
-
 def merge_small_clusters( clusters):
     """ returns clusters where each has a minimum size and one cluster is just a linear predictor
 
@@ -101,7 +100,7 @@ def merge_small_clusters( clusters):
             new_clusters.append( cl )
     return n_discarded, new_clusters
 
-def learn_potential( cluster , width, height, k_max=8, stride=30):
+def learn_potential(cluster, width, height, k_max=8, stride=30):
     """Returns the legendre coefficients of a potential function learned from a list of point in a 2D domain.
 
     args:
@@ -144,7 +143,7 @@ def learn_potential( cluster , width, height, k_max=8, stride=30):
     initial_guess = np.zeros( (k_max+1)**2 )
 
     # CALLBACK FUNCTIONS
-    def cb_function( theta_flat ):
+    def cb_function(theta_flat):
         cb_function.bar.next()
         return 0
     import progress.bar
@@ -158,7 +157,6 @@ def learn_potential( cluster , width, height, k_max=8, stride=30):
     print res.message
     assert(res.success)
     return res.x.reshape( (k_max+1, k_max+1) )
-
 
 def get_classes(curves, width, height, k_max=4):
     """ Given curves returns coefficients and probabilities and clusters
@@ -176,14 +174,14 @@ def get_classes(curves, width, height, k_max=4):
 
     NOTE: alpha[k] and clusters_pruned[k] have probabilitiy P_of_c[k].  k=-1 corresponds to a linear predictor
     """
-    clusters = cluster_trajectories( curves )
+    clusters = cluster_trajectories(curves)
     
     #Prune the clusters and keep track of how many agents you discard
     n_discarded = 0
     for k in range(len(clusters)):
-        n, clusters[k] = prune_cluster( clusters[k] )
+        n, clusters[k] = prune_cluster(clusters[k])
         n_discarded +=n
-    n, clusters = merge_small_clusters( clusters )
+    n, clusters = merge_small_clusters(clusters)
     n_discarded += n
 
     #print "There are %d nonlinear clusters" % len(clusters)
@@ -213,7 +211,7 @@ if __name__ == "__main__":
     print "Testing clustering routine"
     import numpy as np
     import process_data
-    folder = '../annotations/coupa/video1/'
+    folder = '../annotations/bookstore/video3/'
     BB_ts_list, width, height = process_data.get_BB_ts_list(folder, label="Biker")
     curve_list = map(process_data.BB_ts_to_curve, BB_ts_list)
 
