@@ -1,6 +1,6 @@
 import numpy as np
 
-def align_cluster( cluster ):
+def align_cluster(cluster):
     """ returns cluster with curves aligned
 
     args:
@@ -16,7 +16,7 @@ def align_cluster( cluster ):
     return [ reverse_or_not(c)  for c in cluster ]
 
 
-def cluster_trajectories( curves ):
+def cluster_trajectories(curves):
     """Given a list of curves, cluster_trajectories will cluster them."""
     n_curves = len(curves)
     X_2B_clstrd = np.zeros( (n_curves, 4) )
@@ -45,34 +45,12 @@ def cluster_trajectories( curves ):
     #clusterer.Affinity = aff
     cluster_labels = clusterer.fit_predict(aff)
     out = []
-    for label in set( cluster_labels):
-        cluster = map( lambda k: curves[k] , filter( lambda k: cluster_labels[k] == label , range( n_curves) ) )
-        out.append( cluster )
+    for label in set(cluster_labels):
+        cluster = map(lambda k: curves[k], filter(lambda k: cluster_labels[k]==label, range(n_curves)))
+        out.append(cluster)
     return map( align_cluster, out)
 
-#NOTE:  THIS IS NOT USED
-def mhd_cluster_trajectories( curves ):
-    """Returns clusters based upon the modified Hausdorff distance."""
-    n_curves = len(curves)
-    from sklearn.cluster import AffinityPropagation
-    clusterer = AffinityPropagation(affinity='precomputed', convergence_iter=100)
-    aff = np.zeros((n_curves, n_curves))
-    for i in range(n_curves):
-        for j in range(i+1,n_curves):
-            from modified_Hausdorff_distance import modified_Hausdorff_distance as mhd
-            aff[i,j] = mhd( curves[i].transpose(), curves[j].transpose() )
-            aff[j,i] = aff[i,j]
-
-    #clusterer.Affinity = aff
-    cluster_labels = clusterer.fit_predict(aff)
-    out = []
-    for label in set( cluster_labels):
-        cluster = map( lambda k: curves[k] , filter( lambda k: cluster_labels[k] == label , range( n_curves) ) )
-        out.append( cluster )
-    return map( align_cluster, out)
-
-
-def prune_cluster( cluster ):
+def prune_cluster(cluster):
     """ Removes the abnormally long/short trajectories from a cluster
 
     args:
@@ -182,7 +160,7 @@ def learn_potential( cluster , width, height, k_max=8, stride=30):
     return res.x.reshape( (k_max+1, k_max+1) )
 
 
-def get_classes( curves, width, height, k_max=4 ):
+def get_classes(curves, width, height, k_max=4):
     """ Given curves returns coefficients and probabilities and clusters
 
     args:
@@ -235,20 +213,18 @@ if __name__ == "__main__":
     print "Testing clustering routine"
     import numpy as np
     import process_data
-    process_data = reload(process_data)
-    folder = '../annotations/coupa/video2/'
-    x_data, y_data, width, height = process_data.get_trajectories(folder, label="Biker")
+    folder = '../annotations/coupa/video1/'
+    BB_ts_list, width, height = process_data.get_BB_ts_list(folder, label="Biker")
+    curve_list = map(process_data.BB_ts_to_curve, BB_ts_list)
 
     import matplotlib.pyplot as plt
-    for k in range(len(x_data)):
-        plt.plot(x_data[k], y_data[k],'b-')
+    for curve in curve_list:
+        plt.plot(curve[0], curve[1],'b-')
     plt.grid()
     plt.axis('equal')
     plt.show()
 
-    curves = map( np.vstack , zip(x_data, y_data) )
-    V_scale = (width/2, height/2)
-    alpha, P_of_c, clusters = get_classes( curves, V_scale )
+    alpha, P_of_c, clusters = get_classes(curve_list, width, height)
     n_cluster = len(clusters)
     print "n_cluster = %d \n" % n_cluster
     fig, ax_arr = plt.subplots( n_cluster , 1 , figsize = (5,10))
@@ -259,9 +235,7 @@ if __name__ == "__main__":
     plt.title("Clusters")
     plt.show()
 
-
     print "Testing computation of prior"
     print "P(c) = " 
     print P_of_c
     print "Sum = %f" % P_of_c.sum()
-
