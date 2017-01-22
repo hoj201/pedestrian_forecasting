@@ -7,7 +7,9 @@ import scipy as sp
 from functools import partial
 import matplotlib.pyplot as plt
 
+
 import posteriors
+import derived_posteriors
 from derived_posteriors import joint_lin_x_x_hat_v_hat
 from derived_posteriors import joint_k_s_x_x_hat_v_hat
 from derived_posteriors import joint_lin_x_t_x_hat_v_hat
@@ -15,6 +17,8 @@ from derived_posteriors import joint_k_x_x_hat_v_hat
 
 
 from data import scene
+
+
 
 Vk = scene.alpha_arr
 scene_scale = np.array([scene.width, scene.height])
@@ -25,6 +29,24 @@ s_max = scene.s_max
 sigma_x = scene.sigma_x
 sigma_v = scene.sigma_v
 sigma_L = scene.sigma_L
+kappa = scene.kappa
+
+def set_scene(num_scene):
+    global scene, Vk, scene_scale, dist_width, vel_width, s_max, sigma_x, sigma_v, sigma_L, kappa
+    from data import scenes
+    scene = scenes[i]
+    Vk = scene.alpha_arr
+    scene_scale = np.array([scene.width, scene.height])
+    #temporary
+    dist_width = np.ones([2]) * scene.bbox_width
+    vel_width = np.ones([2]) * scene.bbox_velocity_width
+    s_max = scene.s_max
+    sigma_x = scene.sigma_x
+    sigma_v = scene.sigma_v
+    sigma_L = scene.sigma_L
+    kappa = scene.kappa
+    derived_posteriors.set_scene(num_scene)
+
 
 def integrate_class(k, x0, T, N_steps):
     """
@@ -125,6 +147,17 @@ def particle_generator(x_hat, v_hat, t_final, N_steps):
         #TODO: append regular grid and weights to x_out, w_out
         x_out = np.concatenate( [x_out, x_lin], axis=1)
         w_out = np.concatenate( [w_out, w_lin])
+        #BEGIN GAUSSIAN CONVOLVE
+        from numpy.random import normal
+        from scipy.stats import multivariate_normal
+        N_conv = 10
+        length = len(w_out) * N_conv
+        gauss = np.vstack(np.random.normal(mu, np.sqrt(kappa (t_final/float(N_points) * n)), length))
+        positions = np.repeat(x_out, 10, axis=1) + gauss
+        weights = multivariate_normal(gauss.transpose(), mean=np.array([0,0]), cov=kappa) * np.repeat(w_out, 10)
+        x_out = positions
+        w_out = weights
+        #END GAUSSIAN CONVOLVE
         if n==1:
             prob_of_mu = w_out.sum()
         yield x_out, w_out/ prob_of_mu

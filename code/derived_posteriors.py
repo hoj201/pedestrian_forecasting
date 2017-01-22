@@ -7,6 +7,7 @@ from scipy.special import erf
 import matplotlib.pyplot as plt
 
 from data import scene
+
 max_k = len(scene.P_of_c)-1
 #temporary s_max
 s_max = 1
@@ -19,6 +20,22 @@ sigma_v = scene.sigma_v
 sigma_L = scene.sigma_L
 p_of_lin = scene.P_of_c[-1]
 scene_scale = np.array([scene.width, scene.height])
+
+def set_scene(num_scene):
+    global scene, max_k, s_max, dist_width, vel_width, sigma_x, sigma_v, sigma_l, p_of_lin, scene_scale
+    from data import scenes
+    scene = scenes[num_scene]
+    max_k = len(scene.P_of_c)-1
+    #temporary s_max
+    s_max = scene.s_max
+    #temporary dist_width
+    dist_width = np.ones([2]) * scene.bbox_width
+    vel_width = np.ones([2]) * scene.bbox_velocity_width
+    sigma_x = scene.sigma_x
+    sigma_v = scene.sigma_v
+    sigma_L = scene.sigma_L
+    p_of_lin = scene.P_of_c[-1]
+    scene_scale = np.array([scene.width, scene.height])
 
 
 #"mathematically correct" version

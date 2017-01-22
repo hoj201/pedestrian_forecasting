@@ -3,6 +3,7 @@ import numpy as np
 from evaluation import evaluate_plane
 import matplotlib.pyplot as plt
 from matplotlib import cm
+import generate_distributions
 from generate_distributions import particle_generator, lin_generator
 from test_distribution import particle_generator as particle_generator_t
 from decimal import Decimal
@@ -110,6 +111,7 @@ if __name__ == "__main__":
         test_scene = test_scenes[int(argv[1])]
         scene = test_scene
         test_set = test_sets[int(argv[1])]
+        generate_distributions.set_scene(int(argv[1]))
 
     tau_arr = np.array([10**(-x) for x in range(2, 5)])
     tau_arr = np.exp( -np.log(10) * np.linspace(0, 6, 8))
