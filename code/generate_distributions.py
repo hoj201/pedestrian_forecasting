@@ -150,11 +150,11 @@ def particle_generator(x_hat, v_hat, t_final, N_steps):
         #BEGIN GAUSSIAN CONVOLVE
         from numpy.random import normal
         from scipy.stats import multivariate_normal
-        N_conv = 10
+        N_conv = 30
         length = len(w_out) * N_conv
         gauss = np.vstack((np.random.normal(0, kappa * t_final/float(N_steps) * n, length), np.random.normal(0, kappa * t_final/float(N_steps) * n, length)))
-        positions = np.repeat(x_out, 10, axis=1) + gauss
-        weights = multivariate_normal.pdf(gauss.transpose(), mean=np.array([0,0]), cov=(kappa * t_final/float(N_steps) * n)**2) * np.repeat(w_out, 10)
+        positions = np.repeat(x_out, N_conv, axis=1) + gauss
+        weights = multivariate_normal.pdf(gauss.transpose(), mean=np.array([0,0]), cov=(kappa * t_final/float(N_steps) * n)**2) * np.repeat(w_out, N_conv) / N_conv
         x_out = positions
         w_out = weights
         #END GAUSSIAN CONVOLVE
