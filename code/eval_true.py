@@ -169,7 +169,7 @@ if __name__ == "__main__":
         print "Measured speed / sigma_L = {:f}".format( speed / scene.sigma_L )
         print "sigma_L = {:f}".format( scene.sigma_L)
         k=0
-        t_final = min(len(curve[0]), 400)
+        t_final = min(len(curve[0]), 150)
         N_steps = t_final
         #Domain is actually larger than the domain we care about
         domain = [-scene.width/2, scene.width/2, -scene.height/2, scene.height/2]
