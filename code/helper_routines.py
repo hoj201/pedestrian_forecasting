@@ -19,7 +19,6 @@ def cdf_of_normal(mu, sigma, x_min, x_max):
     out *= 0.5
     return out
 
-#TODO: Consider vectorizing this
 def cdf_of_2d_normal(mu, sigma, bbox):
     """ Computes the integral of a normal distribution over a bounding box.
 
@@ -40,7 +39,7 @@ def cdf_of_2d_normal(mu, sigma, bbox):
 if __name__ == "__main__":
     print "Testing routine cdf_of_normal"
     sigma = 1.1
-    mu = 0.0
+    mu = 0.1
     x_min = -0.2
     x_max = 1
     result = cdf_of_normal(mu, sigma, x_min, x_max)
@@ -66,3 +65,13 @@ if __name__ == "__main__":
             )
     print "result   = {}".format(result)
     print "expected = {} +/- {}".format(expected, error)
+
+    print "Testint cdf_of_normal is vectorized"
+    mu = np.random.randn(10)
+    result = cdf_of_normal(mu, sigma, x_min, x_max)
+    print result
+
+    print "Testint cdf_of_2d_normal is vectorized"
+    mu = np.random.randn(2,10)
+    result = cdf_of_2d_normal(mu, sigma, bbox)
+    print result
