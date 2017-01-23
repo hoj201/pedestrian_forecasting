@@ -34,7 +34,7 @@ kappa = scene.kappa
 def set_scene(num_scene):
     global scene, Vk, scene_scale, dist_width, vel_width, s_max, sigma_x, sigma_v, sigma_L, kappa
     from data import scenes
-    scene = scenes[i]
+    scene = scenes[num_scene]
     Vk = scene.alpha_arr
     scene_scale = np.array([scene.width, scene.height])
     #temporary
@@ -73,7 +73,7 @@ def integrate_class(k, x0, T, N_steps):
     x_arr = np.concatenate([x_forward, x_backward[1:]])
     return x_arr.reshape( (2*N_steps+1, 2, N) )
 
-def particle_generator(x_hat, v_hat, t_final, N_steps):
+def particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True):
     """
     a generator which gives particles and weights
     Takes:
@@ -147,17 +147,18 @@ def particle_generator(x_hat, v_hat, t_final, N_steps):
         #TODO: append regular grid and weights to x_out, w_out
         x_out = np.concatenate( [x_out, x_lin], axis=1)
         w_out = np.concatenate( [w_out, w_lin])
-        #BEGIN GAUSSIAN CONVOLVE
-        from numpy.random import normal
-        from scipy.stats import multivariate_normal
-        N_conv = 30
-        length = len(w_out) * N_conv
-        gauss = np.vstack((np.random.normal(0, kappa * t_final/float(N_steps) * n, length), np.random.normal(0, kappa * t_final/float(N_steps) * n, length)))
-        positions = np.repeat(x_out, N_conv, axis=1) + gauss
-        weights = multivariate_normal.pdf(gauss.transpose(), mean=np.array([0,0]), cov=(kappa * t_final/float(N_steps) * n)**2) * np.repeat(w_out, N_conv) / N_conv
-        x_out = positions
-        w_out = weights
-        #END GAUSSIAN CONVOLVE
+	if convolve:
+        	#BEGIN GAUSSIAN CONVOLVE
+        	from numpy.random import normal
+        	from scipy.stats import multivariate_normal
+        	N_conv = 15 
+        	length = len(w_out) * N_conv
+        	gauss = np.vstack((np.random.normal(0, kappa * t_final/float(N_steps) * n, length), np.random.normal(0, kappa * t_final/float(N_steps) * n, length)))
+        	positions = np.repeat(x_out, N_conv, axis=1) + gauss
+        	weights = multivariate_normal.pdf(gauss.transpose(), mean=np.array([0,0]), cov=(kappa * t_final/float(N_steps) * n)**2) * np.repeat(w_out, N_conv) / N_conv
+        	x_out = positions
+        	w_out = weights
+        	#END GAUSSIAN CONVOLVE
         if n==1:
             prob_of_mu = w_out.sum()
         yield x_out, w_out/ prob_of_mu

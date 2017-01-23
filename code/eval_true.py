@@ -106,13 +106,16 @@ if __name__ == "__main__":
         test_scene = test_scenes[0]
         scene = test_scene
         test_set = test_sets[0]
+	inds = range(len(test_set))
     else:
         scene_number = int(argv[1])
         test_scene = test_scenes[int(argv[1])]
         scene = test_scene
         test_set = test_sets[int(argv[1])]
         generate_distributions.set_scene(int(argv[1]))
-
+	if len(argv) > 2:
+            st = argv[2]
+            inds = map(int, st.split(","))
     tau_arr = np.array([10**(-x) for x in range(2, 5)])
     tau_arr = np.exp( -np.log(10) * np.linspace(0, 6, 8))
 
@@ -152,7 +155,7 @@ if __name__ == "__main__":
     f_lin = open("results/linear.txt", "w")
     f_ours = open("results/ours.txt", "w")
 
-    for i in range(0, len(test_set)):
+    for i in inds:
         test_BB_ts = test_set[i]
 
         from process_data import BB_ts_to_curve
@@ -170,7 +173,7 @@ if __name__ == "__main__":
         N_steps = t_final
         #Domain is actually larger than the domain we care about
         domain = [-scene.width/2, scene.width/2, -scene.height/2, scene.height/2]
-        ours = particle_generator(x_hat, v_hat, t_final, N_steps)
+        ours = particle_generator(x_hat, v_hat, t_final, N_steps, convolve=False)
         mine = particle_generator_t(x_hat, v_hat, t_final, N_steps)
         lin = lin_generator(x_hat, v_hat, t_final, N_steps)
 
@@ -243,7 +246,7 @@ if __name__ == "__main__":
 
             axarr[1][1].plot(xs, ys)
 
-            #plt.savefig("images/precision_recall/{}/pr_agent{}_T{}.png".format(scene_number,i, int(t_final/float(N_steps) * k)))
+            plt.savefig("images/precision_recall/{}/pr_agent{}_T{}.png".format(scene_number,i, int(t_final/float(N_steps) * k)))
             #plt.show()
             plt.close('all')
 
