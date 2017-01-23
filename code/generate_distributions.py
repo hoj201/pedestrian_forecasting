@@ -96,9 +96,9 @@ def particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True):
     x0 = np.vstack([X.flatten(), Y.flatten()])
     
     #Initializes a regular grid for evaluation of the linear class
-    x_span = np.linspace( -scene.width/2, scene.width/2, 50)
+    x_span = np.linspace( -scene.width/2, scene.width/2, )
     dx = x_span[1] - x_span[0]
-    y_span = np.linspace( -scene.height/2, scene.height/2, 50)
+    y_span = np.linspace( -scene.height/2, scene.height/2, 150)
     dy = y_span[1] - y_span[0]
     X,Y = np.meshgrid(x_span, y_span)
     x_lin = np.vstack( [X.flatten(), Y.flatten()])
@@ -142,12 +142,7 @@ def particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True):
         x_out[:,:n+1,:,:] = x_arr[:,:n+1,:,:]
         w_out = w_arr.flatten()
         x_out = np.vstack([x_out[:,:,0,:].flatten(), x_out[:,:,1,:].flatten()])
-        #The following computations handle the linear predictor class
-        w_lin = joint_lin_x_t_x_hat_v_hat(t, x_lin, x_hat, v_hat) * dy*dx
-        #TODO: append regular grid and weights to x_out, w_out
-        x_out = np.concatenate( [x_out, x_lin], axis=1)
-        w_out = np.concatenate( [w_out, w_lin])
-	if convolve:
+        if convolve:
         	#BEGIN GAUSSIAN CONVOLVE
         	from numpy.random import normal
         	from scipy.stats import multivariate_normal
@@ -159,6 +154,11 @@ def particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True):
         	x_out = positions
         	w_out = weights
         	#END GAUSSIAN CONVOLVE
+        #The following computations handle the linear predictor class
+        w_lin = joint_lin_x_t_x_hat_v_hat(t, x_lin, x_hat, v_hat) * dy*dx
+        #TODO: append regular grid and weights to x_out, w_out
+        x_out = np.concatenate( [x_out, x_lin], axis=1)
+        w_out = np.concatenate( [w_out, w_lin])
         if n==1:
             prob_of_mu = w_out.sum()
         yield x_out, w_out/ prob_of_mu
