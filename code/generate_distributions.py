@@ -85,7 +85,7 @@ def particle_generator(x_hat, v_hat, t_final, N_steps):
     Example:
     for x,w in particle_generator( scene, x_hat, v_hat, 3.0):
         plt.scatter(x[0], x[1]) #NOTE: This plots the points
-        print w.sum() #This prints the total mass
+        print w.sum() #This p(rints the total mass
     """
     num_nl_classes = len(scene.P_of_c)-1
     
@@ -152,9 +152,9 @@ def particle_generator(x_hat, v_hat, t_final, N_steps):
         from scipy.stats import multivariate_normal
         N_conv = 10
         length = len(w_out) * N_conv
-        gauss = np.vstack(np.random.normal(mu, np.sqrt(kappa (t_final/float(N_points) * n)), length))
+        gauss = np.vstack((np.random.normal(0, kappa * t_final/float(N_steps) * n, length), np.random.normal(0, kappa * t_final/float(N_steps) * n, length)))
         positions = np.repeat(x_out, 10, axis=1) + gauss
-        weights = multivariate_normal(gauss.transpose(), mean=np.array([0,0]), cov=kappa) * np.repeat(w_out, 10)
+        weights = multivariate_normal.pdf(gauss.transpose(), mean=np.array([0,0]), cov=(kappa * t_final/float(N_steps) * n)**2) * np.repeat(w_out, 10)
         x_out = positions
         w_out = weights
         #END GAUSSIAN CONVOLVE
