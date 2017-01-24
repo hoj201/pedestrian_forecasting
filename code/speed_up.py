@@ -128,6 +128,7 @@ if __name__ == "__main__":
         curve = BB_ts_to_curve( test_BB_ts)
 
         x_hat = curve[:,1]
+        
         v_hat = (curve[:,10] - curve[:,0])/10
         print "x_hat = " + str(x_hat)
         print "v_hat = " + str(v_hat)
@@ -158,9 +159,16 @@ if __name__ == "__main__":
 
         auc_ours = []
         auc_lin = []
-
+        import time
+        st = time.time()
+        import cProfile, pstats, StringIO
+        pr = cProfile.Profile()
+        pr.enable()
         for ((x_arr_ours, w_arr_ours), (x_arr_lin, w_arr_lin)) in gen:
-            if n%1==0:
+            #print n
+            #n += 1
+            #continue
+            if n%5==0:
                 w_arr_ours /= np.sum(w_arr_ours) if  np.sum(w_arr_ours) > 0 else 1
                 #whr = np.where(w_arr > 0)[0]
                 #x_arr = x_arr.transpose()[whr].transpose()
@@ -211,8 +219,8 @@ if __name__ == "__main__":
                 axarr[1][1].set_ylim(bounds[1])
 
 
-                x = curve[0][int(t_final/float(N_steps) * k )]
-                y = curve[1][int(t_final/float(N_steps) * k )]
+                x = curve[0][int(t_final/float(N_steps) * n )]
+                y = curve[1][int(t_final/float(N_steps) * n )]
 
                 xs = [x - test_scene.bbox_width/2.0, x - test_scene.bbox_width/2.0, x + test_scene.bbox_width/2.0, x + test_scene.bbox_width/2.0, x - test_scene.bbox_width/2.0]
                 ys = [y - test_scene.bbox_width/2.0, y + test_scene.bbox_width/2.0, y+ test_scene.bbox_width/2.0, y - test_scene.bbox_width/2.0, y - test_scene.bbox_width/2.0]
@@ -235,6 +243,14 @@ if __name__ == "__main__":
                 #plt.show()
                 plt.close('all')
             n += 1
+        print time.time() - st
+        pr.disable()
+        s = StringIO.StringIO()
+        sortby = 'cumulative'
+        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+        ps.print_stats()
+        print s.getvalue()
+
         fig = plt.figure()
         ax = plt.gca()
         ax.set_ylim([-.1, 1.2])

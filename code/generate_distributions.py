@@ -90,7 +90,7 @@ def particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True):
     num_nl_classes = len(scene.P_of_c)-1
     
     #Initializes particles for nonlinear classes
-    x_span = np.linspace( - 3*sigma_x, 3*sigma_x, 20)
+    x_span = np.linspace( - 3*sigma_x, 3*sigma_x, 5)
     dvol_nl = (x_span[1]-x_span[0])**2
     X,Y = np.meshgrid(x_span + x_hat[0], x_span + x_hat[1])
     x0 = np.vstack([X.flatten(), Y.flatten()])
@@ -117,11 +117,11 @@ def particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True):
     w_arr_base = np.zeros((num_nl_classes, 2*N_steps+1, N_ptcl))
     for k in range(num_nl_classes):
         for m in range(-N_steps,N_steps+1):
-            w_arr_base[k,m] = joint_k_s_x_x_hat_v_hat(
-                k, s_max*m /N_steps, x0, x_hat, v_hat) #TODO: Memoize??
+            w_arr_base[k,m] = joint_k_x_x_hat_v_hat(
+                k, x0, x_hat, v_hat) #TODO: Memoize??
 
     veloc = [scene.director_field_vectorized(k, x0) for k in range(num_nl_classes)]
-
+    print np.amax(w_arr_base)
     for n in range(1,N_steps):
         #The following computations handle the nonlinear classes
         t = n * t_final / float(N_steps)
@@ -146,7 +146,7 @@ def particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True):
         	#BEGIN GAUSSIAN CONVOLVE
         	from numpy.random import normal
         	from scipy.stats import multivariate_normal
-        	N_conv = 15 
+        	N_conv = 15
         	length = len(w_out) * N_conv
         	gauss = np.vstack((np.random.normal(0, kappa * t_final/float(N_steps) * n, length), np.random.normal(0, kappa * t_final/float(N_steps) * n, length)))
         	positions = np.repeat(x_out, N_conv, axis=1) + gauss
