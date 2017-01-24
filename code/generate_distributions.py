@@ -164,32 +164,11 @@ def particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True):
         yield x_out, w_out/ prob_of_mu
     pass
 
-def lin_generator(x_hat, v_hat, t_final, N_steps):
-    x_span = np.linspace( -scene.width/2, scene.width/2, 250)
-    dx = x_span[1] - x_span[0]
-    y_span = np.linspace( -scene.height/2, scene.height/2, 250)
-    dy = y_span[1] - y_span[0]
-    X,Y = np.meshgrid(x_span, y_span)
-    x_lin = np.vstack( [X.flatten(), Y.flatten()])
-    for n in range(1, N_steps+1):
-        t = float(t_final / N_steps) * n
-        w_lin = joint_lin_x_t_x_hat_v_hat(t, x_lin, x_hat, v_hat) * dy*dx
-        yield (x_lin, w_lin)
-
-
-    
-
-def pdf_generator():
-    """
-    a generator
-    """
-    pass
 
 if __name__ == '__main__':
     from integrate import trap_quad
     import matplotlib.pyplot as plt
-    with open('test_set.pkl', 'rs') as f:
-        test_set = pickle.load(f)
+    from data import set as test_set
     test_BB_ts = test_set[3]
 
     from process_data import BB_ts_to_curve
