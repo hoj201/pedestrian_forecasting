@@ -21,6 +21,30 @@ def convolve_and_score( pts, weights, sigma, bbox_ls):
                 )
     return score
 
+def precision_series(pred_scores, true_scores, tols):
+    """ Computes the precision for a range of tolerances
+
+    args:
+        pred_scores: numpy array of shape (N,)
+        true_scores: numpy array of shape (N,)
+        tols: numpy array of shape (N_tols,)
+
+    returns:
+        out: numpy array of shape (N_tols,)
+    """
+    N_tols = len(tols)
+    N_scores = len(pred_scores)
+    pred = np.outer(pred_scores, np.ones(N_tols))>np.outer(np.ones(N_scores), tols)
+    true = np.outer(true_scores, np.ones(N_tols))>np.outer(np.ones(N_scores), tols)
+    PP = pred.sum(axis=0).astype(np.int32)
+    TP = true.sum(axis=0).astype(np.int32)
+
+    #where PP is 0 we should output a precision of 1
+    TP = (PP==0) + TP*(PP!=0)
+    PP = (PP==0) + PP*(PP!=0)
+    return TP / PP.astype(np.float64)
+
+
 def precision(computed, ground_truth):
     """ Computes precision
     args:
@@ -44,8 +68,7 @@ def recall(computed, ground_truth):
         out: float
     """
     TP = np.logical_and(computed, ground_truth).sum()
-    P = ground_truth.sum()
-    return TP / float(P)
+    pass
 
 def accuracy(computed, ground_truth):
     """ Computes accuracy
@@ -151,7 +174,7 @@ if __name__ == "__main__":
     print "computed = {}".format(computed)
 
     print "Testing if convolve_and_score is vectorized."
-    N_pts = 10000
+    N_pts = 100
     pts = np.random.randn(2,N_pts)
     weights = np.random.randn(N_pts)**2
     X_grid, Y_grid = np.meshgrid(
@@ -173,3 +196,6 @@ if __name__ == "__main__":
     print "max score = {}".format(score.max())
     print "min score = {}".format(score.min())
 
+    tols = np.linspace( score.min(), score.max(), 100 )
+    precision_arr = precision_series(score, score, tols)
+    
