@@ -96,9 +96,9 @@ def particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True):
     x0 = np.vstack([X.flatten(), Y.flatten()])
     
     #Initializes a regular grid for evaluation of the linear class
-    x_span = np.linspace( -scene.width/2, scene.width/2, )
+    x_span = np.linspace( -scene.width/2, scene.width/2, 250)
     dx = x_span[1] - x_span[0]
-    y_span = np.linspace( -scene.height/2, scene.height/2, 150)
+    y_span = np.linspace( -scene.height/2, scene.height/2, 250)
     dy = y_span[1] - y_span[0]
     X,Y = np.meshgrid(x_span, y_span)
     x_lin = np.vstack( [X.flatten(), Y.flatten()])

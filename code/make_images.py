@@ -15,6 +15,12 @@ if len(argv) > 1:
 	from data import sets
 	test_scene = scenes[int(argv[1])]
 	test_set = sets[int(argv[1])]
+inds = range(len(test_set))
+if len(argv) > 2:
+        inds = map(int, argv[2].split(","))
+inds = range(len(test_set))
+if len(argv) > 2:
+    inds = map(int, argv[1].split(","))
 scene = test_scene
 def rho_true(subj, T, test_set, bbox_ls):
     """ Computes the integral of rho_true over a bounding box"""
@@ -51,13 +57,13 @@ if __name__ == "__main__":
     import matplotlib.animation as anim
     import types
 
-    for i in range(6,8): #len(test_set)):
+    for i in inds: #len(test_set)):
         test_BB_ts = test_set[i]
 
         from process_data import BB_ts_to_curve
         curve = BB_ts_to_curve( test_BB_ts)
         x_hat = curve[:,5]
-        v_hat = (curve[:,100] - curve[:,0])/100
+        v_hat = (curve[:,10] - curve[:,0])/10
         #v_hat /= np.sqrt(v_hat[0] **2 + v_hat[1] ** 2)
         #v_hat *= test_scene.sigma_v * 0.5
         print curve[:, 10]
@@ -73,10 +79,10 @@ if __name__ == "__main__":
         #Domain is actually larger than the domain we care about
         domain = [-scene.width, scene.width, -scene.height, scene.height]
 
-        gen = particle_generator(x_hat, v_hat, t_final, N_steps)
+        gen = particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True)
         n = 0
         from visualization_routines import singular_distribution_to_image
-        res = (50,60)
+        res = (100,100)
         ims = []
         plt.clf()
         for x_arr, w_arr in gen:
@@ -94,12 +100,12 @@ if __name__ == "__main__":
                 #def setvisible(self,vis):
                 #    for c in self.collections: c.set_visible(vis)
                 ####################################################################
-                bounds = [test_scene.width, test_scene.height]
-                rho = (x_arr, w_arr)
-                rt = lambda x: rho_true(i, int(t_final/float(N_steps) * n), test_set, x)
-                tau = 1.39E-4
-                width = test_scene.bbox_width/3
-                evaluate_plane(bounds, rho, rt, width, debug_level=1)
+                #bounds = [test_scene.width, test_scene.height]
+                #rho = (x_arr, w_arr)
+                #rt = lambda x: rho_true(i, int(t_final/float(N_steps) * n), test_set, x)
+                #tau = 1.39E-4
+                #width = test_scene.bbox_width/3
+                #evaluate_plane(bounds, rho, rt, width, debug_level=1)
                 plt.axis("off")
                 import matplotlib.cm as cm
                 cmap = cm.ScalarMappable(cmap="viridis")

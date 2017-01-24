@@ -4,5 +4,5 @@ code/plt.py
 *.mp4
 code/tmp
 code/frames
-
+*.png
 *.zip
