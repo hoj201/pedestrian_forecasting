@@ -10,4 +10,4 @@ for file in sorted(os.listdir("pickles")):
         with open("pickles/" + file,'r') as f:
             sets.append(pickle.load(f))
 scene = scenes[0]
-set = sets[0]
+set = sets[0] #TODO: Probably should not use a python keyword here
