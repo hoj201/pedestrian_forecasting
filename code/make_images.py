@@ -15,7 +15,9 @@ if len(argv) > 1:
 	from data import sets
 	test_scene = scenes[int(argv[1])]
 	test_set = sets[int(argv[1])]
-
+inds = range(len(test_set))
+if len(argv) > 2:
+        inds = map(int, argv[2].split(","))
 inds = range(len(test_set))
 if len(argv) > 2:
     inds = map(int, argv[1].split(","))
@@ -77,7 +79,7 @@ if __name__ == "__main__":
         #Domain is actually larger than the domain we care about
         domain = [-scene.width, scene.width, -scene.height, scene.height]
 
-        gen = particle_generator(x_hat, v_hat, t_final, N_steps, convolve=False)
+        gen = particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True)
         n = 0
         from visualization_routines import singular_distribution_to_image
         res = (100,100)
