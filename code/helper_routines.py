@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import numpy as np
+from scipy.special import erf
 
 def convolve_and_score( pts, weights, sigma, bbox_ls):
     """ Smooths a singular distribution, and integrates it over a list of bboxes
@@ -13,13 +14,73 @@ def convolve_and_score( pts, weights, sigma, bbox_ls):
     returns:
         score: numpy_arr of shape (N_boxes,)
     """
-    score = np.zeros(len(bbox_ls))
+
+    num_bboxes = len(bbox_ls)
+    score = np.zeros(num_bboxes)
+    #basex = np.tile(pts[0], (num_bboxes, 1))
+    #basey = np.tile(pts[1], (num_bboxes,1))
+    #xmins = bbox_ls[:, 0]
+    #xmaxes = bbox_ls[:, 1]
+    #ymins = bbox_ls[:, 2]
+    #ymaxes = bbox_ls[:, 3]
+    #maxes_x = (xmaxes - basex.transpose()).transpose()/(np.sqrt(2)*sigma)
+    #mins_x = (xmins - basex.transpose()).transpose()/(np.sqrt(2)*sigma)
+
+    #out_x = (erf(maxes_x) - erf(mins_x)) / 2
+
+    #maxes_y = (ymaxes - basey.transpose()).transpose()/(np.sqrt(2)*sigma)
+    #mins_y = (ymins - basey.transpose()).transpose()/(np.sqrt(2)*sigma)
+    #out_y = (erf(maxes_y) - erf(mins_y)) / 2
+
+    #out = (out_x * out_y) * weights
+
+    #return np.sum(out, axis=1)
+
     for k, bbox in enumerate(bbox_ls):
         score[k] = np.dot(
                 cdf_of_2d_normal(pts, sigma, bbox),
                 weights
                 )
     return score
+
+def cdf_of_normal(mu, sigma, x_min, x_max):
+    """ Computes the integral of a normal distribution over a bounding box.
+
+    args:
+        mu: numpy array of size 2
+        sigma: float, standard deviation
+        x_min: float
+        x_max: float
+
+    returns:
+        out: float
+    """
+    
+    out = erf( (x_max-mu)/(np.sqrt(2)*sigma) )
+    out -= erf( (x_min-mu)/(np.sqrt(2)*sigma) )
+    out *= 0.5
+    return out
+
+def cdf_of_2d_normal(mu, sigma, bbox):
+    """ Computes the integral of a normal distribution over a bounding box.
+
+    args:
+        mu: numpy array of size 2, mean of normal distribution
+        sigma: float, standard deviation
+        bbox: 4-tuple (x_min, x_max, y_min, y_max)
+
+    returns:
+        out: float
+
+    NOTE: This is vectorized in the parameter mu as long as mu is of shape
+    (2,N).
+    """
+    x_min, x_max, y_min, y_max = bbox
+    out_x = cdf_of_normal(mu[0], sigma, x_min, x_max)
+    out_y = cdf_of_normal(mu[1], sigma, y_min, y_max)
+    out = out_x * out_y
+    return out
+    
 
 def precision_series(pred_scores, true_scores, tols):
     """ Computes the precision for a range of tolerances
@@ -83,43 +144,7 @@ def accuracy(computed, ground_truth):
     total = computed.size()
     return count / float(total)
 
-def cdf_of_normal(mu, sigma, x_min, x_max):
-    """ Computes the integral of a normal distribution over a bounding box.
 
-    args:
-        mu: numpy array of size 2
-        sigma: float, standard deviation
-        x_min: float
-        x_max: float
-
-    returns:
-        out: float
-    """
-    from scipy.special import erf
-    out = erf( (x_max-mu)/(np.sqrt(2)*sigma) )
-    out -= erf( (x_min-mu)/(np.sqrt(2)*sigma) )
-    out *= 0.5
-    return out
-
-def cdf_of_2d_normal(mu, sigma, bbox):
-    """ Computes the integral of a normal distribution over a bounding box.
-
-    args:
-        mu: numpy array of size 2, mean of normal distribution
-        sigma: float, standard deviation
-        bbox: 4-tuple (x_min, x_max, y_min, y_max)
-
-    returns:
-        out: float
-
-    NOTE: This is vectorized in the parameter mu as long as mu is of shape
-    (2,N).
-    """
-    x_min, x_max, y_min, y_max = bbox
-    out_x = cdf_of_normal(mu[0], sigma, x_min, x_max)
-    out_y = cdf_of_normal(mu[1], sigma, y_min, y_max)
-    out = out_x * out_y
-    return out
 
 if __name__ == "__main__":
     print "Testing routine cdf_of_normal"

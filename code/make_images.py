@@ -9,19 +9,15 @@ from sys import argv
 
 from data import scene as test_scene
 from data import set as test_set
-
 if len(argv) > 1:
 	from data import scenes
 	from data import sets
 	test_scene = scenes[int(argv[1])]
 	test_set = sets[int(argv[1])]
 inds = range(len(test_set))
+scene = test_scene
 if len(argv) > 2:
         inds = map(int, argv[2].split(","))
-inds = range(len(test_set))
-if len(argv) > 2:
-    inds = map(int, argv[1].split(","))
-scene = test_scene
 def rho_true(subj, T, test_set, bbox_ls):
     """ Computes the integral of rho_true over a bounding box"""
     res = (20,20)
@@ -74,7 +70,7 @@ if __name__ == "__main__":
         print "Measured speed / sigma_L = {:f}".format( speed / scene.sigma_L )
         print "sigma_L = {:f}".format( scene.sigma_L)
         k=0
-        t_final = min(len(curve[0]), 400)
+        t_final = min(len(curve[0]), 10)
         N_steps = t_final
         #Domain is actually larger than the domain we care about
         domain = [-scene.width, scene.width, -scene.height, scene.height]
@@ -111,6 +107,7 @@ if __name__ == "__main__":
                 cmap = cm.ScalarMappable(cmap="viridis")
                 colors = cmap.to_rgba(w_arr/np.amax(w_arr))
                 colors[:, 3] = w_arr/np.amax(w_arr)
+                plt.scatter(curve[0], curve[1])
 
                 #plt.scatter(x_arr[0], x_arr[1], c=colors, cmap="viridis", edgecolors="none")
                 #plt.plot(curve[0], curve[1], color="red")

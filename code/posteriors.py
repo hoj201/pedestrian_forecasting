@@ -105,9 +105,8 @@ def x_given_k(x,k):
     """
     out = (1.0/_normalization_constants[k])
     out *= np.exp( -1*legval_scale(x[0], x[1], Vk[k]))
-    out *= (x[0] <= scene_scale[0]/2.0)*(x[0] >= -scene_scale[0]/2.0)
-    out *= (x[1] <= scene_scale[1]/2.0)*(x[1] >= -scene_scale[1]/2.0)
-    #out = np.ones(x.shape[1])
+    #out *= (x[0] <= scene_scale[0]/2.0)*(x[0] >= -scene_scale[0]/2.0)
+    #out *= (x[1] <= scene_scale[1]/2.0)*(x[1] >= -scene_scale[1]/2.0)
     return out
 
 def x_given_lin(x):
@@ -121,8 +120,8 @@ def x_given_lin(x):
     else:
         const_arr = np.ones(x.shape[1])
     out = const_arr/(scene_scale[0] * scene_scale[1])
-    out *= (x[0] <= scene_scale[0]/2.0)*(x[0] >= -scene_scale[0]/2.0)
-    out *= (x[1] <= scene_scale[1]/2.0)*(x[1] >= -scene_scale[1]/2.0)
+    #out *= (x[0] <= scene_scale[0]/2.0)*(x[0] >= -scene_scale[0]/2.0)
+    #out *= (x[1] <= scene_scale[1]/2.0)*(x[1] >= -scene_scale[1]/2.0)
     return out
 
 def v_given_x_lin(v):

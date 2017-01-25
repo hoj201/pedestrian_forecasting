@@ -19,7 +19,6 @@ from derived_posteriors import joint_k_x_x_hat_v_hat
 from data import scene
 
 
-
 Vk = scene.alpha_arr
 scene_scale = np.array([scene.width, scene.height])
 #temporary
@@ -90,7 +89,7 @@ def particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True):
     num_nl_classes = len(scene.P_of_c)-1
     
     #Initializes particles for nonlinear classes
-    x_span = np.linspace( - 3*sigma_x, 3*sigma_x, 20)
+    x_span = np.linspace( - 3*sigma_x, 3*sigma_x, 5)
     dvol_nl = (x_span[1]-x_span[0])**2
     X,Y = np.meshgrid(x_span + x_hat[0], x_span + x_hat[1])
     x0 = np.vstack([X.flatten(), Y.flatten()])
@@ -112,16 +111,15 @@ def particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True):
     w_arr = posteriors.x_hat_given_x(x0, x_hat)*dvol_nl
     w_out = w_arr.flatten()
     x_out = x0
-    yield x_out, w_out
+    yield (x_out, w_out), (x_lin, np.zeros_like(x_lin[0]))
     #For later times, the class of the agent matters.
     w_arr_base = np.zeros((num_nl_classes, 2*N_steps+1, N_ptcl))
     for k in range(num_nl_classes):
         for m in range(-N_steps,N_steps+1):
-            w_arr_base[k,m] = joint_k_s_x_x_hat_v_hat(
-                k, s_max*m /N_steps, x0, x_hat, v_hat) #TODO: Memoize??
+            w_arr_base[k,m] = joint_k_x_x_hat_v_hat(
+                k, x0, x_hat, v_hat) #TODO: Memoize??
 
     veloc = [scene.director_field_vectorized(k, x0) for k in range(num_nl_classes)]
-
     for n in range(1,N_steps):
         #The following computations handle the nonlinear classes
         t = n * t_final / float(N_steps)
@@ -146,7 +144,7 @@ def particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True):
         	#BEGIN GAUSSIAN CONVOLVE
         	from numpy.random import normal
         	from scipy.stats import multivariate_normal
-        	N_conv = 15 
+        	N_conv = 15
         	length = len(w_out) * N_conv
         	gauss = np.vstack((np.random.normal(0, kappa * t_final/float(N_steps) * n, length), np.random.normal(0, kappa * t_final/float(N_steps) * n, length)))
         	positions = np.repeat(x_out, N_conv, axis=1) + gauss
@@ -157,12 +155,14 @@ def particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True):
         #The following computations handle the linear predictor class
         w_lin = joint_lin_x_t_x_hat_v_hat(t, x_lin, x_hat, v_hat) * dy*dx
         #TODO: append regular grid and weights to x_out, w_out
-        x_out = np.concatenate( [x_out, x_lin], axis=1)
-        w_out = np.concatenate( [w_out, w_lin])
-        if n==1:
-            prob_of_mu = w_out.sum()
-        yield x_out, w_out/ prob_of_mu
+        #x_out = np.concatenate( [x_out, x_lin], axis=1)
+        #w_out = np.concatenate( [w_out, w_lin])
+        prob_of_mu = w_out.sum() + w_lin.sum()
+        yield (x_out, w_out/ prob_of_mu), (x_lin, w_lin/prob_of_mu)
     pass
+
+
+
 
 
 if __name__ == '__main__':
