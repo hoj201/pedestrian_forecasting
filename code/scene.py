@@ -33,7 +33,7 @@ class Scene():
  
 
     """
-    def __init__( self, BB_ts_ls, width, height, k_max_theta=6, k_max_vf=10 ):
+    def __init__( self, BB_ts_ls, width, height, k_max_theta=15, k_max_vf=15 ):
         """ Initializer
 
         args:
