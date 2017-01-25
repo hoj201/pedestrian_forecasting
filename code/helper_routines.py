@@ -17,20 +17,19 @@ def convolve_and_score( pts, weights, sigma, bbox_ls):
 
     num_bboxes = len(bbox_ls)
     score = np.zeros(num_bboxes)
-    basex = np.tile(pts[0], (num_bboxes, 1))
-    basey = np.tile(pts[1], (num_bboxes,1))
-    xmins = bbox_ls[:, 0]
-    xmaxes = bbox_ls[:, 1]
-    ymins = bbox_ls[:, 2]
-    ymaxes = bbox_ls[:, 3]
-    maxes_x = (xmaxes - basex.transpose()).transpose()/(np.sqrt(2)*sigma)
-    mins_x = (xmins - basex.transpose()).transpose()/(np.sqrt(2)*sigma)
+    #basex = np.tile(pts[0], (num_bboxes, 1))
+    #basey = np.tile(pts[1], (num_bboxes,1))
+    #xmins = bbox_ls[:, 0]
+    #xmaxes = bbox_ls[:, 1]
+    #ymins = bbox_ls[:, 2]
+    #ymaxes = bbox_ls[:, 3]
+    #maxes_x = (xmaxes - basex.transpose()).transpose()/(np.sqrt(2)*sigma)
+    #mins_x = (xmins - basex.transpose()).transpose()/(np.sqrt(2)*sigma)
 
-    out_x = (erf(maxes_x) - erf(mins_x)) / 2
+    #out_x = (erf(maxes_x) - erf(mins_x)) / 2
 
-    maxes_y = (ymaxes - basey.transpose()).transpose()/(np.sqrt(2)*sigma)
-    mins_y = (ymins - basey.transpose()).transpose()/(np.sqrt(2)*sigma)
-
+    #maxes_y = (ymaxes - basey.transpose()).transpose()/(np.sqrt(2)*sigma)
+    #mins_y = (ymins - basey.transpose()).transpose()/(np.sqrt(2)*sigma)
     #out_y = (erf(maxes_y) - erf(mins_y)) / 2
 
     #out = (out_x * out_y) * weights
@@ -42,22 +41,6 @@ def convolve_and_score( pts, weights, sigma, bbox_ls):
                 cdf_of_2d_normal(pts, sigma, bbox),
                 weights
                 )
-        #pts are mu
-        #x_min, x_max, y_min, y_max = bbox
-        #out_x = cdf_of_normal(mu[0], sigma, x_min, x_max)
-
-        #out_x = erf( (x_max-pts[0])/(np.sqrt(2)*sigma) )
-        #out_x -= erf( (x_min-pts[0])/(np.sqrt(2)*sigma) )
-        #out_x *= 0.5
-
-        #out_y = cdf_of_normal(mu[1], sigma, y_min, y_max)
-
-        #out_y = erf( (y_max-pts[1])/(np.sqrt(2)*sigma) )
-        #out_y -= erf( (y_min-pts[1])/(np.sqrt(2)*sigma) )
-        #out_y *= 0.5
-
-        #out = out_x * out_y
-        #score[k] = np.dot(out, weights)
     return score
 
 def cdf_of_normal(mu, sigma, x_min, x_max):

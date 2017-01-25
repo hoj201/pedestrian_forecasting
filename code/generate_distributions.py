@@ -120,7 +120,6 @@ def particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True):
                 k, x0, x_hat, v_hat) #TODO: Memoize??
 
     veloc = [scene.director_field_vectorized(k, x0) for k in range(num_nl_classes)]
-    print np.amax(w_arr_base)
     for n in range(1,N_steps):
         #The following computations handle the nonlinear classes
         t = n * t_final / float(N_steps)
@@ -158,10 +157,12 @@ def particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True):
         #TODO: append regular grid and weights to x_out, w_out
         #x_out = np.concatenate( [x_out, x_lin], axis=1)
         #w_out = np.concatenate( [w_out, w_lin])
-        if n==1:
-            prob_of_mu = w_out.sum() + w_lin.sum()
+        prob_of_mu = w_out.sum() + w_lin.sum()
         yield (x_out, w_out/ prob_of_mu), (x_lin, w_lin/prob_of_mu)
     pass
+
+
+
 
 
 if __name__ == '__main__':

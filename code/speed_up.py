@@ -4,7 +4,7 @@ from evaluation import evaluate_ours, evaluate_lin
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import generate_distributions
-from generate_distributions import particle_generator #, lin_generator
+from generate_distributions import particle_generator
 #from test_distribution import particle_generator as particle_generator_t
 from decimal import Decimal
 from adjustText import adjust_text
@@ -137,11 +137,12 @@ if __name__ == "__main__":
         print "Measured speed / sigma_L = {:f}".format( speed / scene.sigma_L )
         print "sigma_L = {:f}".format( scene.sigma_L)
         k=0
-        t_final = min(len(curve[0]), 100)
+        t_final = min(len(curve[0]), 400)
         N_steps = t_final
         #Domain is actually larger than the domain we care about
         domain = [-scene.width/2, scene.width/2, -scene.height/2, scene.height/2]
         ours = particle_generator(x_hat, v_hat, t_final, N_steps, convolve=False)
+        import time
         #mine = particle_generator_t(x_hat, v_hat, t_final, N_steps)
         #lin = lin_generator(x_hat, v_hat, t_final, N_steps)
 
@@ -160,19 +161,18 @@ if __name__ == "__main__":
 
         auc_ours = []
         auc_lin = []
-        import time
         st = time.time()
         import cProfile, pstats, StringIO
         pr = cProfile.Profile()
         pr.enable()
         for ((x_arr_ours, w_arr_ours), (x_arr_lin, w_arr_lin)) in ours:
-            #print n
-            #n += 1
-            #continue
             if n == 0:
                 n += 1
                 continue
-            if n%5==0:
+            n += 1
+            print n
+            continue
+            if n % 5 == 0:
                 #whr = np.where(w_arr > 0)[0]
                 #x_arr = x_arr.transpose()[whr].transpose()
                 #w_arr = w_arr[whr]
