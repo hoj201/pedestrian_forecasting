@@ -21,14 +21,13 @@ if len(argv) < 2:
     test_scene = test_scenes[0]
     scene = test_scene
     test_set = test_sets[0]
-    inds = range(len(test_set))
 else:
     scene_number = int(argv[1])
     test_scene = test_scenes[int(argv[1])]
     scene = test_scene
     test_set = test_sets[int(argv[1])]
     generate_distributions.set_scene(int(argv[1]))
-
+inds = range(len(test_set))
 if len(argv) > 2:
         st = argv[2]
         inds = map(int, st.split(","))
@@ -82,7 +81,8 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import matplotlib.animation as anim
     import types
-
+    st = time.time()
+    print time.time()
     def f(i):
         test_BB_ts = test_set[i]
 
@@ -138,7 +138,7 @@ if __name__ == "__main__":
                 rhol = (x_arr_lin, w_arr_lin)
                 rt = lambda x: rho_true(i, int(t_final/float(N_steps) * n), test_set, x)
                 width = test_scene.width/40
-                pr_ours, tr_ours, bboxes = evaluate_ours(bounds, rho, rhol, rt, width, scene.kappa * t_final/float(N_steps) * n, debug_level=0)
+                pr_ours, tr_ours, bboxes = evaluate_ours(bounds, rho, rhol, rt, width, 1.3 * scene.kappa * t_final/float(N_steps) * n, debug_level=0)
 
                 w_arr_lin /= np.sum(w_arr_lin) if  np.sum(w_arr_lin) > 0 else 1
                 #whr = np.where(w_arr > 0)[0]
@@ -221,8 +221,8 @@ if __name__ == "__main__":
         ax = plt.gca()
         ax.set_ylim([-.1, 1.2])
         plt.title("AUC for agent {}".format(i))
-        ax.plot([x for x in range(len(auc_ours))], auc_ours, label = "Ours")
-        ax.plot([x for x in range(len(auc_lin))], auc_lin, label = "Linear")
+        ax.plot([x * 5 for x in range(len(auc_ours))], auc_ours, label = "Ours")
+        ax.plot([x * 5  for x in range(len(auc_lin))], auc_lin, label = "Linear")
         ax.set_xlabel('Frames')
         ax.set_ylabel('AUC')
         ax.legend()
@@ -230,9 +230,9 @@ if __name__ == "__main__":
         plt.close('all')
 
     from joblib import Parallel, delayed
-    Parallel(n_jobs=2)(delayed(f)(x) for x in inds)
-
-
+    Parallel(n_jobs=18)(delayed(f)(x) for x in inds)
+    print time.time()
+    print time.time() - st
 
 
 
