@@ -19,7 +19,6 @@ from derived_posteriors import joint_k_x_x_hat_v_hat
 from data import scene
 
 
-
 Vk = scene.alpha_arr
 scene_scale = np.array([scene.width, scene.height])
 #temporary
@@ -112,7 +111,7 @@ def particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True):
     w_arr = posteriors.x_hat_given_x(x0, x_hat)*dvol_nl
     w_out = w_arr.flatten()
     x_out = x0
-    yield x_out, w_out
+    yield (x_out, w_out), (x_lin, np.zeros_like(x_lin[0]))
     #For later times, the class of the agent matters.
     w_arr_base = np.zeros((num_nl_classes, 2*N_steps+1, N_ptcl))
     for k in range(num_nl_classes):
@@ -157,11 +156,11 @@ def particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True):
         #The following computations handle the linear predictor class
         w_lin = joint_lin_x_t_x_hat_v_hat(t, x_lin, x_hat, v_hat) * dy*dx
         #TODO: append regular grid and weights to x_out, w_out
-        x_out = np.concatenate( [x_out, x_lin], axis=1)
-        w_out = np.concatenate( [w_out, w_lin])
+        #x_out = np.concatenate( [x_out, x_lin], axis=1)
+        #w_out = np.concatenate( [w_out, w_lin])
         if n==1:
-            prob_of_mu = w_out.sum()
-        yield x_out, w_out/ prob_of_mu
+            prob_of_mu = w_out.sum() + w_lin.sum()
+        yield (x_out, w_out/ prob_of_mu), (x_lin, w_lin/prob_of_mu)
     pass
 
 

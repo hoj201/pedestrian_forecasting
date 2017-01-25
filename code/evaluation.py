@@ -12,13 +12,66 @@ from integrate import trap_quad
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
+from helper_routines import convolve_and_score
 
-def classifier(bounds, width, rho):
+def classifier(bounds, width, rho, sigma_x):
     #takes:
     #bounds: [width, height]
     #rho: (np.array(n_points, 2), np.array(n_points))
     #tau: float
-    #returns: bool array #NOTE hoj:  This does not output a bool, as written
+    #returns: float array #NOTE hoj:  This does not output a bool, as written
+    pts, weights = rho
+    asdf = {"counter": 0}
+
+    ctx = int(np.ceil(bounds[0]/width))
+    cty = int(np.ceil(bounds[1]/width))
+
+    x_lims = np.linspace(-bounds[0]/2, bounds[0]/2, ctx+1)
+    y_lims = np.linspace(-bounds[1]/2, bounds[1]/2, cty+1)
+
+    bboxes = []
+    sums = []
+    for i in range(ctx):
+        for j in range(cty):
+            bboxes.append([-1 * bounds[0]/2.0 + width * i, -1 * bounds[0]/2.0 + width * (i+1),
+                            -1 * bounds[1]/2.0 + width * j, -1 * bounds[1]/2.0 + width * (j+1)])
+    bboxes = np.array(bboxes)
+    if sigma_x > 0:
+        sums = convolve_and_score(rho[0], rho[1], sigma_x, bboxes)
+    else:
+        sums, bboxes = classifier_no_convolve(bounds, width, rho)
+
+    #for i in range(ctx):
+    #    lbx = x_lims[i]
+    #    ubx = x_lims[i+1]
+    #    start = pts[0].searchsorted(lbx)
+    #    end = pts[0].searchsorted(ubx)
+    #    pts_x = pts[:,start:end]
+    #    weights_x = weights[start:end]
+
+
+    #    #Sort with respect to y-component
+    #    indices = np.argsort(pts_x[1])
+    #    pts_x = pts_x[:,indices]
+    #    weights_x = weights_x[indices]
+    #    for j in range(cty):
+    #        lby = y_lims[j]
+    #        uby = y_lims[j+1]
+    #        start = pts_x[1].searchsorted(lby)
+    #        end = pts_x[1].searchsorted(uby)
+    #        sums.append(weights_x[start:end].sum())
+
+    #print(res + integrals)[np.where(res + integrals > tau)[0]][36:]
+    #printE[np.where(res + integrals > tau)[0]]
+    sums = np.array(sums)
+    return sums, bboxes
+
+def classifier_no_convolve(bounds, width, rho):
+    #takes:
+    #bounds: [width, height]
+    #rho: (np.array(n_points, 2), np.array(n_points))
+    #tau: float
+    #returns: float array #NOTE hoj:  This does not output a bool, as written
     pts, weights = rho
     asdf = {"counter": 0}
 
@@ -54,14 +107,15 @@ def classifier(bounds, width, rho):
             start = pts_x[1].searchsorted(lby)
             end = pts_x[1].searchsorted(uby)
             sums.append(weights_x[start:end].sum())
-            bboxes.append([[width, width],
-                           [-1 * bounds[0]/2.0 + width/2.0 + width * i, -1 * bounds[1]/2.0 + width/2.0 + width * j]])
+            bboxes.append([-1 * bounds[0]/2.0 + width * i, -1 * bounds[0]/2.0 + width * (i+1),
+                            -1 * bounds[1]/2.0 + width * j, -1 * bounds[1]/2.0 + width * (j+1)])
 
     #print(res + integrals)[np.where(res + integrals > tau)[0]][36:]
     #printE[np.where(res + integrals > tau)[0]]
     sums = np.array(sums)
-    bboxes = np.array(bboxes)
     return sums, bboxes
+
+
 
 def true_classifier(E, rho_true):
     #takes:
@@ -96,7 +150,7 @@ def recall(pred, truth):
 def accuracy(pred, truth):
     return len(np.where(pred == truth)[0]) / float(len(truth))
 
-def evaluate_plane(bbox, rho, rho_true, width, debug_level=0):
+def evaluate_ours(bbox, rho, rho_lin, rho_true, width, sigma, debug_level=0):
     #Takes:
     #bbox: np.array(2): [scene_width, scene_height]
     #rho: (np.array(n_points, 2), np.array(n_points))
@@ -109,7 +163,28 @@ def evaluate_plane(bbox, rho, rho_true, width, debug_level=0):
     bboxes = []
     #create all of the bounding boxes
     #Create prediction
-    predic, bboxes = classifier(bbox, width, rho)
+    predic, bboxes = classifier(bbox, width, rho, sigma)
+    predicl, bboxesl = classifier_no_convolve(bbox, width, rho_lin)
+    predic = predic + predicl
+    #create truth for comparison
+    truth = true_classifier(bboxes, rho_true)
+    true = truth > 0
+
+    return  (predic, true, bboxes)
+
+def evaluate_lin(bbox, rho_lin, rho_true, width, debug_level=0):
+    #Takes:
+    #bbox: np.array(2): [scene_width, scene_height]
+    #rho: (np.array(n_points, 2), np.array(n_points))
+    #rho_true: function
+    #tau: float
+    #lin_term: function
+    #width: float
+    #returns (precision, recall, accuracy)
+    bboxes = []
+    #create all of the bounding boxes
+    #Create prediction
+    predic, bboxes = classifier_no_convolve(bbox, width, rho_lin)
     #create truth for comparison
     truth = true_classifier(bboxes, rho_true)
     true = truth > 0
