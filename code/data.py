@@ -1,5 +1,6 @@
 import pickle
 import os
+import numpy as np
 scenes = []
 sets = []
 for file in sorted(os.listdir("pickles")):
