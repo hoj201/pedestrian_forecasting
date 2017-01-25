@@ -18,10 +18,13 @@ sigma_x = scene.sigma_x
 sigma_v = scene.sigma_v
 sigma_L = scene.sigma_L
 
-def set_scene(num_scene):
-    global scene, Vk, scene_scale, dist_width, vel_width, s_max, sigma_x, sigma_v, sigma_L
-    from data import scenes
-    scene = scenes[num_scene]
+def set_scene(num_scene, custom_scene=None):
+    global scene, Vk, max_k, s_max, dist_width, vel_width, sigma_x, sigma_v, sigma_l, p_of_lin, scene_scale
+    if custom_scene!=None:
+        scene = custom_scene
+    else:
+        from data import scenes
+        scene = scenes[num_scene]
     Vk = scene.alpha_arr
     scene_scale = np.array([scene.width, scene.height])
     #temporary
