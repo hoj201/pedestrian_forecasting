@@ -62,7 +62,7 @@ def evaluate(gen, i, t_final, N_points):
 
     return predic, true, rho_arr
 
-def plot_roc(predics, trues, title, axes, f):
+def plot_roc(predics, trues, title, axes):
     false_positive_rate, true_positive_rate, thresholds = roc_curve(trues, predics)
     axes.scatter(false_positive_rate, true_positive_rate)
     txts = []
@@ -83,46 +83,7 @@ if __name__ == "__main__":
     import matplotlib.animation as anim
     import types
 
-    tau_arr = np.array([10**(-x) for x in range(2, 5)])
-    tau_arr = np.exp( -np.log(10) * np.linspace(0, 6, 8))
-
-    xs_l = np.zeros(0)
-
-    ys_l = np.zeros(0)
-
-    zs_prec_ours = np.zeros(0)
-    zs_rec_ours = np.zeros(0)
-
-    zs_prec_mine = np.zeros(0)
-    zs_rec_mine = np.zeros(0)
-
-    zs_prec_lin = np.zeros(0)
-    zs_rec_lin = np.zeros(0)
-
-    prec_arr_ours = np.zeros(len(tau_arr))
-    rec_arr_ours = np.zeros(len(tau_arr))
-
-    prec_arr_lin = np.zeros(len(tau_arr))
-    rec_arr_lin = np.zeros(len(tau_arr))
-
-
-    res_ours = np.zeros(3)
-    res_mine = np.zeros(3)
-    res_lin = np.zeros(3)
-    f = open("results_coupa.txt", "w")
-
-    trueours = []
-    predicours = []
-
-    truemine = []
-    predicmine = []
-
-    truelin = []
-    prediclin = []
-    f_lin = open("results/linear.txt", "w")
-    f_ours = open("results/ours.txt", "w")
-
-    for i in inds:
+    def f(i):
         test_BB_ts = test_set[i]
 
         from process_data import BB_ts_to_curve
@@ -142,7 +103,6 @@ if __name__ == "__main__":
         #Domain is actually larger than the domain we care about
         domain = [-scene.width/2, scene.width/2, -scene.height/2, scene.height/2]
         ours = particle_generator(x_hat, v_hat, t_final, N_steps, convolve=False)
-        import time
         #mine = particle_generator_t(x_hat, v_hat, t_final, N_steps)
         #lin = lin_generator(x_hat, v_hat, t_final, N_steps)
 
@@ -161,17 +121,10 @@ if __name__ == "__main__":
 
         auc_ours = []
         auc_lin = []
-        st = time.time()
-        import cProfile, pstats, StringIO
-        pr = cProfile.Profile()
-        pr.enable()
         for ((x_arr_ours, w_arr_ours), (x_arr_lin, w_arr_lin)) in ours:
             if n == 0:
                 n += 1
                 continue
-            n += 1
-            print n
-            continue
             if n % 5 == 0:
                 #whr = np.where(w_arr > 0)[0]
                 #x_arr = x_arr.transpose()[whr].transpose()
@@ -203,8 +156,8 @@ if __name__ == "__main__":
                     ax.set_xlim([-.1, 1.2])
                     ax.set_ylim([-.1, 1.2])
 
-                auc_ours.append(plot_roc(pr_ours, tr_ours, "Our Algorithm for agent {}, t={}".format(i, int(t_final/float(N_steps) * k)), axarr[0][0], f_ours))
-                auc_lin.append(plot_roc(pr_lin, tr_lin, "Linear Predictor for agent {}, t={}".format(i, int(t_final/float(N_steps) * k)), axarr[0][1], f_lin))
+                auc_ours.append(plot_roc(pr_ours, tr_ours, "Our Algorithm for agent {}, t={}".format(i, int(t_final/float(N_steps) * n)), axarr[0][0]))
+                auc_lin.append(plot_roc(pr_lin, tr_lin, "Linear Predictor for agent {}, t={}".format(i, int(t_final/float(N_steps) * n)), axarr[0][1]))
 
 
                 #X,Y,Z = singular_distribution_to_image(
@@ -253,7 +206,7 @@ if __name__ == "__main__":
                     x_arr_lin, w_arr_lin, domain, res= (100,100))
                 #Z = Z > 1E-3
                 im = axarr[1][1].pcolormesh(X,Y,Z, cmap='viridis')
-                axarr[1][1].set_xlabel("AUC is {}".format(auc_ours[-1]))
+                axarr[1][1].set_xlabel("AUC is {}".format(auc_lin[-1]))
 
                 axarr[1][1].scatter(x, y)
 
@@ -263,13 +216,6 @@ if __name__ == "__main__":
                 #plt.show()
                 plt.close('all')
             n += 1
-        print time.time() - st
-        pr.disable()
-        s = StringIO.StringIO()
-        sortby = 'cumulative'
-        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-        ps.print_stats()
-        print s.getvalue()
 
         fig = plt.figure()
         ax = plt.gca()
@@ -282,6 +228,9 @@ if __name__ == "__main__":
         ax.legend()
         plt.savefig("images/precision_recall/{}/{}AUC_for_agent_{}.png".format(scene_number, scene_number, i))
         plt.close('all')
+
+    from joblib import Parallel, delayed
+    Parallel(n_jobs=2)(delayed(f)(x) for x in inds)
 
 
 
