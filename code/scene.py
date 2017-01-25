@@ -33,7 +33,7 @@ class Scene():
  
 
     """
-    def __init__( self, BB_ts_ls, width, height, k_max_theta=15, k_max_vf=15 ):
+    def __init__( self, BB_ts_ls, width, height, k_max_alpha=6, k_max_theta=6):
         """ Initializer
 
         args:
@@ -63,7 +63,8 @@ class Scene():
 
         #Learn the  agent_classes
         from cluster import get_classes
-        alpha_arr, P_of_c, clusters = get_classes( curve_ls, width, height)
+        alpha_arr, P_of_c, clusters = get_classes( curve_ls, width, height,
+                k_max=k_max_alpha)
         self.alpha_arr = alpha_arr
         self.P_of_c = P_of_c
         print P_of_c
