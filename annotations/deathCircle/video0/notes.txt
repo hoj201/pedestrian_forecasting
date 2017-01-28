@@ -1,0 +1,2 @@
+BMP images are 16-bit R5,G6,B5 format
+The golf cart is 2.31 meters long
