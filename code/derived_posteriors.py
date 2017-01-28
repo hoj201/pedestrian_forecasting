@@ -21,10 +21,13 @@ sigma_L = scene.sigma_L
 p_of_lin = scene.P_of_c[-1]
 scene_scale = np.array([scene.width, scene.height])
 
-def set_scene(num_scene):
+def set_scene(num_scene, custom_scene=None):
     global scene, max_k, s_max, dist_width, vel_width, sigma_x, sigma_v, sigma_l, p_of_lin, scene_scale
-    from data import scenes
-    scene = scenes[num_scene]
+    if custom_scene!=None:
+        scene = custom_scene
+    else:
+        from data import scenes
+        scene = scenes[num_scene]
     max_k = len(scene.P_of_c)-1
     #temporary s_max
     s_max = scene.s_max

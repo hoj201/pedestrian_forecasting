@@ -1,0 +1,1 @@
+bmp is in format 16-bit, R5,G6,B5
