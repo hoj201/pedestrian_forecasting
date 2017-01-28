@@ -1,0 +1,3 @@
+BMP files are in 16-bit R5,G6,B5 format
+48 pixels = 15.4 meters in the downsampled image
+3.12 pixels = 1 meter

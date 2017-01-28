@@ -1,1 +1,5 @@
 BMP files are saved in 16-bit R5,G6,B5 format.  With colorspace info
+
+scale:
+62px = 40ft = 12.19m
+5.09px = 1m

@@ -1,1 +1,5 @@
 bmp is in format 16-bit, R5,G6,B5
+
+scale:
+68px = 60ft = 18.29m
+3.72px = 1m

@@ -1,2 +1,6 @@
 BMP images are 16-bit R5,G6,B5 format
+
+scale:
+34px = 40ft = 12.19m
+2.79px = 1m
 The golf cart is 2.31 meters long
