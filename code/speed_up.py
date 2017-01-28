@@ -146,10 +146,6 @@ if __name__ == "__main__":
                 rt = lambda x: rho_true(i, int(t_final/float(N_steps) * n), test_set, x)
                 width = test_scene.width/40
                 pr_ours, tr_ours, bboxes = evaluate_ours(bounds, rho, rhol, rt, width, 1.6 * scene.kappa * t_final/float(N_steps) * n, debug_level=0)
-		#mask = pr_ours < np.amax(pr_ours)/1.5
-		#mask_2 = pr_ours > np.amax(pr_ours)/1.5
-		#pr_ours = pr_ours * mask 
-		#pr_ours +=  mask_2 * np.amax(pr_ours) / 2
                 w_arr_lin /= np.sum(w_arr_lin) if  np.sum(w_arr_lin) > 0 else 1
                 #whr = np.where(w_arr > 0)[0]
                 #x_arr = x_arr.transpose()[whr].transpose()
@@ -158,16 +154,16 @@ if __name__ == "__main__":
                 #plt.contourf(X,Y,Z, 30, cmap='viridis')
                 rho = (x_arr_lin, w_arr_lin)
                 pr_lin, tr_lin = evaluate_lin(bounds, rhol, rt, width, debug_level=0)
-		if len(ppr_ours) == 0:
-		    ppr_ours = np.array([pr_ours])
-		    ttr_ours = np.array([tr_ours])
-		    ppr_lin = np.array([pr_lin])
-		    ttr_lin = np.array([tr_lin])
-		else:
-		    ppr_ours = np.vstack((ppr_ours, pr_ours))
-		    ttr_ours = np.vstack((ttr_ours, tr_ours))
-		    ppr_lin = np.vstack((ppr_lin, pr_lin))
-		    ttr_lin = np.vstack((ttr_lin, tr_lin))
+                if len(ppr_ours) == 0:
+		            ppr_ours = np.array([pr_ours])
+		            ttr_ours = np.array([tr_ours])
+		            ppr_lin = np.array([pr_lin])
+		            ttr_lin = np.array([tr_lin])
+                else:
+		            ppr_ours = np.vstack((ppr_ours, pr_ours))
+		            ttr_ours = np.vstack((ttr_ours, tr_ours))
+		            ppr_lin = np.vstack((ppr_lin, pr_lin))
+		            ttr_lin = np.vstack((ttr_lin, tr_lin))
 
                 f, axarr = plt.subplots(2, 2)
 
@@ -203,10 +199,10 @@ if __name__ == "__main__":
 		
 		
                 #img = axarr[1][0].pcolor(X,Y,Z, cmap='viridis')
-		im = axarr[1][0].imshow(Z.transpose(), origin="lower", extent=[-bounds[0]/2,bounds[0]/2,-bounds[1]/2,bounds[1]/2])
-		axarr[1][0].imshow(reference, extent=[-bounds[0]/2,bounds[0]/2,-bounds[1]/2,bounds[1]/2], alpha=0.5)
-		#for col,val in zip(img.get_facecolors(), pr_ours):
-		#    col[3] = 0.5
+                im = axarr[1][0].imshow(Z.transpose(), origin="lower", extent=[-bounds[0]/2,bounds[0]/2,-bounds[1]/2,bounds[1]/2])
+                iaxarr[1][0].imshow(reference, extent=[-bounds[0]/2,bounds[0]/2,-bounds[1]/2,bounds[1]/2], alpha=0.5)
+		        #for col,val in zip(img.get_facecolors(), pr_ours):
+		        #    col[3] = 0.5
 		    
                 axarr[1][0].set_xlabel("AUC is {}".format(auc_ours[-1]))
 
@@ -216,7 +212,7 @@ if __name__ == "__main__":
                 axarr[1][0].set_ylim(bound[1])
                 axarr[1][1].set_xlim(bound[0])
                 axarr[1][1].set_ylim(bound[1])
-		axarr[1][0].set_aspect('equal')
+                axarr[1][0].set_aspect('equal')
                 axarr[1][1].set_aspect('equal')
                 x = curve[0][int(t_final/float(N_steps) * n )]
                 y = curve[1][int(t_final/float(N_steps) * n )]
@@ -231,13 +227,13 @@ if __name__ == "__main__":
                 #X,Y,Z = singular_distribution_to_image(
                 #    x_arr_lin, w_arr_lin, domain, res= (ctx,cty))
                 #Z = Z > 1E-3
-		Z = pr_lin.reshape((ctx, cty))
+                Z = pr_lin.reshape((ctx, cty))
 
                 axarr[1][1].imshow(Z.transpose(), origin="lower", extent=[-bounds[0]/2,bounds[0]/2,-bounds[1]/2,bounds[1]/2])
                 axarr[1][1].imshow(reference, extent=[-bounds[0]/2,bounds[0]/2,-bounds[1]/2,bounds[1]/2], alpha=0.5)
                 pr_lin /= np.amax(pr_lin)
-		#plt.savefig("p.png")
-		#for col,val in zip(im.get_facecolors(), pr_lin):
+		        #plt.savefig("p.png")
+		        #for col,val in zip(im.get_facecolors(), pr_lin):
                 #    col[3] = 0.5
                 axarr[1][1].set_xlabel("AUC is {}".format(auc_lin[-1]))
                 axarr[1][1].scatter(x, y)
