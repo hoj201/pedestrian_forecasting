@@ -1,0 +1,5 @@
+The features maps in bmp format were saves using 16-bit RGB.
+I checked the box that said "Do not save color-space information"
+
+That said.  It is easy enough for me to generate these figures in another 
+format
