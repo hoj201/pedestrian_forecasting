@@ -102,6 +102,9 @@ Papers to mention
 \end{itemize}
 
 \section{Model}
+
+\todo[inline]{ramv: I would include far fewer model details here just to illustrate that our focus is on efficient computation for general models.}
+
 %Describe scenario in english.
 Our goal is to generate a time-dependent probability density over $\mathbb{R}^2$, which predicts the true location of an agent in the future.
 The input to the algorithm at runtime is a noisy measurement of position and velocity, $\hat{x}_0, \hat{v}_0 \in \mathbb{R}^2$.
@@ -119,7 +122,7 @@ This allows our model to be divided into three parts:
 The measurements and the agent's internal state are dependent on reality.  This couples all the variables in a Bayesian network, which we will describe in the following subsections.
 The resulting Bayesian network can be used to compute the desired posterior.
 
-\subsection{The sensor model}
+\subsection{The Sensor Model}
 At time $t=0$, we obtain a noisy reading of position, $\hat{x}_0 \in \mathbb{R}^2$.
 We assume that our measurements come from Gaussian noise about the true location $x_0 \in \mathbb{R}^2$,
 so that $\Pr(\hat{x}_0 \mid x_0 ) = (2\pi \sigma_x^2)^{-1} \exp( - \| \hat{x}_0 - x_0 \|^2 / (2 \sigma_x^2) )$.
@@ -129,7 +132,7 @@ We should note that $\hat{v}_0$ is typically derived from multiple measurements 
 This induces a linear inequality between $\sigma_x$ and $\sigma_v$.
 For example, a first order finite difference would yield $\sigma_v \geq 2 \sigma_x / \Delta t$ where $\Delta t > 0$ is the time-step size between consecutive measurements of position.
 
-\subsection{The agent model}
+\subsection{The Agent Model}
 All agents are initialized within some rectangular region $D \subset \mathbb{R}^2$.
 We denote the true position and velocity of an agent by $x_t$ and $v_t$.
 While we may mention $x_t$ and $v_t$, these are never available to us and are not quantities any model should seek to predict with certainty.
@@ -178,7 +181,7 @@ In summary, the agent flavors are parametrized by the set
 \end{align*}
 and each flavor determines the sort of motion we should expect from that agent.
 
-\subsection{The full model}
+\subsection{The Full Model}
 Concatenating the measurement model with our motion model yields the Bayesian network
 \begin{center}
 \begin{tikzpicture}[thick, var/.style={circle,draw,thin,rounded corners,shade,top color=blue!50,minimum size = 4mm}]
@@ -237,7 +240,9 @@ Which allows us to derive $\rho_t$ by appropriately marginalizing over the full 
 The abundance of Dirac deltas and Gaussians allows the integrals involved in computing $\rho_t$ to be solved in closed form
 as smooth functions over $\mathbb{R}^2$.
 
-\subsection{Inverse optimal control}
+\subsection{Inverse Optimal Control}
+\todo[inline]{ramv: I would just mention this as a property that is satisfied by our vector fields and leave the theorem for the appendix.}
+
 One of the valuable aspect of the motion model of \cite{Kitani2012} was that the trajectories were solutions of optimal control problems.
 This is a desirable property for a motion model of pedestrians/cyclists/vehicles in that it seems reasonable to assume that we all move through the world with an intent to get somewhere.
 This framework where one determines an optimal control problem from trajectories (as opposed to solving for trajectories of an optimal control problem) was dubbed \emph{inverse optimal control} (IOC).
@@ -276,7 +281,14 @@ where $v_t = \frac{d x_t}{dt}$, $\| \cdot \|_g$ is the norm with respect to $g$ 
 	where $g = \Phi^* g_V$ is the pull-back metric, and $f = \Phi^* \tilde{f}$ is the pull-back of $\tilde{f}$.
 \end{proof}
 
+\section{Efficient Probability Propagation} \label{sec:efficient}
+
+\todo[inline]{ramv: I think this is the exciting part of the paper, since people struggle to advect things efficiently through nonlinear models. I'd definitely go into lots of detail here and include the theorem about the $L^1$ bound.}
+
 \section{Learning} \label{sec:learning}
+
+\todo[inline]{ramv: I'd consider folding this section into the experiment section. This is basically how we learn all of the stuff in our model.}
+
   Now that the model has been described, we can discuss how one can fit the parameters of the model to a data set.
   In the results section, we will use the Stanford Drone Dataset \cite{StanfordDroneData}.
   More generally, we will assume that for a fixed scene we have a database of previously observed trajectories $\{ \hat{x}^1, \dots, \hat{x}^N\}$.
@@ -376,92 +388,94 @@ where $v_t = \frac{d x_t}{dt}$, $\| \cdot \|_g$ is the norm with respect to $g$ 
 %  \end{enumerate}
   
 \section{Results}
+
+\todo[inline]{ramv: Id try to fold the learning section as a subsection in this section....}
  Precision, accuracy, etc.
 
-\section{RSS citations}
-
-Please make sure to include \verb!natbib.sty! and to use the
-\verb!plainnat.bst! bibliography style. \verb!natbib! provides additional
-citation commands, most usefully \verb!\citet!. For example, rather than the
-awkward construction 
-
-{\small
-\begin{verbatim}
-\cite{kalman1960new} demonstrated...
-\end{verbatim}
-}
-
-\noindent
-rendered as ``\cite{kalman1960new} demonstrated...,''
-or the
-inconvenient 
-
-{\small
-\begin{verbatim}
-Kalman \cite{kalman1960new} 
-demonstrated...
-\end{verbatim}
-}
-
-\noindent
-rendered as 
-``Kalman \cite{kalman1960new} demonstrated...'', 
-one can
-write 
-
-{\small
-\begin{verbatim}
-\citet{kalman1960new} demonstrated... 
-\end{verbatim}
-}
-\noindent
-which renders as ``\citet{kalman1960new} demonstrated...'' and is 
-both easy to write and much easier to read.
-  
-\subsection{RSS Hyperlinks}
-
-This year, we would like to use the ability of PDF viewers to interpret
-hyperlinks, specifically to allow each reference in the bibliography to be a
-link to an online version of the reference. 
-As an example, if you were to cite ``Passive Dynamic Walking''
-\cite{McGeer01041990}, the entry in the bibtex would read:
-
-{\small
-\begin{verbatim}
-@article{McGeer01041990,
-  author = {McGeer, Tad}, 
-  title = {\href{http://ijr.sagepub.com/content/9/2/62.abstract}{Passive Dynamic Walking}}, 
-  volume = {9}, 
-  number = {2}, 
-  pages = {62-82}, 
-  year = {1990}, 
-  doi = {10.1177/027836499000900206}, 
-  URL = {http://ijr.sagepub.com/content/9/2/62.abstract}, 
-  eprint = {http://ijr.sagepub.com/content/9/2/62.full.pdf+html}, 
-  journal = {The International Journal of Robotics Research}
-}
-\end{verbatim}
-}
-\noindent
-and the entry in the compiled PDF would look like:
-
-\def\tmplabel#1{[#1]}
-
-\begin{enumerate}
-\item[\tmplabel{1}] Tad McGeer. \href{http://ijr.sagepub.com/content/9/2/62.abstract}{Passive Dynamic
-Walking}. {\em The International Journal of Robotics Research}, 9(2):62--82,
-1990.
-\end{enumerate}
+%\section{RSS citations}
 %
-where the title of the article is a link that takes you to the article on IJRR's website. 
-
-
-Linking cited articles will not always be possible, especially for
-older articles. There are also often several versions of papers
-online: authors are free to decide what to use as the link destination
-yet we strongly encourage to link to archival or publisher sites
-(such as IEEE Xplore or Sage Journals).  We encourage all authors to use this feature to
-the extent possible.
+%Please make sure to include \verb!natbib.sty! and to use the
+%\verb!plainnat.bst! bibliography style. \verb!natbib! provides additional
+%citation commands, most usefully \verb!\citet!. For example, rather than the
+%awkward construction 
+%
+%{\small
+%\begin{verbatim}
+%\cite{kalman1960new} demonstrated...
+%\end{verbatim}
+%}
+%
+%\noindent
+%rendered as ``\cite{kalman1960new} demonstrated...,''
+%or the
+%inconvenient 
+%
+%{\small
+%\begin{verbatim}
+%Kalman \cite{kalman1960new} 
+%demonstrated...
+%\end{verbatim}
+%}
+%
+%\noindent
+%rendered as 
+%``Kalman \cite{kalman1960new} demonstrated...'', 
+%one can
+%write 
+%
+%{\small
+%\begin{verbatim}
+%\citet{kalman1960new} demonstrated... 
+%\end{verbatim}
+%}
+%\noindent
+%which renders as ``\citet{kalman1960new} demonstrated...'' and is 
+%both easy to write and much easier to read.
+%  
+%\subsection{RSS Hyperlinks}
+%
+%This year, we would like to use the ability of PDF viewers to interpret
+%hyperlinks, specifically to allow each reference in the bibliography to be a
+%link to an online version of the reference. 
+%As an example, if you were to cite ``Passive Dynamic Walking''
+%\cite{McGeer01041990}, the entry in the bibtex would read:
+%
+%{\small
+%\begin{verbatim}
+%@article{McGeer01041990,
+%  author = {McGeer, Tad}, 
+%  title = {\href{http://ijr.sagepub.com/content/9/2/62.abstract}{Passive Dynamic Walking}}, 
+%  volume = {9}, 
+%  number = {2}, 
+%  pages = {62-82}, 
+%  year = {1990}, 
+%  doi = {10.1177/027836499000900206}, 
+%  URL = {http://ijr.sagepub.com/content/9/2/62.abstract}, 
+%  eprint = {http://ijr.sagepub.com/content/9/2/62.full.pdf+html}, 
+%  journal = {The International Journal of Robotics Research}
+%}
+%\end{verbatim}
+%}
+%\noindent
+%and the entry in the compiled PDF would look like:
+%
+%\def\tmplabel#1{[#1]}
+%
+%\begin{enumerate}
+%\item[\tmplabel{1}] Tad McGeer. \href{http://ijr.sagepub.com/content/9/2/62.abstract}{Passive Dynamic
+%Walking}. {\em The International Journal of Robotics Research}, 9(2):62--82,
+%1990.
+%\end{enumerate}
+%%
+%where the title of the article is a link that takes you to the article on IJRR's website. 
+%
+%
+%Linking cited articles will not always be possible, especially for
+%older articles. There are also often several versions of papers
+%online: authors are free to decide what to use as the link destination
+%yet we strongly encourage to link to archival or publisher sites
+%(such as IEEE Xplore or Sage Journals).  We encourage all authors to use this feature to
+%the extent possible.
 
 \section{Conclusion} 
 \label{sec:conclusion}
