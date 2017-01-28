@@ -1,0 +1,1 @@
+BMP files are in 16-bit R5,G6,B6 format
