@@ -113,6 +113,7 @@ def classifier_no_convolve(bounds, width, rho):
     #print(res + integrals)[np.where(res + integrals > tau)[0]][36:]
     #printE[np.where(res + integrals > tau)[0]]
     sums = np.array(sums)
+    bboxes = np.array(bboxes)
     return sums, bboxes
 
 
@@ -188,6 +189,9 @@ def evaluate_lin(bbox, rho_lin, rho_true, width, debug_level=0):
     #create truth for comparison
     truth = true_classifier(bboxes, rho_true)
     true = truth > 0
+
+    ctx = int(np.ceil(bbox[0]/width))
+    cty = int(np.ceil(bbox[1]/width))
 
     return  (predic, true)
 
