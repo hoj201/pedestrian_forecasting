@@ -89,6 +89,18 @@ The abstract goes here.
 
 \section{Introduction}
 
+\todo[inline]{hoj: maybe ram should write the first paragraph.}
+
+\subsection{Background}
+Papers to mention
+\begin{itemize}
+	\item \citet{Kitani2012} (Early MDP based paper)
+	\item \citet{Karasev2016} (Another motion model, discrete time)
+	\item \citet{Ballan2016} (The knowledge transfer paper)
+	\item \citet{Ziebart2009} (Another MDP paper)
+	\item \citet{Helbing1992} (fluid based crowd model)
+\end{itemize}
+
 \section{Model}
 %Describe scenario in english.
 Our goal is to generate a time-dependent probability density over $\mathbb{R}^2$, which predicts the true location of an agent in the future.
@@ -178,7 +190,7 @@ Concatenating the measurement model with our motion model yields the Bayesian ne
 	\node[var] (x_hat) [right=of x] {$\hat{x}_0$};
 	\node[var] (v_hat) [right=of v] {$\hat{v}_0$};
 	\node[var] (x_check_t) [left=of v_check] {$\check{x}_t$};
-	\node[var] (x_t) [below=of x_check_t] {$x_t$};
+	\node[var] (x_t) [left=of x_check_t] {$x_t$};
 	\draw[->] (x_check) to (x);
 	\draw[->] (v_check) to (v);
 	\draw[->] (f) to (x_check);
@@ -193,34 +205,34 @@ Concatenating the measurement model with our motion model yields the Bayesian ne
 \end{tikzpicture}
 \end{center}
 Which allows us to derive $\rho_t$ by appropriately marginalizing over the full joint probability over all $9$ variables. [Reference]
-\todo[inline]{hoj: May I cut the following?  If I say ``PGM'' or ``Bayesian network'' perhaps that enough to convey the sort of computations needed}
-Specifically, the vector-fields $\{X_1,\dots,X_n\}$ as well as the probabilities $\Pr( x_0 \mid k )$, $\Pr(lin)$, and $\Pr( k )$ will be learned from the data.
-We will also assume $\Pr(s,k) = \Pr(s \mid k ) \Pr(k)$ where 
-\begin{align*}
-	\Pr(s \mid k ) \sim \mathcal{U}([-s_{\max}, s_{\max} ] ) \quad \text{for } k=1,\dots,n
-\end{align*}
-and $s_{\max} > 0$ is learned from the data.
-We describe the learning step in more detail in section \ref{sec:learning}.
-
-The desired posterior, $\rho_t$ is a posterior over $D$ given by
-\begin{align*}
-	&\rho_t(x_t) = \Pr(x_t \mid \hat{x}_0, \hat{v}_0) \\
-		&= \frac{ \Pr( x_t, \hat{x}_0, \hat{v}_0) }{ \Pr( \hat{x}_0, \hat{v}_0 ) } \\
-		&= \frac{1}{ \Pr( \hat{x}_0, \hat{v}_0 ) } \int \Pr( x_t , x_0, v_0, \hat{x}_0, \hat{v}_0 , f ) dx_0\, dv_0\, df
-\end{align*}
-and the integrand is given, via the Bayesian network.
-In particular, for $f = (k,s)$ we have
-\begin{align*}
-	 &\Pr( x_t , x_0, v_0, \hat{x}_0, \hat{v}_0 , k,s) =\\
-	 &\quad \Pr( x_t \mid x_0 , k, s) \cdot \Pr( v_0 \mid x_0, k , s ) \cdot \\
-	 &\quad \Pr( \hat{x}_0 \mid x_0 ) \cdot \Pr( \hat{v}_0 \mid v_0 ) \cdot \Pr(k) \cdot \Pr(s \mid k),
-\end{align*}
-and for $f = lin$ we have
-\begin{align*}
-	 &\Pr( x_t , x_0, v_0, \hat{x}_0, \hat{v}_0 , lin) =\\
-	 &\quad \Pr( x_t \mid x_0 , v_0, lin) \cdot \Pr( v_0 \mid x_0, lin ) \cdot \\
-	 &\quad \Pr( \hat{x}_0 \mid x_0 ) \cdot \Pr( \hat{v}_0 \mid v_0 ) \cdot \Pr(lin).
-\end{align*}
+%\todo[inline]{hoj: May I cut the following?  If I say ``PGM'' or ``Bayesian network'' perhaps that enough to convey the sort of computations needed}
+%Specifically, the vector-fields $\{X_1,\dots,X_n\}$ as well as the probabilities $\Pr( x_0 \mid k )$, $\Pr(lin)$, and $\Pr( k )$ will be learned from the data.
+%We will also assume $\Pr(s,k) = \Pr(s \mid k ) \Pr(k)$ where 
+%\begin{align*}
+%	\Pr(s \mid k ) \sim \mathcal{U}([-s_{\max}, s_{\max} ] ) \quad \text{for } k=1,\dots,n
+%\end{align*}
+%and $s_{\max} > 0$ is learned from the data.
+%We describe the learning step in more detail in section \ref{sec:learning}.
+%
+%The desired posterior, $\rho_t$ is a posterior over $D$ given by
+%\begin{align*}
+%	&\rho_t(x_t) = \Pr(x_t \mid \hat{x}_0, \hat{v}_0) \\
+%		&= \frac{ \Pr( x_t, \hat{x}_0, \hat{v}_0) }{ \Pr( \hat{x}_0, \hat{v}_0 ) } \\
+%		&= \frac{1}{ \Pr( \hat{x}_0, \hat{v}_0 ) } \int \Pr( x_t , x_0, v_0, \hat{x}_0, \hat{v}_0 , f ) dx_0\, dv_0\, df
+%\end{align*}
+%and the integrand is given, via the Bayesian network.
+%In particular, for $f = (k,s)$ we have
+%\begin{align*}
+%	 &\Pr( x_t , x_0, v_0, \hat{x}_0, \hat{v}_0 , k,s) =\\
+%	 &\quad \Pr( x_t \mid x_0 , k, s) \cdot \Pr( v_0 \mid x_0, k , s ) \cdot \\
+%	 &\quad \Pr( \hat{x}_0 \mid x_0 ) \cdot \Pr( \hat{v}_0 \mid v_0 ) \cdot \Pr(k) \cdot \Pr(s \mid k),
+%\end{align*}
+%and for $f = lin$ we have
+%\begin{align*}
+%	 &\Pr( x_t , x_0, v_0, \hat{x}_0, \hat{v}_0 , lin) =\\
+%	 &\quad \Pr( x_t \mid x_0 , v_0, lin) \cdot \Pr( v_0 \mid x_0, lin ) \cdot \\
+%	 &\quad \Pr( \hat{x}_0 \mid x_0 ) \cdot \Pr( \hat{v}_0 \mid v_0 ) \cdot \Pr(lin).
+%\end{align*}
 
 The abundance of Dirac deltas and Gaussians allows the integrals involved in computing $\rho_t$ to be solved in closed form
 as smooth functions over $\mathbb{R}^2$.
@@ -232,7 +244,7 @@ This framework where one determines an optimal control problem from trajectories
 In this optional subsection, we illustrate how solutions of \ref{eq:ode} can fit within the IOC framework.
 
 \begin{thm}
-	Let $X_k$ be such that $\| X_k(x) \|_2 = 1$ for all $x \in \mathbb{R}^2$.
+	Let $X$ be a vector-field such that $\| X(x) \|_2 = 1$ for all $x \in \mathbb{R}^2$.
 Then, for each initial condition $x_0 \in \mathbb{R}^2$, there exists a neighborhood $U$, a Riemannian metric, $g$, and a cost function, $f$, 
 such that solutions of \eqref{eq:ode} are also solutions of the optimal control problem
 \begin{align}
@@ -247,34 +259,121 @@ where $v_t = \frac{d x_t}{dt}$, $\| \cdot \|_g$ is the norm with respect to $g$ 
 	In this case a solution of \eqref{eq:IOC} is generated by the vector-field $X = \frac{\nabla f}{ \| \nabla f\|}$ where $\nabla$ is the Riemannian gradient with respect to some metric (possibly non-Euclidean).
 	Therefore, our goal is to illustrate that there exists a metric $g$ and a function $f$ such that the given $X$ is given by $\frac{\nabla f}{ \| \nabla f\|}$.
 
-	Because $\| X_k \| = 1$ globally, it has no fixed points.
+	Because $\| X \| = 1$ globally, it has no fixed points.
 	From the flow-box theorem \cite[Theorem 4.1.14]{MTA} we can assert that for any open set, $U \subset \mathbb{R}^2$ there exists a local diffeomorphism which transforms $X_k$ into a flat vector-field.
 	Mathematically, this asserts the existence of a map $\Phi : U \to V \subset \mathbb{R}^2$ such that the push-forward of $X$, which we will denote by $\tilde{X}$, and given by
 	\begin{align*}
-		\tilde{X}(\tilde{x}) = \Phi_* X(\tilde{x}) := \left. D\Phi \right|_{\Phi^{-1}(\tilde{x}) } \cdot X_k(  \Phi^{-1}(\tilde{x}) ),
+		\tilde{X}(\tilde{x}) = \Phi_* X(\tilde{x}) := \left. D\Phi \right|_{\Phi^{-1}(\tilde{x}) } \cdot X(  \Phi^{-1}(\tilde{x}) ),
 	\end{align*}
 	is just the flat vector field $(1,0)$ for all $x \in U$.
 	We could view the coordinate function $\tilde{f}(x) = x^0$ as a cost function on $V$,
 	and we may set $g_V$ to be equal to the standard flat metric on $V$ inherited from $\mathbb{R}^2$.
-	In this case we observe that the vector-field $s \tilde{X}( \tilde{x})$ generates solutions to the optimization problem
+	In this case we observe that $\tilde{X}$ generates solutions to the optimization problem
 	\begin{align*}
-		\tilde{p}^* = \inf_{ \| \tilde{v}_t \|_{g_V}} = \int_0^T \tilde{f}( \tilde{x}_t ) dt
+		\tilde{p}^* = \inf_{ \| \tilde{v}_t \|_{g_V} \leq 1} = \int_0^T \tilde{f}( \tilde{x}_t ) dt
 	\end{align*}
 	By a change of variables, it follows that the original vector field, $X$, then solves the optimization problem \eqref{eq:IOC}
 	where $g = \Phi^* g_V$ is the pull-back metric, and $f = \Phi^* \tilde{f}$ is the pull-back of $\tilde{f}$.
 \end{proof}
 
 \section{Learning} \label{sec:learning}
-  Describe how $\Pr(x \mid k)$, the director-fields, and $\sigma_x$ are learned without using math.
-  Math will be relegated to the appendix.
+  Now that the model has been described, we can discuss how one can fit the parameters of the model to a data set.
+  In the results section, we will use the Stanford Drone Dataset \cite{StanfordDroneData}.
+  More generally, we will assume that for a fixed scene we have a database of previously observed trajectories $\{ \hat{x}^1, \dots, \hat{x}^N\}$.
+  From this data we will tune the parameters of the model appropriately.
+  The parameters of the model which must be chosen or learned are
+  \begin{itemize}
+  	\item the vector-fields $\{ X_k\}_{k=1}^{n}$,
+	\item the posteriors $\Pr(x \mid k,s)$ for $k=1,\dots,m$ and $s \in \mathbb{R}$,
+	\item the posterior $\Pr(x \mid lin)$,
+	\item the unconditioned probabilities $\Pr(f)$ for $f \in F$,
+	\item the standard deviations of the measurement $\sigma_x$ and $\sigma_v$,
+	\item and the blurring parameter $\kappa$.
+  \end{itemize}
   
-  NOTE:  Learning $\kappa$.
-  \begin{enumerate}
-  	\item Learn vector-fields
-	\item Generate approximate curves for each v.f.
-	\item Compute $\kappa_k$ of best fit for each v.f.
-	\item $\kappa = \min_k \{ \kappa_1,\dots,\kappa_n\}$.
-  \end{enumerate}
+  \subsection{Learning the vector fields}
+  Before we can even begin to learn vector-fields, we must learn the number of such vector-fields we have.
+  To do this we use a simple clustering algorithm on the trajectories, to categorize them into groups.
+  In principal, any clustering algorithm could accomplish this.
+  For our algorithm we use the start and end point for each trajectory to obtain a point in $\mathbb{R}^4$.
+  We then cluster in $\mathbb{R}^4$ using Affinity propagation.\todo{hoj:There is more to say here}
+  This clustering of the end-points induces a clustering of the trajectories.
+  So we obtain clusters $S_1, \dots, S_n$ consisting of trajectories from our data set, as well as a set of unclassified trajectories, $S_0$.
+  
+  For each set $S_k$ we may learn a vector-field which is approximately compatible with that set.
+  We'd like to only consider vector-fields who's vectors have unit magnitude because we observe many of the trajectories in the data appear to have a roughly constant speed.
+  Therefore we assume the vector-field takes the form $X_k(x) = \left( \cos( \Theta_k(x) ) , \sin(\Theta_k(x)) \right)$ for some scalar function $\Theta_k(x)$.
+  Learning the vector-fields then boils down to learning the scalar function $\Theta_k$.
+  We will assume $\Theta_k$ takes the form
+  \begin{align*}
+  	\Theta_k(x) = \sum_{\alpha} \theta_{k,\alpha} L_{\alpha}(x)
+  \end{align*}
+  for some collection of coefficients, $\theta_{k,\alpha}$, and a fixed collection of basis functions, $L_{\alpha}$.
+  In our case, we've chosen $L_{\alpha}$ to be a set of low degree Legendre polynomials.
+  Learning $\Theta_k$ can be obtained by looking at all the velocities observed in the cluster, $S_k$.
+  These velocities may be obtained by a low order finite difference formula.
+  Upon normalizing the velocities, we obtain a unit-length velocity vectors, $v_{i,k}$, anchored at each point, $x_{i,k}$, of $S_k$.
+  We can learn $\Theta_k$ by defining the cost-function
+  \begin{align*}
+  	C[ \Theta_k] = \sum_i \langle v_{i,k} , ( \cos(\Theta_k( x_{i,k}) , \sin( \Theta_k( x_{i,k} ) ) \rangle
+  \end{align*}
+  which penalizes $\Theta_k$ for producing a misalignment with the observed velocities at the observed points of $S_k$.
+  When $\Theta_{k}$ includes high order polynomials (e.g. beyond 5th order), we should also include a regularization term to bias the minimizes towards smoother outputs.
+  Using the $H^1$-norm times a fixed scalar would suffice.
+  
+  
+  \subsection{Learning the posteriors}
+  We'd like to compute $\Pr( x_0 \mid k,s)$ for each cluster $k=1,\dots,n$ and each speed $s \in \mathbb{R}$.
+  We will make the modeling assumption that $x_0$ is independent of $s$ given $k$, i.e. $\Pr( x_0 \mid k,s) = \Pr(x_0 \mid k)$.
+  Additionally, we will assume that $s$ and $k$ are independent.
+  This means that we only need to learn $\Pr( x_0 \mid k)$, $\Pr(k)$, and $\Pr(s)$.
+  
+  We will let $\Pr(k) = (n+1)^{-1}$ and $\Pr(s) \sim \mathcal{U}( [-s_{\max}, s_{\max} ] )$
+  where $s_{\max}>0$ is the largest observed speed in the dataset.  This implies that $\Pr(lin) = (n+1)^{-1}$ as well.
+  Other reasonable choices (such as $\Pr(k) \propto | S_k|$) could work, but we've chosen to be more conservative in this paper.
+  
+  In order to learn $\Pr( x_0 \mid k)$ we will assume that it's logarithm may be approximated by a low dimensional subspace of functions on $\mathbb{R}^2$.
+  That is to say, for each $k$ we will assume $\Pr( x_0 \mid k) = \frac{1}{Z_k} \exp( - V_k(x_0) )$ and $V_k$ is a function who's constant term is $0$ and is given by
+  \begin{align*}
+  	V_k(x_0; \mathbf{c} ) := \sum_{|\alpha|< d} c_{\alpha} L_{\alpha}( x_0)
+  \end{align*}
+  for a collection of basis functions, $L_{\alpha}$ and coefficients $\mathbf{c} = \{ c_{\alpha} \}_{|\alpha| < d}$.
+  We chose our basis functions to be the collection of tensor products from the first $6$ Legendre polynomials, normalized to the size of the domain.
+  Then, one may fit the coefficients $c_{\alpha}$ to the data by using a log-likelihood criterion.
+  The resulting (convex) optimization problem takes the form
+  \begin{align*}
+  	\mathbf{c}^* = \inf_{ |\mathbf{c}| } \sum_{x \in S_k} V_k( x_0; \mathbf{c})
+  \end{align*}
+  Where the norm on $\mathbf{c}$ is a sup-norm.
+  We can also bias this optimization towards more regular functions by adding a penalty to the cost function.
+  
+  Finally, we let $\Pr( x_0 \mid lin) \sim \mathcal{U}(D)$.
+  
+  \subsection{Learning the variance parameters}
+  We will assume that the true trajectory of an agent is fairly smooth compared to the noisy output of our measurement device.
+  This justifies smoothing the trajectories, and using the difference between the smoothed signals and the raw data to learn the variance $\sigma_x$.
+  To obtain the results in this paper we have used a moving average of $4$ time steps (this is $0.13$ seconds in realtime).
+  We set $\sigma_v = 2 \sigma_x / \Delta t$ where $\Delta t > 0$ is the time-step size.  This choice is justified from the our use of finite difference's to estimate velocity.
+  In particular, if velocity is approximated via finite differencing as $v(t) \approx (x(t+h) - x(t))\,\Delta t^{-1} + \mathcal{O}(h)$
+  and the measurements are corrupted by Gaussian noise, then the measurement $\hat{v}(t)$ is related to $v(t)$ by Gaussian noise with roughly the same standard deviation as $(x(t+h) - x(t))\,\Delta t^{-1}$.
+  
+  Finally, we must learn $\kappa$, the parameter which blurs the our motion model.
+  We've taken an ad hoc approach in this paper, although more intelligent and theoretically sound alternatives likely exist.
+  For each curve in $S_k$ we create a synthetic curve using the initial position and speed and integrating the corresponding vector-field, $s\, X_k$.
+  So for each curve, $x_i(t)$, of $S_k$, we have a synthesized curve $x_{i,synth}(t)$ as well.
+  We then measure the standard deviation of $(x_i(t) - x_{i,synth}(t)) / t$ over $i$ and at few time, $t \in \{ 0, 100, 200 \}$ in order to obtain $\kappa$.
+  
+
+%  Describe how $\Pr(x \mid k)$, the director-fields, and $\sigma_x$ are learned without using math.
+%  Math will be relegated to the appendix.
+%  
+%  NOTE:  Learning $\kappa$.
+%  \begin{enumerate}
+%  	\item Learn vector-fields
+%	\item Generate approximate curves for each v.f.
+%	\item Compute $\kappa_k$ of best fit for each v.f.
+%	\item $\kappa = \min_k \{ \kappa_1,\dots,\kappa_n\}$.
+%  \end{enumerate}
   
 \section{Results}
  Precision, accuracy, etc.
