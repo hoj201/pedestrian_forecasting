@@ -3,6 +3,7 @@ import numpy as np
 from evaluation import evaluate_ours, evaluate_lin
 import matplotlib.pyplot as plt
 from matplotlib import cm
+import matplotlib.image as mpimg
 import generate_distributions
 from generate_distributions import particle_generator
 #from test_distribution import particle_generator as particle_generator_t
@@ -27,9 +28,10 @@ else:
     scene = test_scene
     test_set = test_sets[int(argv[1])]
     generate_distributions.set_scene(int(argv[1]))
+    path = "../annotations/" + argv[2] + "/video" + argv[3] + "/reference.jpg"
 inds = range(len(test_set))
-if len(argv) > 2:
-        st = argv[2]
+if len(argv) > 4:
+        st = argv[4]
         inds = map(int, st.split(","))
 
 def rho_true(subj, T, test_set, bbox_ls):
@@ -121,6 +123,11 @@ if __name__ == "__main__":
 
         auc_ours = []
         auc_lin = []
+	ppr_ours = np.array([])
+	ttr_ours = np.array([])
+	ppr_lin = np.array([])
+	ttr_lin = np.array([])
+	reference = mpimg.imread(path)
         for ((x_arr_ours, w_arr_ours), (x_arr_lin, w_arr_lin)) in ours:
             if n == 0:
                 n += 1
@@ -138,8 +145,11 @@ if __name__ == "__main__":
                 rhol = (x_arr_lin, w_arr_lin)
                 rt = lambda x: rho_true(i, int(t_final/float(N_steps) * n), test_set, x)
                 width = test_scene.width/40
-                pr_ours, tr_ours, bboxes = evaluate_ours(bounds, rho, rhol, rt, width, 1.3 * scene.kappa * t_final/float(N_steps) * n, debug_level=0)
-
+                pr_ours, tr_ours, bboxes = evaluate_ours(bounds, rho, rhol, rt, width, 1.6 * scene.kappa * t_final/float(N_steps) * n, debug_level=0)
+		#mask = pr_ours < np.amax(pr_ours)/1.5
+		#mask_2 = pr_ours > np.amax(pr_ours)/1.5
+		#pr_ours = pr_ours * mask 
+		#pr_ours +=  mask_2 * np.amax(pr_ours) / 2
                 w_arr_lin /= np.sum(w_arr_lin) if  np.sum(w_arr_lin) > 0 else 1
                 #whr = np.where(w_arr > 0)[0]
                 #x_arr = x_arr.transpose()[whr].transpose()
@@ -148,8 +158,19 @@ if __name__ == "__main__":
                 #plt.contourf(X,Y,Z, 30, cmap='viridis')
                 rho = (x_arr_lin, w_arr_lin)
                 pr_lin, tr_lin = evaluate_lin(bounds, rhol, rt, width, debug_level=0)
+		if len(ppr_ours) == 0:
+		    ppr_ours = np.array([pr_ours])
+		    ttr_ours = np.array([tr_ours])
+		    ppr_lin = np.array([pr_lin])
+		    ttr_lin = np.array([tr_lin])
+		else:
+		    ppr_ours = np.vstack((ppr_ours, pr_ours))
+		    ttr_ours = np.vstack((ttr_ours, tr_ours))
+		    ppr_lin = np.vstack((ppr_lin, pr_lin))
+		    ttr_lin = np.vstack((ttr_lin, tr_lin))
 
                 f, axarr = plt.subplots(2, 2)
+
                 for ax in axarr[0]:
                     ax.set_xlabel('False Positive Rate')
                     ax.set_ylabel('True Positive Rate')
@@ -178,20 +199,25 @@ if __name__ == "__main__":
                         X[rarg][karg] = (-1 * bounds[0]/2.0 + width * (rarg + 0.5))
                         Y[rarg][karg] = (-1 * bounds[1]/2.0 + width * (karg + 0.5))
                 bboxes = np.array(bboxes)
-
                 Z = pr_ours.reshape((ctx, cty))
-
-                im = axarr[1][0].pcolormesh(X,Y,Z, cmap='viridis')
+		
+		
+                #img = axarr[1][0].pcolor(X,Y,Z, cmap='viridis')
+		im = axarr[1][0].imshow(Z.transpose(), origin="lower", extent=[-bounds[0]/2,bounds[0]/2,-bounds[1]/2,bounds[1]/2])
+		axarr[1][0].imshow(reference, extent=[-bounds[0]/2,bounds[0]/2,-bounds[1]/2,bounds[1]/2], alpha=0.5)
+		#for col,val in zip(img.get_facecolors(), pr_ours):
+		#    col[3] = 0.5
+		    
                 axarr[1][0].set_xlabel("AUC is {}".format(auc_ours[-1]))
 
-                bounds = [[-scene.width/2, scene.width/2], [-scene.height/2, scene.height/2]]
+                bound = [[-scene.width/2, scene.width/2], [-scene.height/2, scene.height/2]]
                 bounds2 = [[-.1, 1.2], [-.1, 1.2]]
-                axarr[1][0].set_xlim(bounds[0])
-                axarr[1][0].set_ylim(bounds[1])
-                axarr[1][1].set_xlim(bounds[0])
-                axarr[1][1].set_ylim(bounds[1])
-
-
+                axarr[1][0].set_xlim(bound[0])
+                axarr[1][0].set_ylim(bound[1])
+                axarr[1][1].set_xlim(bound[0])
+                axarr[1][1].set_ylim(bound[1])
+		axarr[1][0].set_aspect('equal')
+                axarr[1][1].set_aspect('equal')
                 x = curve[0][int(t_final/float(N_steps) * n )]
                 y = curve[1][int(t_final/float(N_steps) * n )]
 
@@ -202,12 +228,18 @@ if __name__ == "__main__":
 
                 axarr[1][0].plot(xs, ys)
 
-                X,Y,Z = singular_distribution_to_image(
-                    x_arr_lin, w_arr_lin, domain, res= (100,100))
+                #X,Y,Z = singular_distribution_to_image(
+                #    x_arr_lin, w_arr_lin, domain, res= (ctx,cty))
                 #Z = Z > 1E-3
-                im = axarr[1][1].pcolormesh(X,Y,Z, cmap='viridis')
-                axarr[1][1].set_xlabel("AUC is {}".format(auc_lin[-1]))
+		Z = pr_lin.reshape((ctx, cty))
 
+                axarr[1][1].imshow(Z.transpose(), origin="lower", extent=[-bounds[0]/2,bounds[0]/2,-bounds[1]/2,bounds[1]/2])
+                axarr[1][1].imshow(reference, extent=[-bounds[0]/2,bounds[0]/2,-bounds[1]/2,bounds[1]/2], alpha=0.5)
+                pr_lin /= np.amax(pr_lin)
+		#plt.savefig("p.png")
+		#for col,val in zip(im.get_facecolors(), pr_lin):
+                #    col[3] = 0.5
+                axarr[1][1].set_xlabel("AUC is {}".format(auc_lin[-1]))
                 axarr[1][1].scatter(x, y)
 
                 axarr[1][1].plot(xs, ys)
@@ -216,6 +248,7 @@ if __name__ == "__main__":
                 #plt.show()
                 plt.close('all')
             n += 1
+            
 
         fig = plt.figure()
         ax = plt.gca()
@@ -228,16 +261,39 @@ if __name__ == "__main__":
         ax.legend()
         plt.savefig("images/precision_recall/{}/{}AUC_for_agent_{}.png".format(scene_number, scene_number, i))
         plt.close('all')
+	return (ppr_ours, ttr_ours, ppr_lin, ttr_lin)
 
     from joblib import Parallel, delayed
-    Parallel(n_jobs=18)(delayed(f)(x) for x in inds)
+    arr = Parallel(n_jobs=18)(delayed(f)(x) for x in inds)
     print time.time()
     print time.time() - st
-
-
-
-
-
-
-
+    mn = min([len(x[0]) for x in arr])
+    concat_pr = arr[0][0][:mn]
+    concat_tr = arr[0][1][:mn]
+    concat_pr_lin = arr[0][2][:mn]
+    concat_tr_lin = arr[0][3][:mn]
+    for agent in range(1, len(arr)):
+        concat_pr = np.concatenate((concat_pr, arr[agent][0][:mn]), axis=1)
+        concat_tr = np.concatenate((concat_tr, arr[agent][1][:mn]), axis=1)
+        concat_pr_lin = np.concatenate((concat_pr_lin, arr[agent][2][:mn]), axis=1)
+        concat_tr_lin = np.concatenate((concat_tr_lin, arr[agent][3][:mn]), axis=1)
+    auc_ours = []
+    auc_lin = []
+    for t in range(mn):
+    	false_positive_rate, true_positive_rate, thresholds = roc_curve(concat_tr[t], concat_pr[t])
+    	auc_ours.append(auc(false_positive_rate, true_positive_rate))
+        false_positive_rate, true_positive_rate, thresholds = roc_curve(concat_tr_lin[t], concat_pr_lin[t])
+        auc_lin.append(auc(false_positive_rate, true_positive_rate))
+    xs = np.array(range(mn)) * 5
+    plt.figure()
+    ax = plt.gca()
+    ax.set_ylim([-.1, 1.2])
+    ax.set_xlabel('Frames')
+    ax.set_ylabel('AUC')
+    plt.title("AUC for scene {}".format(scene_number))
+    ax.plot(xs, auc_ours, label = "Ours")
+    ax.plot(xs, auc_lin, label = "Linear")
+    ax.legend()
+    plt.savefig("images/precision_recall/AUC_for_scene{}.png".format(scene_number))
+    plt.clf()
 
