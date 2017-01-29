@@ -14,6 +14,7 @@
 
 %  For theorems, etc
 \newtheorem{thm}{Theorem}
+\newtheorem{cor}{Corollary}
 
 % numbers option provides compact numerical references in the text. 
 \usepackage[numbers]{natbib}
@@ -111,50 +112,43 @@ The input to the algorithm at runtime is a noisy measurement of position and vel
 If the (unknown) location of agent at time $t$ is given by $x_t \in \mathbb{R}^2$, then the distribution we seek is the posterior $\rho_t(x_t) := \Pr( x_t \mid \hat{x}_0, \hat{v}_0 )$.
 
 In order to derive an expression for $\rho$ we will build a probabilistic graphical model.
-Our model assumes we have noisy information about agents, and each agent moves with some intention through the world according to there own noisy perception.
+Our model assumes we have noisy information about agents, and each agent moves with some intention through the world in a way that is roughly approximated by a model.
 This allows our model to be divided into three parts:
 \begin{enumerate}
-	\item Reality:  This is parametrized by the true position and velocity of the observed agent $x_t, v_0$.
-	\item Our sensor model:  This is represented by our sensor readings $\hat{x}_0$ and $\hat{v}_0$.
-	\item The agent model:  This is represented by a trajectory $\check{x}_t$, which is the agent's own estimate of her position, as well as numerous other variables which will be introduced in upcoming subsections.
+	\item Reality:  This is parametrized by the true position for all time, $x_t$, and the initial velocity of the agent $v_0$.
+	\item The measurements:  This is represented by our sensor readings $\hat{x}_0$ and $\hat{v}_0$ and are independent of all other variables given the true initial position and velocity, $x_o, v_0$.
+	\item The motion model:  This is represented by a trajectory $\check{x}_t$ and depends on a variety of other variables which will be described shortly.
 \end{enumerate}
-
-The measurements and the agent's internal state are dependent on reality.  This couples all the variables in a Bayesian network, which we will describe in the following subsections.
-The resulting Bayesian network can be used to compute the desired posterior.
+We will now elaborate on these three components, and relate them to one another.
 
 \subsection{The Sensor Model}
 At time $t=0$, we obtain a noisy reading of position, $\hat{x}_0 \in \mathbb{R}^2$.
-We assume that our measurements come from Gaussian noise about the true location $x_0 \in \mathbb{R}^2$,
-so that $\Pr(\hat{x}_0 \mid x_0 ) = (2\pi \sigma_x^2)^{-1} \exp( - \| \hat{x}_0 - x_0 \|^2 / (2 \sigma_x^2) )$.
-Similarly, we have a velocity reading $\hat{v}_0 \in \mathbb{R}^2$ which is conditionally dependent on the true velocity $v_0 \in \mathbb{R}^2$
-via the posterior $\Pr( \hat{v}_0 \mid v_0 ) = (2\pi \sigma_v^2)^{-1} \exp( - \| \hat{v}_0 - v_0 \|^2 / (2 \sigma_v^2) )$.
-We should note that $\hat{v}_0$ is typically derived from multiple measurements of position via a finite difference.
-This induces a linear inequality between $\sigma_x$ and $\sigma_v$.
-For example, a first order finite difference would yield $\sigma_v \geq 2 \sigma_x / \Delta t$ where $\Delta t > 0$ is the time-step size between consecutive measurements of position.
+We assume that our measurements come from Gaussian noise about the true location $x_0 \in \mathbb{R}^2$.
+We use the same sensor model is assumed for velocity.
+In principal, any measurement model could be used, and we may view this as a parameter of our method.
 
 \subsection{The Agent Model}
 All agents are initialized within some rectangular region $D \subset \mathbb{R}^2$.
-We denote the true position and velocity of an agent by $x_t$ and $v_t$.
-While we may mention $x_t$ and $v_t$, these are never available to us and are not quantities any model should seek to predict with certainty.
-Any proposed model should include something to account for the fact that it is almost certainly wrong.
-We do this by fitting a deterministic model to the data and blurring the result in order to acknowledge such modeling errors.
+We denote the true position of an agent by $x_t$.
+We should never expect to know $x_t$ and the nature of its evolution precisely, and any model should account for the fact that any model is almost surely false, to some degree.
+We do this by fitting a deterministic model to the data and blurring the result in order to acknowledge inevitable modeling errors.
 
-Specifically, our motion model consists of a modeled trajectory $\check{x}_t$, which is probabilistically related to the true position by $x_t$ via the dependency
+Specifically, our motion model consists of a modeled trajectory $\check{x}_t$, which is probabilistically related to the true position by $x_t$ via 
 \begin{align*}
 	\Pr( x_t \mid \check{x}_t ) \sim \mathcal{N}( \check{x}_t, \sigma_{int}(t)),
 \end{align*}
 where $\sigma_{int}(t) = \kappa t$ for some learned constant $\kappa > 0$.
-This insures the consistency condition $\check{x}_0 = x_0$, while acknowledging the existence of uncertainty over long times.
+This insures the consistency condition $\check{x}_0 = x_0$, while acknowledging the existence of uncertainty for all $t>0$.
 
 Once initialized, agents come in two flavors: linear and nonlinear.
 Linear agents imagine that they move in straight lines at constant velocity.
-Thus $\check{x}_t = \check{x}_0 + t \check{v}_0$ and so we have the posterior
+Thus $\check{x}_t = x_0 + t v_0$ and so we have the posterior
 \begin{align*}
-	\Pr( \check{x}_t \mid \check{x}_0, \check{v}_0, lin) = \delta( \check{x}_t - \check{x}_0 - t \check{v}_0 ).
+	\Pr( \check{x}_t \mid x_0, v_0, lin) = \delta( \check{x}_t - x_0 - t v_0 ).
 \end{align*}
 We will assume linear agents also satisfy the posteriors
 \begin{align*}
-	\Pr( \check{x}_0 \mid lin ) \sim \mathcal{U}( D)\quad,\quad \Pr( \check{v}_0 \mid lin ) \sim \mathcal{N}( 0 , \sigma_L).
+	\Pr( x_0 \mid lin ) \sim \mathcal{U}( D)\quad,\quad \Pr( v_0 \mid lin ) \sim \mathcal{N}( 0 , \sigma_L).
 \end{align*}
 
 If the agent is of nonlinear type, then we assume the dynamics take the form
@@ -162,52 +156,59 @@ If the agent is of nonlinear type, then we assume the dynamics take the form
 	\frac{d \check{x}_t}{dt} \equiv \check{v}_t = s \cdot X_k(\check{x}_t) \label{eq:ode}
 \end{align}
 where $X_k$ is a vector-field from a finite collection $\{X_1, \dots, X_n\}$, and $s \in \mathbb{R}$.
-This collection is learned from the data-set.
-It is assumed that $k$ and $s$ are both constant in time, so that the position $x_t$ is determined from the
-tripe $(\check{x}_0,k,s)$ by integrating \eqref{eq:ode}.
+More specifically, we assume that each $X_k$ has the property that $\| X_k(x) \| = 1$ for all $x \in D$.
+This property ensures that speed is constant in time, and it has the further advantage of being the (local) generator
+of solutions to an optimal navigation problem (see Appendix \ref{app:ioc}).
+The vector-fields $X_1,\dots,X_n$ are learned from the data-set (see \S \ref{sec:learning}).
+
+It is assumed that $k$ and $s$ are both constant in time, so that $\check{x}_t$ is determined from the
+tripe $(x_0,k,s)$ by integrating \eqref{eq:ode} with the initial condition $x_0$.
 In other words, we have the posterior
 \begin{align*}
-	\Pr( \check{x}_t \mid \check{x}_0 , k , s) = \delta( \check{x}_t - \Phi^{t}_{k,s}( \check{x}_0) )
+	\Pr( \check{x}_t \mid x_0 , k , s) = \delta( \check{x}_t - \Phi^{t}_{k,s}( x_0) )
 \end{align*}
-where $\Phi^{t}_{k,s}$ is the flow-map of the vector field $s \cdot X_k$ up to time $t$.
-It is notable, that the variables $k,s$ and $\check{x}_0$ determine $\check{v}_0$.
+where $\Phi^{t}_{k,s}$ is the flow-map of the vector field $s \,X_k$ up to time $t$.
+It is notable, that the variables $k,s$ and $x_0$ determine $v_0$.
 Thus we also have the posterior
 \begin{align*}
-	\Pr( \check{v}_0 \mid k,s, \check{x}_0) = \delta( \check{v}_0 -s X_k( \check{x}_0) ).
+	\Pr( v_0 \mid k, s, x_0) = \delta( v_0 -s X_k( x_0) ).
 \end{align*}
 In summary, the agent flavors are parametrized by the set
 \begin{align*}
 	F = \{ lin \} \cup \left( \mathbb{R} \times \{ 1 , \dots, n \} \right)
 \end{align*}
 and each flavor determines the sort of motion we should expect from that agent.
-
 \subsection{The Full Model}
-Concatenating the measurement model with our motion model yields the Bayesian network
+Concatenating the measurement model with our motion model yields the Bayesian network:
 \begin{center}
 \begin{tikzpicture}[thick, var/.style={circle,draw,thin,rounded corners,shade,top color=blue!50,minimum size = 4mm}]
 	\node[var] (f) {$f$};
-	\node[var] (x_check) [right=of f] {$\check{x}_0$};
-	\node[var] (v_check) [below=of x_check] {$\check{v}_0$};
-	\node[var] (x)[right=of x_check] {$x_0$};
-	\node[var] (v)[right=of v_check] {$v_0$};
+	\node[var] (x)[right=of f] {$x_0$};
+	\node[var] (v)[below=of x] {$v_0$};
 	\node[var] (x_hat) [right=of x] {$\hat{x}_0$};
 	\node[var] (v_hat) [right=of v] {$\hat{v}_0$};
-	\node[var] (x_check_t) [left=of v_check] {$\check{x}_t$};
+	\node[var] (x_check_t) [left=of v] {$\check{x}_t$};
 	\node[var] (x_t) [left=of x_check_t] {$x_t$};
-	\draw[->] (x_check) to (x);
-	\draw[->] (v_check) to (v);
-	\draw[->] (f) to (x_check);
-	\draw[->] (f) to (v_check);
+	\draw[->] (f) to (x);
+	\draw[->] (f) to (v);
 	\draw[->] (f.south) to (x_check_t.north);
-	\draw[->] (v_check.west) to (x_check_t.east);
-	\draw[->] (x_check.south west) to (x_check_t.north east);
-	\draw[->] (x_check.south) to (v_check.north);
 	\draw[->] (x.east) to (x_hat.west);
+	\draw[->] (x) to (x_check_t);
+	\draw[->] (x) to (v);
+	\draw[->] (v) to (x_check_t);
 	\draw[->] (v.east) to (v_hat.west);
 	\draw[->] (x_check_t) to (x_t); 
-\end{tikzpicture}
+\end{tikzpicture}.
 \end{center}
-Which allows us to derive $\rho_t$ by appropriately marginalizing over the full joint probability over all $9$ variables. [Reference]
+We may use this Bayesian network to compute $\rho_t$ efficiently.
+In particular
+\begin{align*}
+	\rho_t(x_t ) &:= \Pr( x_t \mid \hat{x}_0, \hat{v}_0 ) \\
+	&= \left( \sum_{k} \int \Pr( x_t, k , s  \mid \hat{x}_0, \hat{v}_0 ) ds \right) \\
+	&\quad + \Pr( x_t, lin \mid \hat{x}_0, \hat{v}_0 ).
+\end{align*}
+The final term $\Pr( x_t, lin \mid \hat{x}_0, \hat{v}_0 )$ is expressible in terms of the error function, and would pose a negligible burden in terms of numerical computation.
+The primary computational burden in computint $\rho_t(x_t)$ constitutes the computation of $\left( \sum_{k} \int \Pr( x_t, k , s  \mid \hat{x}_0, \hat{v}_0 ) ds \right)$.
 %\todo[inline]{hoj: May I cut the following?  If I say ``PGM'' or ``Bayesian network'' perhaps that enough to convey the sort of computations needed}
 %Specifically, the vector-fields $\{X_1,\dots,X_n\}$ as well as the probabilities $\Pr( x_0 \mid k )$, $\Pr(lin)$, and $\Pr( k )$ will be learned from the data.
 %We will also assume $\Pr(s,k) = \Pr(s \mid k ) \Pr(k)$ where 
@@ -237,60 +238,156 @@ Which allows us to derive $\rho_t$ by appropriately marginalizing over the full 
 %	 &\quad \Pr( \hat{x}_0 \mid x_0 ) \cdot \Pr( \hat{v}_0 \mid v_0 ) \cdot \Pr(lin).
 %\end{align*}
 
-The abundance of Dirac deltas and Gaussians allows the integrals involved in computing $\rho_t$ to be solved in closed form
-as smooth functions over $\mathbb{R}^2$.
-
-\subsection{Inverse Optimal Control}
-\todo[inline]{ramv: I would just mention this as a property that is satisfied by our vector fields and leave the theorem for the appendix.}
-
-One of the valuable aspect of the motion model of \cite{Kitani2012} was that the trajectories were solutions of optimal control problems.
-This is a desirable property for a motion model of pedestrians/cyclists/vehicles in that it seems reasonable to assume that we all move through the world with an intent to get somewhere.
-This framework where one determines an optimal control problem from trajectories (as opposed to solving for trajectories of an optimal control problem) was dubbed \emph{inverse optimal control} (IOC).
-In this optional subsection, we illustrate how solutions of \ref{eq:ode} can fit within the IOC framework.
-
-\begin{thm}
-	Let $X$ be a vector-field such that $\| X(x) \|_2 = 1$ for all $x \in \mathbb{R}^2$.
-Then, for each initial condition $x_0 \in \mathbb{R}^2$, there exists a neighborhood $U$, a Riemannian metric, $g$, and a cost function, $f$, 
-such that solutions of \eqref{eq:ode} are also solutions of the optimal control problem
-\begin{align}
-	p^* = \inf_{ \| v_t \|_g = s } \int_0^T f( x_t) dt \label{eq:IOC}
-\end{align}
-where $v_t = \frac{d x_t}{dt}$, $\| \cdot \|_g$ is the norm with respect to $g$ and the infimum is taken over all differentiable curves in $U$ which originate from $x_0$.
-\end{thm}
-
-\begin{proof}
-	By rescaling time, we may let $s$ be any positive real number.
-	Therefore, without loss of generality, we will seek an $f$ and $g$ such that $s=1$.
-	In this case a solution of \eqref{eq:IOC} is generated by the vector-field $X = \frac{\nabla f}{ \| \nabla f\|}$ where $\nabla$ is the Riemannian gradient with respect to some metric (possibly non-Euclidean).
-	Therefore, our goal is to illustrate that there exists a metric $g$ and a function $f$ such that the given $X$ is given by $\frac{\nabla f}{ \| \nabla f\|}$.
-
-	Because $\| X \| = 1$ globally, it has no fixed points.
-	From the flow-box theorem \cite[Theorem 4.1.14]{MTA} we can assert that for any open set, $U \subset \mathbb{R}^2$ there exists a local diffeomorphism which transforms $X_k$ into a flat vector-field.
-	Mathematically, this asserts the existence of a map $\Phi : U \to V \subset \mathbb{R}^2$ such that the push-forward of $X$, which we will denote by $\tilde{X}$, and given by
-	\begin{align*}
-		\tilde{X}(\tilde{x}) = \Phi_* X(\tilde{x}) := \left. D\Phi \right|_{\Phi^{-1}(\tilde{x}) } \cdot X(  \Phi^{-1}(\tilde{x}) ),
-	\end{align*}
-	is just the flat vector field $(1,0)$ for all $x \in U$.
-	We could view the coordinate function $\tilde{f}(x) = x^0$ as a cost function on $V$,
-	and we may set $g_V$ to be equal to the standard flat metric on $V$ inherited from $\mathbb{R}^2$.
-	In this case we observe that $\tilde{X}$ generates solutions to the optimization problem
-	\begin{align*}
-		\tilde{p}^* = \inf_{ \| \tilde{v}_t \|_{g_V} \leq 1} = \int_0^T \tilde{f}( \tilde{x}_t ) dt
-	\end{align*}
-	By a change of variables, it follows that the original vector field, $X$, then solves the optimization problem \eqref{eq:IOC}
-	where $g = \Phi^* g_V$ is the pull-back metric, and $f = \Phi^* \tilde{f}$ is the pull-back of $\tilde{f}$.
-\end{proof}
 
 \section{Efficient Probability Propagation} \label{sec:efficient}
+As mentioned \todo{hoj: Make sure we mention this.}, many of the modeling choices were born out of a balance between accuracy and real-time computability.
+One of the major modeling choices, that agents move approximately according to a small number of ODEs, is the most prominent such choice.
+In this section we give some details on how this modeling choice can be leveraged to compute $\rho$ quickly, and accurately.
 
-\todo[inline]{ramv: I think this is the exciting part of the paper, since people struggle to advect things efficiently through nonlinear models. I'd definitely go into lots of detail here and include the theorem about the $L^1$ bound.}
+Firstly, note that $\rho$ may be decomposed by the law of total probability as
+\begin{align*}
+	\rho_t(x_t ) &:= \Pr( x_t \mid \hat{x}_0, \hat{v}_0 ) \\
+	&= \left( \sum_{k} \int \Pr( x_t, k , s  \mid \hat{x}_0, \hat{v}_0 ) ds \right) \\
+	&\quad + \Pr( x_t, lin \mid \hat{x}_0, \hat{v}_0 ).
+\end{align*}
+The final term, $\Pr( x_t, lin  \mid \hat{x}_0, \hat{v}_0)$, turns out to be a closed form expression involving error-functions.\todo{hoj:Must I provide this?  It's a bit long.}
+The other terms are more difficult to compute efficiently, and are the primary concern of this section.
+To begin, from the graphical model we can see that
+\begin{align*}
+	&\Pr( x_t, k,s,\mid \hat{x}_0, \hat{v}_0) \propto \Pr( x_t, k,s,\hat{x}_0, \hat{v}_0) \\
+	&= \int \Pr( x_t, \check{x}_t , \hat{x}_0, \hat{v}_0, k,s) d\check{x}_t \\
+	&= \int \Pr( x_t \mid \check{x}_t ) \Pr(\check{x}_t , \hat{x}_0, \hat{v}_0, k,s) d\check{x}_t
+\end{align*}
+As $\Pr( x_t \mid \check{x}_t) \sim \mathcal{N}( \check{x}_t ; \kappa t)$, we see from the last line that $\Pr( x_t, k,s,\mid \hat{x}_0, \hat{v}_0)$ is proportional to a Gaussian convolution of
+of the joint distribution $\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s)$.
+Assuming such a convolution can be performed efficiently (which we will address later), we can focus on computation of $\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s)$.
 
-\section{Learning} \label{sec:learning}
+Again, from the PGM we see that
+\begin{align*}
+	&\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s) = \int \Pr( \check{x}_t , x_0, \hat{x}_0, v_0, \hat{v}_0, k,s) dx_0 \, dv_0 \\
+		&=  \int \Pr( \check{x}_t \mid  x_0, k,s, v_0) \Pr(\hat{x}_0, x_0, \hat{v}_0, v_0, k, s) dx_0 \, dv_0 \\
+		&= \int \delta\left( \check{x}_t - \Phi_{k,s}^{t}( x_0) \right) \Pr(\hat{x}_0, x_0, \hat{v}_0, v_0, k, s) dx_0 \, dv_0 \\
+		&= \int \delta\left( \check{x}_t - \Phi_{k,s}^{t}( x_0) \right) \delta\left( v_0 - s X_k (x_0) \right) \\
+		&\hspace{20ex} \Pr(\hat{x}_0, x_0, \hat{v}_0, v_0, k, s) dx_0\, dv_0
+\end{align*}
+Carrying out the integration over $v_0$ we observe
+\begin{align}
+\begin{split}
+	&\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s) \\
+	&= \int \delta\left( \check{x}_t - \Phi_{k,s}^{t}( x_0) \right) \Pr(\hat{x}_0, x_0, \hat{v}_0, v_0(s,k,x_0), k, s) dx_0
+\end{split}
+\label{eq:push forward}
+\end{align}
+where $v_0(s,k,x_0) := s\, X_k(x_0)$. As the density $\Pr(\hat{x}_0, x_0, \hat{v}_0, v_0(s,k,x_0), k, s) $ is Riemann integrable in $x_0$,
+ we may approximate it as a sum of weighted Dirac delta's supported on a regular grid with spacing $\Delta x$.\todo{Perhaps prove this claim in the appendix.}
+In other words
+\begin{align}
+	\begin{split}
+		\Pr(\hat{x}_0, x_0, \hat{v}_0, v_0(s,k,x_0), k, s) = \\
+		\qquad \left( \sum_{\alpha} c_{k,s,\alpha} \delta( x_0 - \bar{x}_0^\alpha ) \right) + \varepsilon_0(x_0)
+	\end{split}
+	\label{eq:approximation 1}
+\end{align}
+for constants
+\begin{align}
+	c_{k,s,\alpha} =  \left. \left[ \Pr( x_0, \hat{x}_0 , \hat{v}_0, v_0(s,k,x_0), k,s) \right] \right|_{x_0 = x_0^\alpha} \label{eq:constants}
+\end{align}
+and error of magnitude $\| \varepsilon_0 \|_{L^1} \sim \mathcal{O}( \Delta x)$ with respect to the $L^1$-norm in $x_0$.
+The coefficients, $c_{k,s,\alpha}$, can be computed efficiently as product of the posteriors appearing in the PGM.
+Substitution of \eqref{eq:approximation 1} into the final line of \eqref{eq:push forward} yields
+\begin{align*}
+	\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s) = \sum_\alpha c_{k,s,\alpha} \delta \left( \check{x}_t - \Phi_{k,s}( x_0^\alpha) \right) + \varepsilon_t( \check{x}_t)
+\end{align*}
+where $\varepsilon_t = \int \delta\left( \check{x}_t - \Phi_{k,s}^{t}( x_0) \right)  \varepsilon_0(x_0) dx_0$.
+The first term is computable by flowing the points of the grid, $x_0^\alpha$, by the evolution of the vector field $s X_k$.
+The second term, $\tilde{\varepsilon}$, may be viewed as an error term.
+In fact, this method of approximating $\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s)$ as a sum of Dirac-deltas is adaptive, in that the error term does not grow in total mass.
 
-\todo[inline]{ramv: I'd consider folding this section into the experiment section. This is basically how we learn all of the stuff in our model.}
+\begin{thm} \label{thm:error}
+	The error term, $\varepsilon_t$, is of size $\mathcal{O}( \Delta x)$ in the $L^1$-norm, for fixed $k,s,\hat{x}_0$, and $\hat{v}_0$.
+	Moreover, the magnitude is constant in time.
+\end{thm}
+\begin{proof}
+	To declutter notation, let us temporarily denote $\Phi_{k,s}^t$ by $\Phi$.
+	We observe
+\begin{align*}
+	\| \varepsilon_t \|_{L^1} &= \int \left| \int \delta( \check{x}_t - \Phi(x_0) ) \varepsilon_0(x_0) dx_0 \right| d\check{x}_t \\
+	&= \int \det( \left. D\Phi \right|_{\Phi^{-1}( \check{x}_t) }) |\varepsilon_{0}( \Phi^{-1}( \check{x}_t )) | d\check{x}_t \\
+	&= \int | \varepsilon_0( u) | du = \| \varepsilon_0 \|_{L^1}
+\end{align*}
+As $\varepsilon_0$ is of magnitude $\mathcal{O}( \Delta x)$ the result follows.
+\end{proof}
 
-  Now that the model has been described, we can discuss how one can fit the parameters of the model to a data set.
-  In the results section, we will use the Stanford Drone Dataset \cite{StanfordDroneData}.
+As the Gaussian convolution of a Dirac-delta distribution is a Gaussian distribution, the following corollary is nearly immediate.
+\begin{cor} \label{cor:error}
+	Let $G_{\sigma}(x-\mu)$ denote the probability density of a bivariate normal distribution of standard deviation $\sigma$ and mean $\mu$.
+	Then the density
+	\begin{align}
+		\sum_\alpha c_{k,s,\alpha} G_{\kappa t}( x_t - \Phi_{k,s}^t( x_0^{\alpha}) ) \label{eq:approximation 2}
+	\end{align}
+	is an approximation of $\Pr( x_t, k, s, \hat{x}_0, \hat{v}_0)$
+	with a constant in time error bound of magnitude $\mathcal{O}( \Delta x)$.
+\end{cor}
+\begin{proof}
+	Recall that $\Pr( x_t, k, s, \hat{x}_0, \hat{v}_0)$ is related to $\Pr( \check{x}_t, k,s,\hat{x}_0, \hat{v}_0)$ by convolving the latter density in the variable $\check{x}_t$ with a Gaussian kernel of variance $\kappa t$.
+	That is to say
+	\begin{align*}
+		\Pr(x_t, k, s, \hat{x}_0, \hat{v}_0) = \int G_{\kappa t}( x_t - \check{x}_t) \Pr( \check{x}_t, k,s,\hat{x}_0, \hat{v}_0) d\check{x}_t \\
+	\end{align*}
+	Substitution of \eqref{eq:approximation 1} yields
+	\begin{align*}
+		\Pr(x_t, k, s, \hat{x}_0, \hat{v}_0) = \sum_\alpha c_{\alpha} G_{\kappa t}( x_t - \Phi_{k,s}^t( x_0^{\alpha}) ) + (G_{\kappa t} * \varepsilon_t )
+	\end{align*}
+	Gaussian convolution preserves the $L^1$-norm of a density.
+	Therefore $\| G_{\kappa t} * \varepsilon_t \|_{L^1} = \| \varepsilon_t \|_{L^1} \sim \mathcal{O}(\Delta x)$, which is also constant in time by Theorem \ref{thm:error}.
+\end{proof}
+
+Corollary \ref{cor:error} justifies using \eqref{eq:approximation 2} as an approximation of $\Pr( x_t, k,s,\hat{x}_0, \hat{v}_0)$.
+So we've reduce the problem of computing $\rho_t(x_t)$ to the problem of computing the coefficient $c_{k,s,\alpha}$ and the point $\Phi_{k,s}^t(x_0^\alpha)$ for all $k,s$ and points $x_0^{\alpha} \in \Lambda$.
+We can reduce this burden further by exploiting the following symmetry.
+\begin{thm}
+	$\Phi_{k,s}^t = \Phi_{k,1}^{st}$.
+\end{thm}
+\begin{proof}
+	Say $x(t)$ satisfies the ordinary differential equation $x'(t) = sX_k(x(t))$ with the initial condition $x_0$.
+	In other words, $x(t) = \Phi_{k,s}^{t}(x_0)$.
+	Taking a derivative of $x(t/s)$, we see $\frac{d}{dt} (x(t/s)) = x'(t/s) /s = X_k(x(st))$.
+	Therefore $x(t/s) = \Phi_{k,1}^{t}( x_0)$.
+	Substitution of $t$ with $\tau = t/s$ yields $x(\tau) = \Phi_{k,1}^{s \tau} (x_0)$.
+	As $x(\tau) = \Phi_{k,s}^{\tau}(x_0)$ as well, the result follows.
+\end{proof}
+
+Thus, computation of $\Phi_{k,s}^t( x_0^{\alpha})$ boils down to computing $\Phi_{k,1}^t(x_0^{\alpha})$.
+
+At this point, we may summarize the ingredient to compute an approximation of $\Pr( x_t ,k,s \mid \hat{x}_0, \hat{v}_0 )$ in two parts
+\begin{enumerate}
+	\item Compute the constants $c_{\alpha}$ from \eqref{eq:constants}.
+	\item Compute $\Phi_{k,1}^t(x_0^{\alpha})$ for each $k$ and each point $x_0^{\alpha}$ in the grid over a time-interval $[-T,T]$.
+\end{enumerate}
+Each of these pieces may be computed efficiently, and the full computation is embarrassingly parallel.
+For example, for fixed $k$ and $\alpha$, the computation of $\Phi_{k,1}^t(x_0^{\alpha})$ on the interval $[-T,T]$ take $\mathcal{O}(T)$ time using a
+an explicit finite difference scheme, and computation for each $(k,\alpha)$ may be performed in parallel with another such pair.
+Moreover, computation $c_{k,s,\alpha}$ is embarrassingly parallel in with respect to all triples $(k,s,\alpha)$.
+If the posteriors of our PGM consist solely of elementary functions such as Gaussians and polynomials, then computation of all coefficients $c_{k,s,\alpha}$
+can be made virtually instantaneous given enough processors, as would be the case with a sufficiently powerful graphics processing unit.
+More precisely, the full computation of our approximation of $\rho_t(x_t)$ would take $\mathcal{O}( T n A / N )$ time given $N$ processing units
+where $A = | \cup_\alpha \{ x_0^\alpha\} |$ is the size of the mesh and $n$ is the number of vector fields.
+
+
+%  Describe how $\Pr(x \mid k)$, the director-fields, and $\sigma_x$ are learned without using math.
+%  Math will be relegated to the appendix.
+%  
+%  NOTE:  Learning $\kappa$.
+%  \begin{enumerate}
+%  	\item Learn vector-fields
+%	\item Generate approximate curves for each v.f.
+%	\item Compute $\kappa_k$ of best fit for each v.f.
+%	\item $\kappa = \min_k \{ \kappa_1,\dots,\kappa_n\}$.
+%  \end{enumerate}
+  
+\section{Implementation and Experimental results}
+  Now that the model has been described, we can discuss a way, but certainly not the only way, that one can fit parameters of the model to a data set.
+  For the purpose of demonstration, we will use the Stanford Drone Dataset \cite{StanfordDroneData}.
   More generally, we will assume that for a fixed scene we have a database of previously observed trajectories $\{ \hat{x}^1, \dots, \hat{x}^N\}$.
   From this data we will tune the parameters of the model appropriately.
   The parameters of the model which must be chosen or learned are
@@ -375,22 +472,7 @@ where $v_t = \frac{d x_t}{dt}$, $\| \cdot \|_g$ is the norm with respect to $g$ 
   So for each curve, $x_i(t)$, of $S_k$, we have a synthesized curve $x_{i,synth}(t)$ as well.
   We then measure the standard deviation of $(x_i(t) - x_{i,synth}(t)) / t$ over $i$ and at few time, $t \in \{ 0, 100, 200 \}$ in order to obtain $\kappa$.
   
-
-%  Describe how $\Pr(x \mid k)$, the director-fields, and $\sigma_x$ are learned without using math.
-%  Math will be relegated to the appendix.
-%  
-%  NOTE:  Learning $\kappa$.
-%  \begin{enumerate}
-%  	\item Learn vector-fields
-%	\item Generate approximate curves for each v.f.
-%	\item Compute $\kappa_k$ of best fit for each v.f.
-%	\item $\kappa = \min_k \{ \kappa_1,\dots,\kappa_n\}$.
-%  \end{enumerate}
-  
-\section{Results}
-
-\todo[inline]{ramv: Id try to fold the learning section as a subsection in this section....}
- Precision, accuracy, etc.
+ \subsection{ Precision, accuracy, etc.}
 
 %\section{RSS citations}
 %
@@ -483,6 +565,48 @@ where $v_t = \frac{d x_t}{dt}$, $\| \cdot \|_g$ is the norm with respect to $g$ 
 The conclusion goes here.
 
 \section*{Acknowledgments}
+Thanks to Kris Kitani
+
+\appendix
+\subsection{Inverse Optimal Control} \label{app:ioc}
+One of the valuable aspect of the motion model of \cite{Kitani2012} was that the trajectories were solutions of optimal control problems.
+This is a desirable property for a motion model of pedestrians/cyclists/vehicles in that it seems reasonable to assume that we all move through the world with an intent to get somewhere.
+This framework where one determines an optimal control problem from trajectories (as opposed to solving for trajectories of an optimal control problem) was dubbed \emph{inverse optimal control} (IOC).
+In this optional subsection, we illustrate how solutions of \ref{eq:ode} can fit within the IOC framework.
+
+\begin{thm}
+	Let $X$ be a vector-field such that $\| X(x) \|_2 = 1$ for all $x \in \mathbb{R}^2$.
+Then, for each initial condition $x_0 \in \mathbb{R}^2$, there exists a neighborhood $U$, a Riemannian metric, $g$, and a cost function, $f$, 
+such that solutions of \eqref{eq:ode} are also solutions of the optimal control problem
+\begin{align}
+	p^* = \inf_{ \| v_t \|_g = s } \int_0^T f( x_t) dt \label{eq:IOC}
+\end{align}
+where $v_t = \frac{d x_t}{dt}$, $\| \cdot \|_g$ is the norm with respect to $g$ and the infimum is taken over all differentiable curves in $U$ which originate from $x_0$.
+\end{thm}
+
+\begin{proof}
+	By rescaling time, we may let $s$ be any positive real number.
+	Therefore, without loss of generality, we will seek an $f$ and $g$ such that $s=1$.
+	In this case a solution of \eqref{eq:IOC} is generated by the vector-field $X = \frac{\nabla f}{ \| \nabla f\|}$ where $\nabla$ is the Riemannian gradient with respect to some metric (possibly non-Euclidean).
+	Therefore, our goal is to illustrate that there exists a metric $g$ and a function $f$ such that the given $X$ is given by $\frac{\nabla f}{ \| \nabla f\|}$.
+
+	Because $\| X \| = 1$ globally, it has no fixed points.
+	From the flow-box theorem \cite[Theorem 4.1.14]{MTA} we can assert that for any open set, $U \subset \mathbb{R}^2$ there exists a local diffeomorphism which transforms $X_k$ into a flat vector-field.
+	Mathematically, this asserts the existence of a map $\Phi : U \to V \subset \mathbb{R}^2$ such that the push-forward of $X$, which we will denote by $\tilde{X}$, and given by
+	\begin{align*}
+		\tilde{X}(\tilde{x}) = \Phi_* X(\tilde{x}) := \left. D\Phi \right|_{\Phi^{-1}(\tilde{x}) } \cdot X(  \Phi^{-1}(\tilde{x}) ),
+	\end{align*}
+	is just the flat vector field $(1,0)$ for all $x \in U$.
+	We could view the coordinate function $\tilde{f}(x) = x^0$ as a cost function on $V$,
+	and we may set $g_V$ to be equal to the standard flat metric on $V$ inherited from $\mathbb{R}^2$.
+	In this case we observe that $\tilde{X}$ generates solutions to the optimization problem
+	\begin{align*}
+		\tilde{p}^* = \inf_{ \| \tilde{v}_t \|_{g_V} \leq 1} = \int_0^T \tilde{f}( \tilde{x}_t ) dt
+	\end{align*}
+	By a change of variables, it follows that the original vector field, $X$, then solves the optimization problem \eqref{eq:IOC}
+	where $g = \Phi^* g_V$ is the pull-back metric, and $f = \Phi^* \tilde{f}$ is the pull-back of $\tilde{f}$.
+\end{proof}
+
 
 %% Use plainnat to work nicely with natbib. 
 
