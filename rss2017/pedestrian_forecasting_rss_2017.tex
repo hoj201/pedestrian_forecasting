@@ -35,7 +35,7 @@
 \begin{document}
 
 % paper title
-\title{Realtime Probabilistic Pedestrian Forecasting}
+\title{Real-Time Probabilistic Pedestrian Forecasting}
 
 % You will get a Paper-ID when submitting a pdf file to the conference system
 \author{Author Names Omitted for Anonymous Review. Paper-ID [add your ID here]}
@@ -90,7 +90,18 @@ The abstract goes here.
 
 \section{Introduction}
 
-\todo[inline]{hoj: maybe ram should write the first paragraph.}
+Autonomous systems (e.g. autonomous vehicle) acting in human-centric environments must be able to anticipate the behavior of neighboring humans to ensure safe operation. 
+In addition to valuing accuracy and precision, any algorithm predicting the intent of humans should satisfy several critical properties to enable safe control design for autonomous systems.
+First, the predictions must be generated at faster than real-time speeds to ensure that they can be used during safe control design for the autonomous system.
+Second, long-time horizon forecasts are preferable to their shorter time counterparts to reduce the aggressiveness of synthesized controllers.
+To better appreciate this second property, consider the problem of an
+If the braking of the 
+
+This paper presents an algorithm for real-time, long-term prediction of pedestrian behavior which can subsequently be used by autonomous agents.
+As depicted in Figure \ref{fig:}, this approach relies upon ... 
+
+%First, since safety is paramount, generated predictions must avoid misclassifying areas as unoccupied even though humans are present. 
+%Though this may unduly reduce the precision of the algorithm 
 
 \subsection{Background}
 Papers to mention
@@ -101,6 +112,10 @@ Papers to mention
 	\item \citet{Ziebart2009} (Another MDP paper)
 	\item \citet{Helbing1992} (fluid based crowd model)
 \end{itemize}
+
+The primary contributions of this paper are:
+
+The rest of the paper is organized as follows:
 
 \section{Model}
 
