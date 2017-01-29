@@ -161,6 +161,21 @@ def particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True):
         yield (x_out, w_out/ prob_of_mu), (x_lin, w_lin/prob_of_mu)
     pass
 
+def linear_generator(x_hat, v_hat, t_final, N_steps):
+    x_span = np.linspace( -scene.width/2, scene.width/2, 250)
+    dx = x_span[1] - x_span[0]
+    y_span = np.linspace( -scene.height/2, scene.height/2, 250)
+    dy = y_span[1] - y_span[0]
+    X,Y = np.meshgrid(x_span, y_span)
+    x_lin = np.vstack( [X.flatten(), Y.flatten()])
+    yield x_lin, np.zeros_like(x_lin[0])
+
+    for n in range(1,N_steps):
+        t = n * t_final / float(N_steps)
+        w_lin = joint_lin_x_t_x_hat_v_hat(t, x_lin, x_hat, v_hat) * dy*dx
+        yield x_lin, w_lin
+
+
 
 
 

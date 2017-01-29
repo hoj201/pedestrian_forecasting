@@ -77,7 +77,7 @@ def plot_roc(predics, trues, title, axes):
 
 if __name__ == "__main__":
     import cProfile, pstats, StringIO
-    import matplotlib.pyplot as plt
+    import matplotlib.pyplot as pltq
     import time
     from integrate import trap_quad
     import matplotlib.pyplot as plt
@@ -123,11 +123,11 @@ if __name__ == "__main__":
 
         auc_ours = []
         auc_lin = []
-	ppr_ours = np.array([])
-	ttr_ours = np.array([])
-	ppr_lin = np.array([])
-	ttr_lin = np.array([])
-	reference = mpimg.imread(path)
+        ppr_ours = np.array([])
+        ttr_ours = np.array([])
+        ppr_lin = np.array([])
+        ttr_lin = np.array([])
+        reference = mpimg.imread(path)
         for ((x_arr_ours, w_arr_ours), (x_arr_lin, w_arr_lin)) in ours:
             if n == 0:
                 n += 1
@@ -146,6 +146,8 @@ if __name__ == "__main__":
                 rt = lambda x: rho_true(i, int(t_final/float(N_steps) * n), test_set, x)
                 width = test_scene.width/40
                 pr_ours, tr_ours, bboxes = evaluate_ours(bounds, rho, rhol, rt, width, 1.6 * scene.kappa * t_final/float(N_steps) * n, debug_level=0)
+                np.save("pickles/ours/{}/pr_agent_{}_time_{}".format(scene_number, i, n), pr_ours)
+                np.save("pickles/ours/{}/tr_agent_{}_time_{}".format(scene_number, i, n), tr_ours)
                 w_arr_lin /= np.sum(w_arr_lin) if  np.sum(w_arr_lin) > 0 else 1
                 #whr = np.where(w_arr > 0)[0]
                 #x_arr = x_arr.transpose()[whr].transpose()
@@ -154,6 +156,8 @@ if __name__ == "__main__":
                 #plt.contourf(X,Y,Z, 30, cmap='viridis')
                 rho = (x_arr_lin, w_arr_lin)
                 pr_lin, tr_lin = evaluate_lin(bounds, rhol, rt, width, debug_level=0)
+                np.save("pickles/linear/{}/pr_agent_{}_time_{}".format(scene_number, i, n), pr_lin)
+                np.save("pickles/linear/{}/tr_agent_{}_time_{}".format(scene_number, i, n), tr_lin)
                 if len(ppr_ours) == 0:
 		            ppr_ours = np.array([pr_ours])
 		            ttr_ours = np.array([tr_ours])
@@ -176,7 +180,6 @@ if __name__ == "__main__":
                 auc_ours.append(plot_roc(pr_ours, tr_ours, "Our Algorithm for agent {}, t={}".format(i, int(t_final/float(N_steps) * n)), axarr[0][0]))
                 auc_lin.append(plot_roc(pr_lin, tr_lin, "Linear Predictor for agent {}, t={}".format(i, int(t_final/float(N_steps) * n)), axarr[0][1]))
 
-
                 #X,Y,Z = singular_distribution_to_image(
                 #    x_arr_ours, w_arr_ours, domain, res= (100,100))
                 ctx = int(np.ceil(bounds[0]/width))
@@ -196,14 +199,13 @@ if __name__ == "__main__":
                         Y[rarg][karg] = (-1 * bounds[1]/2.0 + width * (karg + 0.5))
                 bboxes = np.array(bboxes)
                 Z = pr_ours.reshape((ctx, cty))
-		
-		
+
                 #img = axarr[1][0].pcolor(X,Y,Z, cmap='viridis')
                 im = axarr[1][0].imshow(Z.transpose(), origin="lower", extent=[-bounds[0]/2,bounds[0]/2,-bounds[1]/2,bounds[1]/2])
-                iaxarr[1][0].imshow(reference, extent=[-bounds[0]/2,bounds[0]/2,-bounds[1]/2,bounds[1]/2], alpha=0.5)
+                axarr[1][0].imshow(reference, extent=[-bounds[0]/2,bounds[0]/2,-bounds[1]/2,bounds[1]/2], alpha=0.5)
 		        #for col,val in zip(img.get_facecolors(), pr_ours):
 		        #    col[3] = 0.5
-		    
+
                 axarr[1][0].set_xlabel("AUC is {}".format(auc_ours[-1]))
 
                 bound = [[-scene.width/2, scene.width/2], [-scene.height/2, scene.height/2]]
