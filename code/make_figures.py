@@ -4,22 +4,51 @@ import matplotlib.image as mpimg
 import numpy as np
 import os
 from data import sets, scenes
-scene = int(argv[1])
-folder = argv[2]
-result = argv[3]
-reference = argv[4]
-width = int(argv[5])
-height = int(argv[6])
+from process_data import BB_ts_to_curve as bbts
+import json
+file = argv[1]
+with open(file) as f:
+    st = f.read()
+json_acceptable_string = st.replace("'", "\"")
+dic = json.loads(json_acceptable_string)
+scene_number = dic['scene_number']
+scene = scenes[scene_number]
+sett = sets[scene_number]
+width = dic['width']
+height = dic['height']
+folders = dic['folders']
+labels = dic['labels']
+reference = dic['reference']
+agent = dic['agent']
+times = dic['times']
 
-for file in os.listdir(folder):
-    if "DS" in file: continue
-    print file
-    data = np.load(folder + file)
-    print data.shape
-    ax = plt.gca()
-    plt.axis('off')
-    plt.imshow(data.reshape(width, height).transpose(), origin="lower", extent=[-width/2.0,width/2.0,-height/2.0,height/2.0], cmap="viridis")
-    plt.imshow(mpimg.imread(reference), extent=[-width/2.0, width/2.0,-height/2.0,height/2.0], alpha=0.5)
-    fname=file[:file.find(".")]
-    plt.savefig(result + fname + ".eps", format="eps", bbox_inches='tight')
-    plt.clf()
+fnames = ["pr_agent_{}_time_{}.npy".format(agent, t) for t in times]
+
+methods = [[np.load(x + f) for f in fnames] for x in folders]
+mx = np.amax(np.array([[np.amax(x) for x in row] for row in methods]))
+nummth = len(methods)
+numt = len(times)
+curve = bbts(sett[agent])
+begin = curve[:, 0]
+end = curve[:, -1]
+
+fig, axarr = plt.subplots(nummth, numt, sharex='col', sharey='row')
+for ax in axarr.flatten():
+    ax.axis('off')
+for ct, ax in enumerate(axarr[0, :]):
+    ax.text(0, scene.height/2 + dic['fontspacing'], "t={}".format(times[ct]), ha="center", va="center",  size=dic['fontsize'], color=dic['fontcolor'])
+for ct, ax in enumerate(axarr[:, 0]):
+    ax.text(-scene.width/2 - dic['fontspacing'], 0, labels[ct], ha="center", va="center", rotation=90,  size=dic['fontsize'], color=dic['fontcolor'])
+
+for parad in range(nummth):
+    for time in range(numt):
+        tmp = axarr[parad][time]
+        tmp.imshow(methods[parad][time].reshape(width, height).transpose(), origin="lower", extent=[-scene.width/2,scene.width/2,-scene.height/2,scene.height/2], cmap="viridis")
+        tmp.imshow(mpimg.imread(reference), extent=[-scene.width/2, scene.width/2,-scene.height/2,scene.height/2], alpha=0.5)
+        tmp.plot(curve[0, :times[time]], curve[1, :times[time]], c="white")
+        tmp.scatter(begin[0], begin[1], marker="o", c="white", edgecolors="none", s=dic['markersize'])
+        tmp.scatter(end[0], end[1], marker="x", c="white", edgecolors="none", s=dic['markersize'])
+        tmp.scatter(curve[0, times[time]], curve[1, times[time]], marker="D", c="white",  edgecolors="none", s=dic['markersize'])
+plt.suptitle(dic['title'], size=dic['titlesize'])
+plt.subplots_adjust( wspace=dic['imgspacing'], hspace=dic['imgspacing'])
+plt.savefig("{}x{} grid.eps".format(nummth, numt), format="eps")

@@ -15,8 +15,6 @@ import cv2
 
 scene_number = int(argv[1])
 agent = sets[scene_number][int(argv[2])]
-width = int(argv[3])
-height = int(argv[4])
 sf = min(width, height)
 
 scene = scenes[scene_number]

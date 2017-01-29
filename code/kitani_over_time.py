@@ -55,9 +55,10 @@ def fn(paths):
     plt.savefig("images/kitani/AUC_vs_t_for_{}.png".format(name))
     plt.show()
     return aucs, times
-paths_kit = ["pickles/kitani/0/"]
-paths_ours = ["pickles/ours/{}/".format(x) for x in range(6)]
-paths_lin = ["pickles/linear/{}/".format(x) for x in range(6)]
+
+paths_kit = ["pickles/kitani/{}/".format(x) for x in range(5)]
+paths_ours = ["pickles/ours/{}/".format(x) for x in range(5)]
+paths_lin = ["pickles/linear/{}/".format(x) for x in range(5)]
 our_auc, our_times = fn(paths_ours)
 kit_auc, kit_times = fn(paths_kit)
 lin_auc, lin_times = fn(paths_lin)
@@ -69,6 +70,7 @@ ax.set_ylabel("AUC")
 plt.plot(our_times, our_auc, ls="solid", c="black", label="Our Algorithm")
 plt.plot(kit_times, kit_auc, ls="dashed", c="black", label="Kitani Algorithm")
 plt.plot(lin_times, lin_auc, ls="dashdot", c="black", label="Linear Predictor")
+plt.legend(loc="lower right")
 fig.savefig('images/The Results.eps', format='eps')
 plt.show()
 
