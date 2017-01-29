@@ -98,20 +98,50 @@ To better appreciate this second property, consider the problem of an
 If the braking of the 
 
 This paper presents an algorithm for real-time, long-term prediction of pedestrian behavior which can subsequently be used by autonomous agents.
-As depicted in Figure \ref{fig:}, this approach relies upon ... 
+As depicted in Figure \ref{fig:}, this approach relies upon. 
 
 %First, since safety is paramount, generated predictions must avoid misclassifying areas as unoccupied even though humans are present. 
 %Though this may unduly reduce the precision of the algorithm 
 
 \subsection{Background}
-Papers to mention
-\begin{itemize}
-	\item \citet{Kitani2012} (Early MDP based paper)
-	\item \citet{Karasev2016} (Another motion model, discrete time)
-	\item \citet{Ballan2016} (The knowledge transfer paper)
-	\item \citet{Ziebart2009} (Another MDP paper)
-	\item \citet{Helbing1992} (fluid based crowd model)
-\end{itemize}
+Most forecasting algorithm are well characterized by the underlying evolution model they adopt.
+Such models come in a variety flavors, and are adapted to the task at hand.
+For example, see \cite{Helbing1992} for crowd modeling.
+
+In this article we are primarily concerned with models that probabilistically predict the position of a single agent.
+The most simple approach to forecasting would be to forward integrate a Kalman filter \cite{kalman1960new} based upon the observed heading.
+Over short time scales this may perform quite well, but the resulting distribution will devolve into a large Gaussian mass over longer time scales.
+To mitigate the negative effects of this simplistic description of motion, slightly more sophisticated motion models should be considered.
+Such models include inverse optimal control (IOC) based models such as \cite{Ziebart2008,Ziebart2009,Kitani2012}.
+These IOC models have the often desirable property of attributing intention and goal-seeking behavior to the agents.
+For example \citet{Kitani2012} extracted a very simple Markov decision process (MDP) evolving on a 2D lattice by training on a small collection of features and trajectories.
+The resulting MDP is very light weight, parametrized by only a small collection of coefficients equal in number to that of the feature maps.
+Secondly, given an initial and final state, the probability distribution of the pedestrian at intermediate states is easily computable because it basically comes down to matrix multiplication.
+Thirdly, the small collection of parameters learned in one environment can, in principal, be used in a novel environment without retraining (i.e. ``knowledge transfer'').
+Lastly, the IOC-MDP framework is very flexible and very easy to generalize.
+For example, time dependent information, such as traffic signals, are incorporated in \cite{Karasev2016}, by relaxing the Markov property and considering a switched Markov process.
+\citet{Karasev2016} generalizes \cite{Kitani2012} further by considering a discrete time Markov process over a continuous space which more closely approximates reality.
+However, this modelling choice resulted in posteriors which were difficult to compute with precision.
+They opted to use a sample based method: a Rao-Blackwellized particle filter.
+The resulting accuracy is known in a probabilistic sense in that the error bounds are themselves random variables.
+Moreover, high accuracy can come at a high computational cost prohibitive for real-time computation.
+It should be noted, however, that speed was not a goal of \cite{Karasev2016}.
+
+One difficulty which IOC models can suffer, is the tendency for the trajectories to become trapped in local optimal.
+This often occurs when agents make very sharp turns, and have intermediate goals to go one place before visiting another.
+To address this, \citet{Ballan2016} adopted an empiricists approach, computing ``turning maps'' and attempting to infer how agents behave in a given patch based on it's feature, solely based on how previous agents have behaved there (regardless of operating under an unobserved optimization criteria).
+Similar to \cite{Karasev2016}, the motion model was a discrete time Markov process over a continuous space and so the relevant posteriors were approximated using sample based techniques.
+Again, the same criticisms in regards to speed an accuracy lodged at \cite{Karasev2016} can also be lodged at \cite{Ballan2016}, and again, we should note that speed/high accuracy were not a priority there.
+However, the motion model of \citet{Ballan2016} was merely an illustrative choice in the more ambitious pursuit of creating a flexible paradigm for pedestrian forecasting.
+In particular, a motion model on one scene ought to be transferable to other scenes, and the representation of the ``objects'' in the scene ought to be flexible in order for behavior to be robust.
+Said differently, the way a forecasting algorithm executes ``knowledge transfer'' should not depend too rigidly on the finitely many labels some engineer managed to think of in a late-night brainstorming session.
+The algorithm should be able to infer how to behave near a roundabout by using prior knowledge of more fundamental building blocks like pavement, curbs, and asphalt.
+In summary, the motion model used in \cite{Ballan2016} is merely a parameter of the more general framework they have proposed.
+We should note that the motion model we will present here can, in principal, be incorporated within their forecasting paradigm.
+
+Finally,
+
+\subsection{Contributions}
 
 The primary contributions of this paper are:
 
@@ -139,13 +169,14 @@ We will now elaborate on these three components, and relate them to one another.
 \subsection{The Sensor Model}
 At time $t=0$, we obtain a noisy reading of position, $\hat{x}_0 \in \mathbb{R}^2$.
 We assume that our measurements come from Gaussian noise about the true location $x_0 \in \mathbb{R}^2$.
-We use the same sensor model is assumed for velocity.
+In other words $\Pr( \hat{x}_0 \mid x_0 ) = G_{\sigma_x}( \hat{x}_0 - x_0 )$ where $G_\sigma$ denotes the bivariate Gaussian distribution.
+We use the same sensor model is assumed for velocity in that $\Pr( \hat{v}_0 \mid v_0 ) = G_{\sigma_v}( \hat{v}_0 - v_0 )$.
 In principal, any measurement model could be used, and we may view this as a parameter of our method.
 
 \subsection{The Agent Model}
 All agents are initialized within some rectangular region $D \subset \mathbb{R}^2$.
 We denote the true position of an agent by $x_t$.
-We should never expect to know $x_t$ and the nature of its evolution precisely, and any model should account for the fact that any model is almost surely false, to some degree.
+We should never expect to know $x_t$ and the nature of its evolution precisely, and any model should account for its own (inevitable) imprecision.
 We do this by fitting a deterministic model to the data and blurring the result in order to acknowledge inevitable modeling errors.
 
 Specifically, our motion model consists of a modeled trajectory $\check{x}_t$, which is probabilistically related to the true position by $x_t$ via 
@@ -156,8 +187,7 @@ where $\sigma_{int}(t) = \kappa t$ for some learned constant $\kappa > 0$.
 This insures the consistency condition $\check{x}_0 = x_0$, while acknowledging the existence of uncertainty for all $t>0$.
 
 Once initialized, agents come in two flavors: linear and nonlinear.
-Linear agents imagine that they move in straight lines at constant velocity.
-Thus $\check{x}_t = x_0 + t v_0$ and so we have the posterior
+Linear agents evolve in time according to the equation $\check{x}_t = x_0 + t v_0$ and so we have the posterior
 \begin{align*}
 	\Pr( \check{x}_t \mid x_0, v_0, lin) = \delta( \check{x}_t - x_0 - t v_0 ).
 \end{align*}
@@ -168,33 +198,33 @@ We will assume linear agents also satisfy the posteriors
 
 If the agent is of nonlinear type, then we assume the dynamics take the form
 \begin{align}
-	\frac{d \check{x}_t}{dt} \equiv \check{v}_t = s \cdot X_k(\check{x}_t) \label{eq:ode}
+	\frac{d \check{x}_t}{dt} = s \cdot X_k(\check{x}_t) \label{eq:ode}
 \end{align}
 where $X_k$ is a vector-field from a finite collection $\{X_1, \dots, X_n\}$, and $s \in \mathbb{R}$.
 More specifically, we assume that each $X_k$ has the property that $\| X_k(x) \| = 1$ for all $x \in D$.
 This property ensures that speed is constant in time, and it has the further advantage of being the (local) generator
 of solutions to an optimal navigation problem (see Appendix \ref{app:ioc}).
-The vector-fields $X_1,\dots,X_n$ are learned from the data-set (see \S \ref{sec:learning}).
+The vector-fields $X_1,\dots,X_n$ are learned from the data-set (see \S \ref{sec:implementation}).
 
 It is assumed that $k$ and $s$ are both constant in time, so that $\check{x}_t$ is determined from the
 tripe $(x_0,k,s)$ by integrating \eqref{eq:ode} with the initial condition $x_0$.
 In other words, we have the posterior
-\begin{align*}
-	\Pr( \check{x}_t \mid x_0 , k , s) = \delta( \check{x}_t - \Phi^{t}_{k,s}( x_0) )
-\end{align*}
+\begin{align}
+	\Pr( \check{x}_t \mid x_0 , k , s) = \delta( \check{x}_t - \Phi^{t}_{k,s}( x_0) ) \label{eq:x_check | ksx}
+\end{align}
 where $\Phi^{t}_{k,s}$ is the flow-map of the vector field $s \,X_k$ up to time $t$.
 It is notable, that the variables $k,s$ and $x_0$ determine $v_0$.
 Thus we also have the posterior
-\begin{align*}
-	\Pr( v_0 \mid k, s, x_0) = \delta( v_0 -s X_k( x_0) ).
-\end{align*}
+\begin{align}
+	\Pr( v_0 \mid k, s, x_0) = \delta( v_0 -s X_k( x_0) ). \label{eq:v | ksx}
+\end{align}
 In summary, the agent flavors are parametrized by the set
-\begin{align*}
-	F = \{ lin \} \cup \left( \mathbb{R} \times \{ 1 , \dots, n \} \right)
-\end{align*}
+\begin{align}
+	F = \{ lin \} \cup \left( \mathbb{R} \times \{ 1 , \dots, n \} \right) \label{eq:flavors}
+\end{align}
 and each flavor determines the sort of motion we should expect from that agent.
 \subsection{The Full Model}
-Concatenating the measurement model with our motion model yields the Bayesian network:
+Concatenating the measurement model with our motion model yields the Bayesian network, where $f$ is an element of $F$ from \eqref{eq:flavors} and denotes the flavor of the agent:
 \begin{center}
 \begin{tikzpicture}[thick, var/.style={circle,draw,thin,rounded corners,shade,top color=blue!50,minimum size = 4mm}]
 	\node[var] (f) {$f$};
@@ -223,7 +253,7 @@ In particular
 	&\quad + \Pr( x_t, lin \mid \hat{x}_0, \hat{v}_0 ).
 \end{align*}
 The final term $\Pr( x_t, lin \mid \hat{x}_0, \hat{v}_0 )$ is expressible in terms of the error function, and would pose a negligible burden in terms of numerical computation.
-The primary computational burden in computint $\rho_t(x_t)$ constitutes the computation of $\left( \sum_{k} \int \Pr( x_t, k , s  \mid \hat{x}_0, \hat{v}_0 ) ds \right)$.
+The primary computational burden derives from the sum $\sum_{k} \int \Pr( x_t, k , s  \mid \hat{x}_0, \hat{v}_0 ) ds$.
 %\todo[inline]{hoj: May I cut the following?  If I say ``PGM'' or ``Bayesian network'' perhaps that enough to convey the sort of computations needed}
 %Specifically, the vector-fields $\{X_1,\dots,X_n\}$ as well as the probabilities $\Pr( x_0 \mid k )$, $\Pr(lin)$, and $\Pr( k )$ will be learned from the data.
 %We will also assume $\Pr(s,k) = \Pr(s \mid k ) \Pr(k)$ where 
@@ -258,15 +288,8 @@ The primary computational burden in computint $\rho_t(x_t)$ constitutes the comp
 As mentioned \todo{hoj: Make sure we mention this.}, many of the modeling choices were born out of a balance between accuracy and real-time computability.
 One of the major modeling choices, that agents move approximately according to a small number of ODEs, is the most prominent such choice.
 In this section we give some details on how this modeling choice can be leveraged to compute $\rho$ quickly, and accurately.
+In particular, we illustrate how to compute an accurate approximation of the the posterior $\Pr( x_t, k,s \mid \hat{x}_0, \hat{v}_0)$.
 
-Firstly, note that $\rho$ may be decomposed by the law of total probability as
-\begin{align*}
-	\rho_t(x_t ) &:= \Pr( x_t \mid \hat{x}_0, \hat{v}_0 ) \\
-	&= \left( \sum_{k} \int \Pr( x_t, k , s  \mid \hat{x}_0, \hat{v}_0 ) ds \right) \\
-	&\quad + \Pr( x_t, lin \mid \hat{x}_0, \hat{v}_0 ).
-\end{align*}
-The final term, $\Pr( x_t, lin  \mid \hat{x}_0, \hat{v}_0)$, turns out to be a closed form expression involving error-functions.\todo{hoj:Must I provide this?  It's a bit long.}
-The other terms are more difficult to compute efficiently, and are the primary concern of this section.
 To begin, from the graphical model we can see that
 \begin{align*}
 	&\Pr( x_t, k,s,\mid \hat{x}_0, \hat{v}_0) \propto \Pr( x_t, k,s,\hat{x}_0, \hat{v}_0) \\
@@ -278,34 +301,37 @@ of the joint distribution $\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s)$.
 Assuming such a convolution can be performed efficiently (which we will address later), we can focus on computation of $\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s)$.
 
 Again, from the PGM we see that
-\begin{align*}
+\begin{align}
 	&\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s) = \int \Pr( \check{x}_t , x_0, \hat{x}_0, v_0, \hat{v}_0, k,s) dx_0 \, dv_0 \\
-		&=  \int \Pr( \check{x}_t \mid  x_0, k,s, v_0) \Pr(\hat{x}_0, x_0, \hat{v}_0, v_0, k, s) dx_0 \, dv_0 \\
-		&= \int \delta\left( \check{x}_t - \Phi_{k,s}^{t}( x_0) \right) \Pr(\hat{x}_0, x_0, \hat{v}_0, v_0, k, s) dx_0 \, dv_0 \\
+		&=  \int \Pr( \check{x}_t \mid  x_0, k,s, v_0) \Pr( \hat{v}_0 \mid v_0) \Pr( v_0 \mid k,s,x_0) \\
+		& \hspace{20ex} \Pr(\hat{x}_0, x_0, k, s) dx_0 \, dv_0 \\
+\end{align}
+Substitution of \eqref{eq:x_check | ksx} and \eqref{eq:v | ksx} yeilds
+\begin{align}
 		&= \int \delta\left( \check{x}_t - \Phi_{k,s}^{t}( x_0) \right) \delta\left( v_0 - s X_k (x_0) \right) \\
-		&\hspace{20ex} \Pr(\hat{x}_0, x_0, \hat{v}_0, v_0, k, s) dx_0\, dv_0
-\end{align*}
+		&\hspace{20ex}\Pr( \hat{v}_0 \mid v_0) \Pr(\hat{x}_0, x_0,k, s) dx_0\, dv_0
+\end{align}
 Carrying out the integration over $v_0$ we observe
 \begin{align}
 \begin{split}
 	&\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s) \\
-	&= \int \delta\left( \check{x}_t - \Phi_{k,s}^{t}( x_0) \right) \Pr(\hat{x}_0, x_0, \hat{v}_0, v_0(s,k,x_0), k, s) dx_0
+	&= \int \delta\left( \check{x}_t - \Phi_{k,s}^{t}( x_0) \right) \Pr(\hat{x}_0, x_0, k, s) G_{\sigma_v}( \hat{v}_0 - s X_k(x_0) ) dx_0
 \end{split}
 \label{eq:push forward}
 \end{align}
-where $v_0(s,k,x_0) := s\, X_k(x_0)$. As the density $\Pr(\hat{x}_0, x_0, \hat{v}_0, v_0(s,k,x_0), k, s) $ is Riemann integrable in $x_0$,
- we may approximate it as a sum of weighted Dirac delta's supported on a regular grid with spacing $\Delta x$.\todo{Perhaps prove this claim in the appendix.}
+ As the density $\Pr(\hat{x}_0, x_0, k, s) G_{\sigma_v}( \hat{v}_0 - s X_k(x_0) )$ is Riemann integrable in $x_0$,
+ we may approximate it as a sum of weighted Dirac delta's supported on a regular grid, $\Gamma = \cup_{\alpha} \{ x_0^\alpha\}$ with spacing $\Delta x$.\todo[inline]{Perhaps prove this claim in the appendix.}
 In other words
 \begin{align}
 	\begin{split}
-		\Pr(\hat{x}_0, x_0, \hat{v}_0, v_0(s,k,x_0), k, s) = \\
-		\qquad \left( \sum_{\alpha} c_{k,s,\alpha} \delta( x_0 - \bar{x}_0^\alpha ) \right) + \varepsilon_0(x_0)
+		 \Pr(\hat{x}_0, x_0, k, s) G_{\sigma_v}( \hat{v}_0 - s X_k(x_0) ) = \\
+		\qquad \left( \sum_{\alpha} c_{k,s,\alpha} \delta( x_0 - x_0^\alpha ) \right) + \varepsilon_0(x_0)
 	\end{split}
 	\label{eq:approximation 1}
 \end{align}
 for constants
 \begin{align}
-	c_{k,s,\alpha} =  \left. \left[ \Pr( x_0, \hat{x}_0 , \hat{v}_0, v_0(s,k,x_0), k,s) \right] \right|_{x_0 = x_0^\alpha} \label{eq:constants}
+	c_{k,s,\alpha} =  \left. \left[ \Pr(\hat{x}_0, x_0, k, s) G_{\sigma_v}( \hat{v}_0 - s X_k(x_0) )  \Delta x^2 \right] \right|_{x_0 = x_0^\alpha} \label{eq:constants}
 \end{align}
 and error of magnitude $\| \varepsilon_0 \|_{L^1} \sim \mathcal{O}( \Delta x)$ with respect to the $L^1$-norm in $x_0$.
 The coefficients, $c_{k,s,\alpha}$, can be computed efficiently as product of the posteriors appearing in the PGM.
@@ -313,9 +339,9 @@ Substitution of \eqref{eq:approximation 1} into the final line of \eqref{eq:push
 \begin{align*}
 	\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s) = \sum_\alpha c_{k,s,\alpha} \delta \left( \check{x}_t - \Phi_{k,s}( x_0^\alpha) \right) + \varepsilon_t( \check{x}_t)
 \end{align*}
-where $\varepsilon_t = \int \delta\left( \check{x}_t - \Phi_{k,s}^{t}( x_0) \right)  \varepsilon_0(x_0) dx_0$.
+where $\varepsilon_t( \check{x}_t) = \int \delta\left( \check{x}_t - \Phi_{k,s}^{t}( x_0) \right)  \varepsilon_0(x_0) dx_0$.
 The first term is computable by flowing the points of the grid, $x_0^\alpha$, by the evolution of the vector field $s X_k$.
-The second term, $\tilde{\varepsilon}$, may be viewed as an error term.
+The second term, $\varepsilon_t$, may be viewed as an error term.
 In fact, this method of approximating $\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s)$ as a sum of Dirac-deltas is adaptive, in that the error term does not grow in total mass.
 
 \begin{thm} \label{thm:error}
@@ -358,7 +384,7 @@ As the Gaussian convolution of a Dirac-delta distribution is a Gaussian distribu
 \end{proof}
 
 Corollary \ref{cor:error} justifies using \eqref{eq:approximation 2} as an approximation of $\Pr( x_t, k,s,\hat{x}_0, \hat{v}_0)$.
-So we've reduce the problem of computing $\rho_t(x_t)$ to the problem of computing the coefficient $c_{k,s,\alpha}$ and the point $\Phi_{k,s}^t(x_0^\alpha)$ for all $k,s$ and points $x_0^{\alpha} \in \Lambda$.
+So we've reduce the problem of computing $\rho_t(x_t)$ to the problem of computing the coefficient $c_{k,s,\alpha}$ and the points $\Phi_{k,s}^t(x_0^\alpha)$ for all $k,s$ and points $x_0^{\alpha} \in \Lambda$.
 We can reduce this burden further by exploiting the following symmetry.
 \begin{thm}
 	$\Phi_{k,s}^t = \Phi_{k,1}^{st}$.
@@ -400,7 +426,7 @@ where $A = | \cup_\alpha \{ x_0^\alpha\} |$ is the size of the mesh and $n$ is t
 %	\item $\kappa = \min_k \{ \kappa_1,\dots,\kappa_n\}$.
 %  \end{enumerate}
   
-\section{Implementation and Experimental results}
+\section{Implementation and Experimental results} \label{sec:implementation}
   Now that the model has been described, we can discuss a way, but certainly not the only way, that one can fit parameters of the model to a data set.
   For the purpose of demonstration, we will use the Stanford Drone Dataset \cite{StanfordDroneData}.
   More generally, we will assume that for a fixed scene we have a database of previously observed trajectories $\{ \hat{x}^1, \dots, \hat{x}^N\}$.
@@ -489,90 +515,6 @@ where $A = | \cup_\alpha \{ x_0^\alpha\} |$ is the size of the mesh and $n$ is t
   
  \subsection{ Precision, accuracy, etc.}
 
-%\section{RSS citations}
-%
-%Please make sure to include \verb!natbib.sty! and to use the
-%\verb!plainnat.bst! bibliography style. \verb!natbib! provides additional
-%citation commands, most usefully \verb!\citet!. For example, rather than the
-%awkward construction 
-%
-%{\small
-%\begin{verbatim}
-%\cite{kalman1960new} demonstrated...
-%\end{verbatim}
-%}
-%
-%\noindent
-%rendered as ``\cite{kalman1960new} demonstrated...,''
-%or the
-%inconvenient 
-%
-%{\small
-%\begin{verbatim}
-%Kalman \cite{kalman1960new} 
-%demonstrated...
-%\end{verbatim}
-%}
-%
-%\noindent
-%rendered as 
-%``Kalman \cite{kalman1960new} demonstrated...'', 
-%one can
-%write 
-%
-%{\small
-%\begin{verbatim}
-%\citet{kalman1960new} demonstrated... 
-%\end{verbatim}
-%}
-%\noindent
-%which renders as ``\citet{kalman1960new} demonstrated...'' and is 
-%both easy to write and much easier to read.
-%  
-%\subsection{RSS Hyperlinks}
-%
-%This year, we would like to use the ability of PDF viewers to interpret
-%hyperlinks, specifically to allow each reference in the bibliography to be a
-%link to an online version of the reference. 
-%As an example, if you were to cite ``Passive Dynamic Walking''
-%\cite{McGeer01041990}, the entry in the bibtex would read:
-%
-%{\small
-%\begin{verbatim}
-%@article{McGeer01041990,
-%  author = {McGeer, Tad}, 
-%  title = {\href{http://ijr.sagepub.com/content/9/2/62.abstract}{Passive Dynamic Walking}}, 
-%  volume = {9}, 
-%  number = {2}, 
-%  pages = {62-82}, 
-%  year = {1990}, 
-%  doi = {10.1177/027836499000900206}, 
-%  URL = {http://ijr.sagepub.com/content/9/2/62.abstract}, 
-%  eprint = {http://ijr.sagepub.com/content/9/2/62.full.pdf+html}, 
-%  journal = {The International Journal of Robotics Research}
-%}
-%\end{verbatim}
-%}
-%\noindent
-%and the entry in the compiled PDF would look like:
-%
-%\def\tmplabel#1{[#1]}
-%
-%\begin{enumerate}
-%\item[\tmplabel{1}] Tad McGeer. \href{http://ijr.sagepub.com/content/9/2/62.abstract}{Passive Dynamic
-%Walking}. {\em The International Journal of Robotics Research}, 9(2):62--82,
-%1990.
-%\end{enumerate}
-%%
-%where the title of the article is a link that takes you to the article on IJRR's website. 
-%
-%
-%Linking cited articles will not always be possible, especially for
-%older articles. There are also often several versions of papers
-%online: authors are free to decide what to use as the link destination
-%yet we strongly encourage to link to archival or publisher sites
-%(such as IEEE Xplore or Sage Journals).  We encourage all authors to use this feature to
-%the extent possible.
 
 \section{Conclusion} 
 \label{sec:conclusion}
