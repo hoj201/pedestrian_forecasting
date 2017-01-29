@@ -202,7 +202,7 @@ if __name__ == "__main__":
 
                 #img = axarr[1][0].pcolor(X,Y,Z, cmap='viridis')
                 im = axarr[1][0].imshow(Z.transpose(), origin="lower", extent=[-bounds[0]/2,bounds[0]/2,-bounds[1]/2,bounds[1]/2])
-                iaxarr[1][0].imshow(reference, extent=[-bounds[0]/2,bounds[0]/2,-bounds[1]/2,bounds[1]/2], alpha=0.5)
+                axarr[1][0].imshow(reference, extent=[-bounds[0]/2,bounds[0]/2,-bounds[1]/2,bounds[1]/2], alpha=0.5)
 		        #for col,val in zip(img.get_facecolors(), pr_ours):
 		        #    col[3] = 0.5
 
