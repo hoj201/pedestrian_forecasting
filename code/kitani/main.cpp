@@ -26,7 +26,7 @@ int main (int argc, char * const argv[]) {
 	
 	OC model;
 
-	model.VISUALIZE = true;
+	//model.VISUALIZE = true;
 
 	model.loadTerminalPts	(terminal_pts_txt_path);
 	model.loadRewardWeights	(reward_weights_txt_path);

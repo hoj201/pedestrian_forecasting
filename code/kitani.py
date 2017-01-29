@@ -8,6 +8,7 @@ from sklearn.metrics import roc_curve, auc, precision_recall_curve
 from visualization_routines import singular_distribution_to_image
 from evaluation import evaluate_ours, evaluate_lin
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 import cv2
 
 
@@ -63,7 +64,7 @@ save result
 repeat for all agents.
 """
 
-for j, agent in enumerate(set[0:2]):
+for j, agent in enumerate(set):
     curve = bbts(agent)
     curve1 = bbts(agent)
     begin = curve[:, 0]
@@ -113,21 +114,22 @@ for j, agent in enumerate(set[0:2]):
         np.save("pickles/kitani/{}/tr_agent_{}_time_{}".format(scene_number, j, num), tr_lin)
         ctx = int(np.ceil(scene.width/box_w))
         cty = int(np.ceil(scene.height/box_w))
+        print ctx
+        print cty
+        assert False
         plt.title("ROC for agent {} t={}".format(j, num))
-        fig = plt.figure()
-        ax = plt.gca()
-        ax.set_ylim([-.1, 1.1])
-        ax.set_xlim([-.1, 1.1])
-        ax.set_ylabel("True Positive Rate")
-        ax.set_xlabel("False Positive Rate\nAUC={}".format(dic[num]))
-        ax.plot(false_pos, true_pos)
+        fig, ax = plt.subplots(2)
+        ax[0].set_ylim([-.1, 1.1])
+        ax[0].set_xlim([-.1, 1.1])
+        ax[0].set_ylabel("True Positive Rate")
+        ax[0].set_xlabel("False Positive Rate\nAUC={}".format(dic[num]))
+        ax[0].plot(false_pos, true_pos)
+        ax[1].imshow(pr_lin.reshape(ctx, cty).transpose(), origin="lower", extent=[-scene.width/2,scene.width/2,-scene.height/2,scene.height/2], cmap="viridis")
+        ax[1].imshow(mpimg.imread("kitani/oc_demo/walk_birdseye.jpg"), extent=[-scene.width/2, scene.width/2,-scene.height/2,scene.height/2], alpha=0.5)
+        plt.plot(curve1[0], curve1[1])
         plt.savefig("images/kitani/{}/AUC_for_agent_{}_t={}.png".format(scene_number, j, num))
         plt.clf()
         plt.close('all')
-        fig = plt.figure()
-        plt.scatter(xs, ys,c= data.flatten(), cmap="viridis", edgecolors="none")
-        plt.plot(curve1[0], curve1[1])
-        plt.savefig("images/kitani/{}/WHYWHYWHY_for_agent_{}_t={}.png".format(scene_number, j, num))
     np.save("pickles/kitani/{}/AUC_agent_{}".format(scene_number, j), np.array(dic))
     plt.title("AUC for agent {} kitani".format(j))
     fig = plt.figure()

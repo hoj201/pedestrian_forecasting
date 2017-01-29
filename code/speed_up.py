@@ -77,7 +77,7 @@ def plot_roc(predics, trues, title, axes):
 
 if __name__ == "__main__":
     import cProfile, pstats, StringIO
-    import matplotlib.pyplot as plt
+    import matplotlib.pyplot as pltq
     import time
     from integrate import trap_quad
     import matplotlib.pyplot as plt
