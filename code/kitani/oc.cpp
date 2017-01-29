@@ -106,7 +106,7 @@ int OC::computeValueFunction	(string output_filename)
 	V	= _V.clone();
 	
 	int n=0;
-	float findiff = -1;	
+	float last = -1;	
 	while(1)
 	{
 		Mat V_padded;
@@ -152,9 +152,7 @@ int OC::computeValueFunction	(string output_filename)
 		_V.copyTo(V);
 		
 		if(maxVal<.9) break;
-		if(findiff < 0) findiff = maxVal;
-		else findiff = findiff - maxVal;
-		if (findiff < 0.0001 && maxVal<5) break;
+		if (last - maxVal < 0.001 && maxVal<5) break;
 		n++;
 		if(n>2000){cout << "ERROR: Max number of iterations." << endl;exit(1);}
 	}
