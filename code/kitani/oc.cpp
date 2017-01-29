@@ -153,6 +153,9 @@ int OC::computeValueFunction	(string output_filename)
 		
 		if(maxVal<.9) break;
 		if (last - maxVal < 0.001 && maxVal<5) break;
+	        last = maxVal;
+		cout << last - maxVal << "\n";
+		cout << maxVal << "\n";
 		n++;
 		if(n>2000){cout << "ERROR: Max number of iterations." << endl;exit(1);}
 	}

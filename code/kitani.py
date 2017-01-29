@@ -16,7 +16,7 @@ import cv2
 scene_number = int(argv[1])
 width = int(argv[2])
 height = int(argv[3])
-sf = min(width, height)
+sf = width
 
 scene = scenes[scene_number]
 set = sets[scene_number]
@@ -114,9 +114,6 @@ for j, agent in enumerate(set):
         np.save("pickles/kitani/{}/tr_agent_{}_time_{}".format(scene_number, j, num), tr_lin)
         ctx = int(np.ceil(scene.width/box_w))
         cty = int(np.ceil(scene.height/box_w))
-        print ctx
-        print cty
-        assert False
         plt.title("ROC for agent {} t={}".format(j, num))
         fig, ax = plt.subplots(2)
         ax[0].set_ylim([-.1, 1.1])
