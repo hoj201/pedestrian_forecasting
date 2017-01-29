@@ -63,8 +63,9 @@ save result
 repeat for all agents.
 """
 
-for j, agent in enumerate(set):
+for j, agent in enumerate(set[0:2]):
     curve = bbts(agent)
+    curve1 = bbts(agent)
     begin = curve[:, 0]
     end = curve[:, -1]
     print begin
@@ -110,7 +111,8 @@ for j, agent in enumerate(set):
         dic[num] = auc(false_pos, true_pos)
         np.save("pickles/kitani/{}/pr_agent_{}_time_{}".format(scene_number, j, num), pr_lin)
         np.save("pickles/kitani/{}/tr_agent_{}_time_{}".format(scene_number, j, num), tr_lin)
-
+        ctx = int(np.ceil(scene.width/box_w))
+        cty = int(np.ceil(scene.height/box_w))
         plt.title("ROC for agent {} t={}".format(j, num))
         fig = plt.figure()
         ax = plt.gca()
@@ -122,6 +124,10 @@ for j, agent in enumerate(set):
         plt.savefig("images/kitani/{}/AUC_for_agent_{}_t={}.png".format(scene_number, j, num))
         plt.clf()
         plt.close('all')
+        fig = plt.figure()
+        plt.scatter(xs, ys,c= data.flatten(), cmap="viridis", edgecolors="none")
+        plt.plot(curve1[0], curve1[1])
+        plt.savefig("images/kitani/{}/WHYWHYWHY_for_agent_{}_t={}.png".format(scene_number, j, num))
     np.save("pickles/kitani/{}/AUC_agent_{}".format(scene_number, j), np.array(dic))
     plt.title("AUC for agent {} kitani".format(j))
     fig = plt.figure()

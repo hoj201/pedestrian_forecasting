@@ -47,6 +47,8 @@ void OC::loadRewardWeights	(string input_filename)
 	fs.open(input_filename.c_str());
 	if(!fs.is_open()){cout << "ERROR: Opening: " << input_filename << endl;exit(1);}
 	float val;
+	cout << _w << "\n";
+	cout << val << "\n";
 	while(fs >> val)_w.push_back(val);
 	cout << "  Number of weights loaded:" << _w.rows << endl;
 }
@@ -271,7 +273,7 @@ void OC::computeForecastDist	(string output_filename)
 		
 		swap(N[0],N[1]);
 		
-		if(n++>300) break;									// trajectory dependent
+		if(n++>400) break;									// trajectory dependent
 	}
 	colormap_CumilativeProb(_D,dsp);
 	cout << "  Writing:" << output_filename << endl;

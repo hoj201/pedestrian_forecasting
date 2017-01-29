@@ -81,7 +81,6 @@ def classifier_no_convolve(bounds, width, rho):
 
     ctx = int(np.ceil(bounds[0]/width))
     cty = int(np.ceil(bounds[1]/width))
-
     x_lims = np.linspace(-bounds[0]/2, bounds[0]/2, ctx+1)
     y_lims = np.linspace(-bounds[1]/2, bounds[1]/2, cty+1)
 
