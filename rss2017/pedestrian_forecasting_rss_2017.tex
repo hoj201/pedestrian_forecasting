@@ -107,12 +107,14 @@ The presented approach significantly outperforms...
 
 \subsection{Background}
 Most forecasting algorithm are well characterized by the underlying evolution model they adopt.
-Such models come in a variety flavors, and are adapted to the task at hand.
-For example, see \cite{Helbing1992} for crowd modeling.
-
-In this article we are primarily concerned with models that probabilistically predict the position of a single agent.
-The most simple approach to forecasting would be to forward integrate a Kalman filter \cite{kalman1960new} based upon the observed heading.
+Such models come in a variety flavors, and are adapted to the task at hand (e.g. see \cite{Helbing1992} for crowd modeling).
+The present article is concerned with a probabilistic forecast for a single agent, while ignoring interactions with other agents and other related tasks, such as detection of agents and environmental features.
+More specifically, the present article concerns the construction of useful motion models for agents.
+The most simple approach to forecasting with motion models would be to forward integrate a Kalman filter \cite{kalman1960new} based upon the observed heading.
 Over short time scales this may perform quite well, but the resulting distribution will devolve into a large Gaussian mass over longer time scales.
+\citet{Schneider2013} found this quality to be a typical property of the extended Kalman filter and Kalman filter with deterministic nonlinear drift.
+In particular, such models were only found to be reasonable for pedestrian prediction over times below $2$ seconds, especially when the pedestrian turns.
+
 To mitigate the negative effects of this simplistic description of motion, slightly more sophisticated motion models should be considered.
 Such models include inverse optimal control (IOC) based models such as \cite{Ziebart2008,Ziebart2009,Kitani2012}.
 These IOC models have the often desirable property of attributing intention and goal-seeking behavior to the agents.
@@ -124,7 +126,7 @@ Lastly, the IOC-MDP framework is very flexible and very easy to generalize.
 For example, time dependent information, such as traffic signals, are incorporated in \cite{Karasev2016}, by relaxing the Markov property and considering a switched Markov process.
 \citet{Karasev2016} generalizes \cite{Kitani2012} further by considering a discrete time Markov process over a continuous space which more closely approximates reality.
 However, this modelling choice resulted in posteriors which were difficult to compute with precision.
-They opted to use a sample based method: a Rao-Blackwellized particle filter.
+They opted to use a sample based method: a Rao-Blackwellized particle filter\cite{Doucet2000}.
 The resulting accuracy is known in a probabilistic sense in that the error bounds are themselves random variables.
 Moreover, high accuracy can come at a high computational cost prohibitive for real-time computation.
 It should be noted, however, that speed was not a goal of \cite{Karasev2016}.
@@ -139,20 +141,40 @@ In particular, a motion model on one scene ought to be transferable to other sce
 Said differently, the way a forecasting algorithm executes ``knowledge transfer'' should not depend too rigidly on the finitely many labels some engineer managed to think of in a late-night brainstorming session.
 The algorithm should be able to infer how to behave near a roundabout by using prior knowledge of more fundamental building blocks like pavement, curbs, and asphalt.
 In summary, the motion model used in \cite{Ballan2016} is merely a parameter of the more general framework they have proposed.
-We should note that the motion model we will present here can, in principal, be incorporated within their forecasting paradigm.
 
-Finally,
+Along similar lines, \citet{Walker2014} has constructed a completely unsupervised approach towards forecasting, trained on unlabeled video data.
+As before, the motion model is that of a discrete time Markov process.  However, the agents are not manually specified, but are learned from a database of videos by detecting which sort of patches are likely to move, and how.  The resulting predictions outperformed \cite{Kitani2012} when comparing the most likely path with the ground truth in mean Hausdorff distance.
+As in all methods mentioned thus far, computational speed was not a concern of \citet{Walker2014}, and no compute times were given.
+Since the motion model is a discrete time Markov process over a continuous space, the same limits that apply to \cite{Karasev2016,Ballan2016} in terms of speed hold for \cite{Walker2014} as well.
+In particular, such motion models force the use of sample-based representations of the posteriors in question with probabilistic descriptions of error, making high accuracy computation very expensive.
 
 \subsection{Contributions}
 
 The primary contributions of this paper are:
+\begin{itemize}
+	\item We provide a computationally expedient and accurate motion model for pedestrian forecasting.
+	\item We evaluate the precision, accuracy, and recall of our model
+	\item We compare our performance to that of a linear predictor and the MDP model of \cite{Kitani2012},
+	both in terms of precision and recall as well as computation time.
+\end{itemize}
+
+We should note that there are a number of things that we do not do, that similar papers to ours typically include (notably \cite{Ballan2016,Karasev2016}).
+For example, we do not concern ourselves with detection and tracking. Nor do we concern ourselves with updating our prediction as new data comes along.
+Such questions are important, but beyond the scope of this paper, which concerns the underlying dynamic model.
+Papers such as \cite{Ballan2016,Karasev2016} pose a more comprehensive approach to pedestrian forecasting, where the motion model is a choice to be made.
+This paper presents one such choice.
+It is our opinion, that the motion model of many practical applications of forecasting ought to run in real time and that any relevant approximations ought to be equipped with hard error bounds.
 
 The rest of the paper is organized as follows:
+\begin{itemize}
+	\item We describe our motion model as a Bayesian network. (\S \ref{sec:model})
+	\item We then describe how to compute probability densities for an agent's position efficiently. (\S \ref{sec:efficient})
+	\item Finally, we demonstrate the model by training and testing it on the Stanford drone dataset. (\S \ref{sec:implementation})
+\end{itemize}
 
-\section{Model}
-
+\section{Model}\label{sec:model}
 \todo[inline]{ramv: I would include far fewer model details here just to illustrate that our focus is on efficient computation for general models.}
-
+\todo[inline]{hoj:I deleted a bunch of details.  But as I was writing the section on fast computation, I found I was adding them back in.  Perhaps the wording can be economized though.}
 %Describe scenario in english.
 Our goal is to generate a time-dependent probability density over $\mathbb{R}^2$, which predicts the true location of an agent in the future.
 The input to the algorithm at runtime is a noisy measurement of position and velocity, $\hat{x}_0, \hat{v}_0 \in \mathbb{R}^2$.
@@ -256,35 +278,6 @@ In particular
 \end{align*}
 The final term $\Pr( x_t, lin \mid \hat{x}_0, \hat{v}_0 )$ is expressible in terms of the error function, and would pose a negligible burden in terms of numerical computation.
 The primary computational burden derives from the sum $\sum_{k} \int \Pr( x_t, k , s  \mid \hat{x}_0, \hat{v}_0 ) ds$.
-%\todo[inline]{hoj: May I cut the following?  If I say ``PGM'' or ``Bayesian network'' perhaps that enough to convey the sort of computations needed}
-%Specifically, the vector-fields $\{X_1,\dots,X_n\}$ as well as the probabilities $\Pr( x_0 \mid k )$, $\Pr(lin)$, and $\Pr( k )$ will be learned from the data.
-%We will also assume $\Pr(s,k) = \Pr(s \mid k ) \Pr(k)$ where 
-%\begin{align*}
-%	\Pr(s \mid k ) \sim \mathcal{U}([-s_{\max}, s_{\max} ] ) \quad \text{for } k=1,\dots,n
-%\end{align*}
-%and $s_{\max} > 0$ is learned from the data.
-%We describe the learning step in more detail in section \ref{sec:learning}.
-%
-%The desired posterior, $\rho_t$ is a posterior over $D$ given by
-%\begin{align*}
-%	&\rho_t(x_t) = \Pr(x_t \mid \hat{x}_0, \hat{v}_0) \\
-%		&= \frac{ \Pr( x_t, \hat{x}_0, \hat{v}_0) }{ \Pr( \hat{x}_0, \hat{v}_0 ) } \\
-%		&= \frac{1}{ \Pr( \hat{x}_0, \hat{v}_0 ) } \int \Pr( x_t , x_0, v_0, \hat{x}_0, \hat{v}_0 , f ) dx_0\, dv_0\, df
-%\end{align*}
-%and the integrand is given, via the Bayesian network.
-%In particular, for $f = (k,s)$ we have
-%\begin{align*}
-%	 &\Pr( x_t , x_0, v_0, \hat{x}_0, \hat{v}_0 , k,s) =\\
-%	 &\quad \Pr( x_t \mid x_0 , k, s) \cdot \Pr( v_0 \mid x_0, k , s ) \cdot \\
-%	 &\quad \Pr( \hat{x}_0 \mid x_0 ) \cdot \Pr( \hat{v}_0 \mid v_0 ) \cdot \Pr(k) \cdot \Pr(s \mid k),
-%\end{align*}
-%and for $f = lin$ we have
-%\begin{align*}
-%	 &\Pr( x_t , x_0, v_0, \hat{x}_0, \hat{v}_0 , lin) =\\
-%	 &\quad \Pr( x_t \mid x_0 , v_0, lin) \cdot \Pr( v_0 \mid x_0, lin ) \cdot \\
-%	 &\quad \Pr( \hat{x}_0 \mid x_0 ) \cdot \Pr( \hat{v}_0 \mid v_0 ) \cdot \Pr(lin).
-%\end{align*}
-
 
 \section{Efficient Probability Propagation} \label{sec:efficient}
 As mentioned \todo{hoj: Make sure we mention this.}, many of the modeling choices were born out of a balance between accuracy and real-time computability.
@@ -448,7 +441,7 @@ where $A = | \cup_\alpha \{ x_0^\alpha\} |$ is the size of the mesh and $n$ is t
   To do this we use a simple clustering algorithm on the trajectories, to categorize them into groups.
   In principal, any clustering algorithm could accomplish this.
   For our algorithm we use the start and end point for each trajectory to obtain a point in $\mathbb{R}^4$.
-  We then cluster in $\mathbb{R}^4$ using Affinity propagation.\todo{hoj:There is more to say here}
+  We then cluster in $\mathbb{R}^4$ using Affinity propagation.
   This clustering of the end-points induces a clustering of the trajectories.
   So we obtain clusters $S_1, \dots, S_n$ consisting of trajectories from our data set, as well as a set of unclassified trajectories, $S_0$.
   
@@ -524,7 +517,7 @@ where $A = | \cup_\alpha \{ x_0^\alpha\} |$ is the size of the mesh and $n$ is t
 The conclusion goes here.
 
 \section*{Acknowledgments}
-Thanks to Kris Kitani
+Thanks to Kris Kitani for being nice.  No thanks to Stanford, for being dicks.
 
 \appendix
 \subsection{Inverse Optimal Control} \label{app:ioc}
