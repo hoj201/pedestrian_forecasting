@@ -120,7 +120,8 @@ def particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True):
                 k, x0, x_hat, v_hat) #TODO: Memoize??
 
     veloc = [scene.director_field_vectorized(k, x0) for k in range(num_nl_classes)]
-    for n in range(1,N_steps):
+    
+    def f(n):
         #The following computations handle the nonlinear classes
         t = n * t_final / float(N_steps)
         ds = s_max / n
@@ -154,12 +155,15 @@ def particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True):
         	#END GAUSSIAN CONVOLVE
         #The following computations handle the linear predictor class
         w_lin = joint_lin_x_t_x_hat_v_hat(t, x_lin, x_hat, v_hat) * dy*dx
-        #TODO: append regular grid and weights to x_out, w_out
+	#TODO: append regular grid and weights to x_out, w_out
         #x_out = np.concatenate( [x_out, x_lin], axis=1)
         #w_out = np.concatenate( [w_out, w_lin])
         prob_of_mu = w_out.sum() + w_lin.sum()
-        yield (x_out, w_out/ prob_of_mu), (x_lin, w_lin/prob_of_mu)
-    pass
+        return (x_out, w_out/ prob_of_mu), (x_lin, w_lin/prob_of_mu)
+    Parallel(n_jobs=18)(delayed(f)(n) for n in range(1,N_steps))
+    n = 1
+
+    yield (x_out, w_out/ prob_of_mu), (x_lin, w_lin/prob_of_mu)
 
 def linear_generator(x_hat, v_hat, t_final, N_steps):
     x_span = np.linspace( -scene.width/2, scene.width/2, 250)

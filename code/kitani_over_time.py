@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.metrics import roc_curve, auc, precision_recall_curve
 from sys import argv
 import os
-name = argv[1]
+#name = argv[1]
 
 def fn(paths):
     fs_tr = []
@@ -52,7 +52,7 @@ def fn(paths):
     ax.set_ylabel("AUC")
     ax.set_xlabel("Frames")
     ax.plot(times, aucs)
-    plt.savefig("images/kitani/AUC_vs_t_for_{}.png".format(name))
+    #plt.savefig("images/kitani/AUC_vs_t_for_{}.png".format(name))
     plt.show()
     return aucs, times
 
@@ -71,7 +71,7 @@ plt.plot(our_times, our_auc, ls="solid", c="black", label="Our Algorithm")
 plt.plot(kit_times, kit_auc, ls="dashed", c="black", label="Kitani Algorithm")
 plt.plot(lin_times, lin_auc, ls="dashdot", c="black", label="Linear Predictor")
 plt.legend(loc="lower right")
-fig.savefig('images/The Results.eps', format='eps')
+plt.savefig('images/The Results.eps', format='eps')
 plt.show()
 
 

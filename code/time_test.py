@@ -127,6 +127,16 @@ if __name__ == "__main__":
             n += 1
             continue
 	    return (ppr_ours, ttr_ours, ppr_lin, ttr_lin)
-    f(agent_num)
+
+import cProfile, pstats, StringIO
+pr = cProfile.Profile()
+pr.enable()
+f(agent_num)
+pr.disable()
+s = StringIO.StringIO()
+sortby = 'cumulative'
+ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+ps.print_stats()
+print s.getvalue()
 
 

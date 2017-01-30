@@ -32,23 +32,21 @@ curve = bbts(sett[agent])
 begin = curve[:, 0]
 end = curve[:, -1]
 
-fig, axarr = plt.subplots(nummth, numt, sharex='col', sharey='row')
-for ax in axarr.flatten():
-    ax.axis('off')
-for ct, ax in enumerate(axarr[0, :]):
-    ax.text(0, scene.height/2 + dic['fontspacing'], "t={}".format(times[ct]), ha="center", va="center",  size=dic['fontsize'], color=dic['fontcolor'])
-for ct, ax in enumerate(axarr[:, 0]):
-    ax.text(-scene.width/2 - dic['fontspacing'], 0, labels[ct], ha="center", va="center", rotation=90,  size=dic['fontsize'], color=dic['fontcolor'])
-
 for parad in range(nummth):
     for time in range(numt):
-        tmp = axarr[parad][time]
-        tmp.imshow(methods[parad][time].reshape(width, height).transpose(), origin="lower", extent=[-scene.width/2,scene.width/2,-scene.height/2,scene.height/2], cmap="viridis")
-        tmp.imshow(mpimg.imread(reference), extent=[-scene.width/2, scene.width/2,-scene.height/2,scene.height/2], alpha=0.5)
-        tmp.plot(curve[0, :times[time]], curve[1, :times[time]], c="white")
-        tmp.scatter(begin[0], begin[1], marker="o", c="white", edgecolors="none", s=dic['markersize'])
-        tmp.scatter(end[0], end[1], marker="x", c="white", edgecolors="none", s=dic['markersize'])
-        tmp.scatter(curve[0, times[time]], curve[1, times[time]], marker="D", c="white",  edgecolors="none", s=dic['markersize'])
-plt.suptitle(dic['title'], size=dic['titlesize'])
-plt.subplots_adjust( wspace=dic['imgspacing'], hspace=dic['imgspacing'])
-plt.savefig("{}x{} grid.eps".format(nummth, numt), format="eps")
+        fig,ax = plt.subplots(1)
+        fig.subplots_adjust(left=-scene.width/2,right=scene.width/2,bottom=-scene.height/2,top=scene.height/2)
+        ax.set_ylim([-scene.height/2,scene.height/2])
+        ax.set_xlim([-scene.width/2, scene.width/2])
+        ax.axis("off")
+
+
+        ax.imshow(methods[parad][time].reshape(width, height).transpose(), origin="lower", extent=[-scene.width/2,scene.width/2,-scene.height/2,scene.height/2], cmap="viridis")
+        ax.imshow(mpimg.imread(reference), extent=[-scene.width/2, scene.width/2,-scene.height/2,scene.height/2], alpha=0.5)
+        ax.plot(curve[0, :times[time]], curve[1, :times[time]], c="white", alpha=dic['linealpha'])
+        ax.scatter(begin[0], begin[1], marker="o", c="white", edgecolors="none", s=dic['markersize'])
+        ax.scatter(end[0], end[1], marker="x", c="white", edgecolors="none", s=dic['markersize'])
+        ax.scatter(curve[0, times[time]], curve[1, times[time]], marker="D", c="white",  edgecolors="none", s=dic['markersize'])
+        plt.savefig(dic['resultsfolder'] + "{}_scene_{}_agent_{}_time_{}.eps".format(labels[parad], scene_number, agent, times[time]), format="eps", bbox_inches='tight', pad_inches=0)
+#plt.suptitle(dic['title'], size=dic['titlesize'])
+#plt.subplots_adjust( wspace=dic['imgspacing'], hspace=dic['imgspacing'])
