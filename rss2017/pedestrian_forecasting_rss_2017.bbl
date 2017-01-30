@@ -1,4 +1,4 @@
-\begin{thebibliography}{6}
+\begin{thebibliography}{4}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -20,12 +20,6 @@ Lamberto Ballan, Francesco Castaldo, Alexandre Alahi, Francesco Palmieri, and
   Amsterdam, Netherlands, October 2016.
 \newblock URL \url{http://arxiv.org/abs/1603.06987}.
 
-\bibitem[Kalman(1960)]{kalman1960new}
-R.E. Kalman.
-\newblock A new approach to linear filtering and prediction problems.
-\newblock \emph{Journal of Basic Engineering}, 82\penalty0 (1):\penalty0
-  35--45, 1960.
-
 \bibitem[Karasev et~al.(2016)Karasev, Ayvaci, Heisele, and Soatto]{Karasev2016}
 V.~Karasev, A.~Ayvaci, B.~Heisele, and S.~Soatto.
 \newblock Intent-aware long-term prediction of pedestrian motion.
@@ -38,14 +32,5 @@ Kris~M. Kitani, Brian~D. Ziebart, James~Andrew Bagnell, and Martial Hebert.
 \newblock Springer Berlin Heidelberg, Berlin, Heidelberg, 2012.
 \newblock ISBN 978-3-642-33765-9.
 \newblock \doi{10.1007/978-3-642-33765-9_15}.
-
-\bibitem[McGeer(1990)]{McGeer01041990}
-Tad McGeer.
-\newblock \href{http://ijr.sagepub.com/content/9/2/62.abstract}{Passive Dynamic
-  Walking}.
-\newblock \emph{The International Journal of Robotics Research}, 9\penalty0
-  (2):\penalty0 62--82, 1990.
-\newblock \doi{10.1177/027836499000900206}.
-\newblock URL \url{http://ijr.sagepub.com/content/9/2/62.abstract}.
 
 \end{thebibliography}

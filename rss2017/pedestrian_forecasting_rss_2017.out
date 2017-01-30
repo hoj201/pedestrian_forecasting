@@ -11,5 +11,10 @@
 \BOOKMARK [2][-]{subsection.4.3}{Learning the variance parameters}{section.4}% 11
 \BOOKMARK [2][-]{subsection.4.4}{ Precision, accuracy, etc.}{section.4}% 12
 \BOOKMARK [1][-]{section.5}{Conclusion}{}% 13
+<<<<<<< Updated upstream
 \BOOKMARK [1][-]{section*.8}{Appendix}{}% 14
 \BOOKMARK [2][-]{subsection.Appendix.A.1}{Inverse Optimal Control}{section*.8}% 15
+=======
+\BOOKMARK [1][-]{section*.7}{Appendix}{}% 14
+\BOOKMARK [2][-]{subsection.Appendix.A.1}{Inverse Optimal Control}{section*.7}% 15
+>>>>>>> Stashed changes
