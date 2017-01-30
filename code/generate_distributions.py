@@ -72,6 +72,51 @@ def integrate_class(k, x0, T, N_steps):
     x_arr = np.concatenate([x_forward, x_backward[1:]])
     return x_arr.reshape( (2*N_steps+1, 2, N) )
 
+def f(args):
+        n, x_arr, x_lin, w_arr_base, veloc = args
+        num_nl_classes = len(scene.P_of_c)-1
+    
+        #Initializes a regular grid for evaluation of the linear class
+        N_ptcl = len(w_arr_base.flatten())
+        #The following computations handle the nonlinear classes
+        t = n * t_final / float(N_steps)
+        ds = s_max / n
+        w_arr = np.zeros((num_nl_classes, 2*n+1, N_ptcl))
+
+        for k in range(num_nl_classes):
+            for m in range(-n,n+1):
+                w_arr[k,m] = w_arr_base[k, m]
+                s = s_max * m / n
+                v = s * veloc[k]
+                r2 = (v[0]-v_hat[0])**2 + (v[1]-v_hat[1])**2
+                w_arr[k, m] *= np.exp( -r2/(2*sigma_v**2) ) / (2*np.pi*sigma_v**2)
+                w_arr[k, m] *= 1.0/(2*s_max) * (s <= s_max) * (s >= -s_max)
+                w_arr[k,m] *= ds * dvol_nl
+        x_out = np.zeros((num_nl_classes,2*n+1,2,N_ptcl))
+        x_out[:,-n:,:,:] = x_arr[:,-n:,:,:]
+        x_out[:,:n+1,:,:] = x_arr[:,:n+1,:,:]
+        w_out = w_arr.flatten()
+        x_out = np.vstack([x_out[:,:,0,:].flatten(), x_out[:,:,1,:].flatten()])
+        if convolve:
+        	#BEGIN GAUSSIAN CONVOLVE
+        	from numpy.random import normal
+        	from scipy.stats import multivariate_normal
+        	N_conv = 15
+        	length = len(w_out) * N_conv
+        	gauss = np.vstack((np.random.normal(0, kappa * t_final/float(N_steps) * n, length), np.random.normal(0, kappa * t_final/float(N_steps) * n, length)))
+        	positions = np.repeat(x_out, N_conv, axis=1) + gauss
+        	weights = multivariate_normal.pdf(gauss.transpose(), mean=np.array([0,0]), cov=(kappa * t_final/float(N_steps) * n)**2) * np.repeat(w_out, N_conv) / N_conv
+        	x_out = positions
+        	w_out = weights
+        	#END GAUSSIAN CONVOLVE
+        #The following computations handle the linear predictor class
+        w_lin = joint_lin_x_t_x_hat_v_hat(t, x_lin, x_hat, v_hat) * dy*dx
+	#TODO: append regular grid and weights to x_out, w_out
+        #x_out = np.concatenate( [x_out, x_lin], axis=1)
+        #w_out = np.concatenate( [w_out, w_lin])
+        prob_of_mu = w_out.sum() + w_lin.sum()
+        return (x_out, w_out/ prob_of_mu), (x_lin, w_lin/prob_of_mu)
+
 def particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True):
     """
     a generator which gives particles and weights
@@ -118,49 +163,11 @@ def particle_generator(x_hat, v_hat, t_final, N_steps, convolve=True):
         for m in range(-N_steps,N_steps+1):
             w_arr_base[k,m] = joint_k_x_x_hat_v_hat(
                 k, x0, x_hat, v_hat) #TODO: Memoize??
-
     veloc = [scene.director_field_vectorized(k, x0) for k in range(num_nl_classes)]
-    
-    def f(n):
-        #The following computations handle the nonlinear classes
-        t = n * t_final / float(N_steps)
-        ds = s_max / n
-        w_arr = np.zeros((num_nl_classes, 2*n+1, N_ptcl))
 
-        for k in range(num_nl_classes):
-            for m in range(-n,n+1):
-                w_arr[k,m] = w_arr_base[k, m]
-                s = s_max * m / n
-                v = s * veloc[k]
-                r2 = (v[0]-v_hat[0])**2 + (v[1]-v_hat[1])**2
-                w_arr[k, m] *= np.exp( -r2/(2*sigma_v**2) ) / (2*np.pi*sigma_v**2)
-                w_arr[k, m] *= 1.0/(2*s_max) * (s <= s_max) * (s >= -s_max)
-                w_arr[k,m] *= ds * dvol_nl
-        x_out = np.zeros((num_nl_classes,2*n+1,2,N_ptcl))
-        x_out[:,-n:,:,:] = x_arr[:,-n:,:,:]
-        x_out[:,:n+1,:,:] = x_arr[:,:n+1,:,:]
-        w_out = w_arr.flatten()
-        x_out = np.vstack([x_out[:,:,0,:].flatten(), x_out[:,:,1,:].flatten()])
-        if convolve:
-        	#BEGIN GAUSSIAN CONVOLVE
-        	from numpy.random import normal
-        	from scipy.stats import multivariate_normal
-        	N_conv = 15
-        	length = len(w_out) * N_conv
-        	gauss = np.vstack((np.random.normal(0, kappa * t_final/float(N_steps) * n, length), np.random.normal(0, kappa * t_final/float(N_steps) * n, length)))
-        	positions = np.repeat(x_out, N_conv, axis=1) + gauss
-        	weights = multivariate_normal.pdf(gauss.transpose(), mean=np.array([0,0]), cov=(kappa * t_final/float(N_steps) * n)**2) * np.repeat(w_out, N_conv) / N_conv
-        	x_out = positions
-        	w_out = weights
-        	#END GAUSSIAN CONVOLVE
-        #The following computations handle the linear predictor class
-        w_lin = joint_lin_x_t_x_hat_v_hat(t, x_lin, x_hat, v_hat) * dy*dx
-	#TODO: append regular grid and weights to x_out, w_out
-        #x_out = np.concatenate( [x_out, x_lin], axis=1)
-        #w_out = np.concatenate( [w_out, w_lin])
-        prob_of_mu = w_out.sum() + w_lin.sum()
-        return (x_out, w_out/ prob_of_mu), (x_lin, w_lin/prob_of_mu)
-    Parallel(n_jobs=18)(delayed(f)(n) for n in range(1,N_steps))
+   
+    from joblib import Parallel, delayed
+    Parallel(n_jobs=18)(delayed(f)(n, x_arr, x_lin, w_arr_base, veloc) for n in range(1,N_steps))
     n = 1
 
     yield (x_out, w_out/ prob_of_mu), (x_lin, w_lin/prob_of_mu)
