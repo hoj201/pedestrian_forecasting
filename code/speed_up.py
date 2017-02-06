@@ -1,6 +1,6 @@
 import pickle
 import numpy as np
-from evaluation import evaluate_ours, evaluate_lin
+from evaluation import evaluate_ours, evaluate_lin, classifier
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import matplotlib.image as mpimg
@@ -146,6 +146,12 @@ if __name__ == "__main__":
                 rt = lambda x: rho_true(i, int(t_final/float(N_steps) * n), test_set, x)
                 width = test_scene.width/40
                 pr_ours, tr_ours, bboxes = evaluate_ours(bounds, rho, rhol, rt, width, 1.6 * scene.kappa * t_final/float(N_steps) * n, debug_level=0)
+
+                rand_rho = map(np.array, ([[x_hat[0]], [x_hat[1]]], [1]))
+                rand_walk = classifier(bounds, width, rho, t_final/float(N_steps) * n * scene.s_max)
+                np.save("pickles/rand/{}/pr_agent_{}_time_{}".format(scene_number, i, n), rand_walk)
+                np.save("pickles/rand/{}/tr_agent_{}_time_{}".format(scene_number, i, n), tr_ours)
+
                 np.save("pickles/ours/{}/pr_agent_{}_time_{}".format(scene_number, i, n), pr_ours)
                 np.save("pickles/ours/{}/tr_agent_{}_time_{}".format(scene_number, i, n), tr_ours)
                 w_arr_lin /= np.sum(w_arr_lin) if  np.sum(w_arr_lin) > 0 else 1
