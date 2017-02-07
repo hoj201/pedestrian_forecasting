@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.metrics import roc_curve, auc, precision_recall_curve
 from sys import argv
 import os
-name = argv[1]
+#name = argv[1]
 
 def fn(paths):
     fs_tr = []
@@ -52,17 +52,21 @@ def fn(paths):
     ax.set_ylabel("AUC")
     ax.set_xlabel("Frames")
     ax.plot(times, aucs)
-    plt.savefig("images/kitani/AUC_vs_t_for_{}.png".format(name))
-    plt.show()
+    #plt.savefig("images/kitani/AUC_vs_t_for_{}.png".format(name))
+    #plt.show()
     return aucs, times
 
-paths_kit = ["pickles/kitani/{}/".format(x) for x in range(5)]
-paths_ours = ["pickles/ours/{}/".format(x) for x in range(5)]
-paths_lin = ["pickles/linear/{}/".format(x) for x in range(5)]
+rng = [0, 2, 3, 4]
+paths_kit = ["pickles/kitani/{}/".format(x) for x in rng]
+paths_ours = ["pickles/ours/{}/".format(x) for x in rng]
+paths_lin = ["pickles/linear/{}/".format(x) for x in rng]
+paths_rand = ["pickles/rand/{}/".format(x) for x in rng]
+
 our_auc, our_times = fn(paths_ours)
 kit_auc, kit_times = fn(paths_kit)
 lin_auc, lin_times = fn(paths_lin)
-
+rand_auc, rand_times = fn(paths_rand)
+plt.clf()
 ax = plt.gca()
 ax.set_ylim([-.1, 1.1])
 ax.set_xlabel("Frames")
@@ -70,8 +74,9 @@ ax.set_ylabel("AUC")
 plt.plot(our_times, our_auc, ls="solid", c="black", label="Our Algorithm")
 plt.plot(kit_times, kit_auc, ls="dashed", c="black", label="Kitani Algorithm")
 plt.plot(lin_times, lin_auc, ls="dashdot", c="black", label="Linear Predictor")
+plt.plot(rand_times, rand_auc, ls="dotted", c="black", label="Random Walk")
 plt.legend(loc="lower right")
-fig.savefig('images/The Results.eps', format='eps')
+plt.savefig('images/The Results.eps', format='eps')
 plt.show()
 
 

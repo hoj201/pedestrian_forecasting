@@ -35,8 +35,10 @@ void OC::loadTerminalPts(string input_filename)
 	if(!fs.is_open()){cout << "ERROR: Opening: " << input_filename << endl;exit(1);}
 	fs >> _start.x;		fs >> _start.y;
 	fs >> _end.x;		fs >> _end.y;
+  fs >> _end2.x; fs >> _end2.y;
 	cout << "  start:" << _start << endl;
 	cout << "  end:" << _end << endl;
+  cout << "  end2: " << _end2 << endl;
 	
 }
 
@@ -142,6 +144,7 @@ int OC::computeValueFunction	(string output_filename)
 			}
 		}
 		_V.at<float>(_end.y,_end.x) = 0.0;			// set goal value to 0
+    _V.at<float>(_end2.y,_end2.x) = 0.0;
 		
 		
 		// ==== CONVERGENCE CRITERIA ==== //
@@ -235,6 +238,7 @@ void OC::computeForecastDist	(string output_filename)
 			for(int row=0;row<N[0].rows;row++)
 			{
 				if(row==_end.y && col == _end.x) continue;		// absorbsion state
+        if(row==_end2.y && col == _end2.x) continue;
 				
 				if(N[0].at<float>(row,col) > (FLT_MIN))
 				{
@@ -254,6 +258,7 @@ void OC::computeForecastDist	(string output_filename)
 			}
 		}
 		N[1].at<float>(_end.y,_end.x) = 0.0;				// absorption state
+    N[1].at<float>(_end2.y,_end2.x) = 0.0;
 		
 		_D += N[1];
 		FileStorage fs;

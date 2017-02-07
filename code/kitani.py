@@ -75,7 +75,7 @@ for j, agent in enumerate(set):
     print begin
     print end
     with open("kitani/oc_demo/walk_terminal_pts.txt", "w") as f:
-        f.write("{} {}\n{} {}".format(int(begin[0]), int(begin[1]), int(end[0]), int(end[1])))
+        f.write("{} {}\n{} {}\n{} {}".format(int(begin[0]), int(begin[1]), int(end[0]), int(end[1]), 0, 0))
     process = subprocess.Popen("./kitani/theirs", stdout=subprocess.PIPE)
     output, err = process.communicate()
     print output
@@ -88,6 +88,8 @@ for j, agent in enumerate(set):
             continue
         num = int(file[file.index("e")+1:file.index(".")])
         print num
+        if num >= ln:
+            continue
         data = cv2.cv.Load("kitani/oc_demo/frames/" + file)
         data = np.array(data)
         xs = []
@@ -100,7 +102,7 @@ for j, agent in enumerate(set):
                 xs.append(scene.width*(-1/2.0+ w * box_width + box_width/2))
                 ys.append(scene.height*(1/2.0 - h * box_height + box_height/2))
                 #bboxes.append([-scene.width/2 + w * box_width, -scene.width/2 + (w+1) * box_width, -scene.height/2 + h * box_height, -scene.height/2 + (h + 1) * box_height])
-        rt = lambda x: rho_true(scene_number, int(len(set)/float(ln) * num), set, x)
+        rt = lambda x: rho_true(j, int((len(curve[0]))/float(ln) * num), set, x)
         rhol = (np.vstack((xs, ys)), data.flatten())
         #plt.imshow(data)
         #plt.show()
@@ -123,6 +125,7 @@ for j, agent in enumerate(set):
         ax[0].plot(false_pos, true_pos)
         ax[1].imshow(pr_lin.reshape(ctx, cty).transpose(), origin="lower", extent=[-scene.width/2,scene.width/2,-scene.height/2,scene.height/2], cmap="viridis")
         ax[1].imshow(mpimg.imread("kitani/oc_demo/walk_birdseye.jpg"), extent=[-scene.width/2, scene.width/2,-scene.height/2,scene.height/2], alpha=0.5)
+        ax[1].scatter(curve[0][int((len(curve[0]))/float(ln) * num)], curve[1][ int(len(curve[0])/float(ln) * num)], s=20, c="white")
         plt.plot(curve1[0], curve1[1])
         plt.savefig("images/kitani/{}/AUC_for_agent_{}_t={}.png".format(scene_number, j, num))
         plt.clf()
