@@ -15,8 +15,10 @@ from helper_routines import convolve_and_score
 
 from data import scenes as test_scenes
 from data import sets as test_sets
+from data import random_sigmas
 
 from sys import argv
+
 if len(argv) < 2:
     scene_number = 0
     test_scene = test_scenes[0]
@@ -148,7 +150,7 @@ if __name__ == "__main__":
                 pr_ours, tr_ours, bboxes = evaluate_ours(bounds, rho, rhol, rt, width, 1.6 * scene.kappa * t_final/float(N_steps) * n, debug_level=0)
 
                 rand_rho = map(np.array, ([[x_hat[0]], [x_hat[1]]], [1]))
-                rand_walk = classifier(bounds, width, rho, t_final/float(N_steps) * n * scene.s_max)
+                rand_walk, _ = classifier(bounds, width, rho, t_final/float(N_steps) * n * random_sigmas[scene_number])
                 np.save("pickles/rand/{}/pr_agent_{}_time_{}".format(scene_number, i, n), rand_walk)
                 np.save("pickles/rand/{}/tr_agent_{}_time_{}".format(scene_number, i, n), tr_ours)
 
