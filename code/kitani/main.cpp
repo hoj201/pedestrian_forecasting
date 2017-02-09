@@ -14,17 +14,19 @@
 using namespace std;
 
 int main (int argc, char * const argv[]) {
-    
-	string birdseye_image_jpg_path		= "kitani/oc_demo/walk_birdseye.jpg";
-	string terminal_pts_txt_path		= "kitani/oc_demo/walk_terminal_pts.txt";
-	string reward_weights_txt_path		= "kitani/oc_demo/walk_reward_weights.txt";
-	string features_xml_path			= "kitani/oc_demo/walk_feature_maps.xml";
+    String folder = argv[1];
+
+	string birdseye_image_jpg_path		= "kitani/" + folder + "/walk_birdseye.jpg";
+	string terminal_pts_txt_path		= "kitani/" + folder + "/walk_terminal_pts.txt";
+	string reward_weights_txt_path		= "kitani/" + folder + "/walk_reward_weights.txt";
+	string features_xml_path			= "kitani/" + folder + "/walk_feature_maps.xml";
 	
-	string output_valuefunc_xml_path	= "kitani/oc_demo/output/walk_valuefunction.xml";
-	string output_policy_xml_path		= "kitani/oc_demo/output/walk_policy.xml";
-	string output_jpg_path				= "kitani/oc_demo/output/walk_forecast.jpg";
+	string output_valuefunc_xml_path	= "kitani/" + folder + "/output/walk_valuefunction.xml";
+	string output_policy_xml_path		= "kitani/" + folder + "/output/walk_policy.xml";
+	string output_jpg_path				= "kitani/" + folder + "/output/walk_forecast.jpg";
 	
 	OC model;
+	model.folder_path = folder;
 
 	//model.VISUALIZE = true;
 

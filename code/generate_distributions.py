@@ -30,10 +30,13 @@ sigma_v = scene.sigma_v
 sigma_L = scene.sigma_L
 kappa = scene.kappa
 
-def set_scene(num_scene):
+def set_scene(num_scene, custom_scene = None):
     global scene, Vk, scene_scale, dist_width, vel_width, s_max, sigma_x, sigma_v, sigma_L, kappa
     from data import scenes
-    scene = scenes[num_scene]
+    if custom_scene != None:
+        scene = custom_scene
+    else:
+        scene = scenes[num_scene]
     Vk = scene.alpha_arr
     scene_scale = np.array([scene.width, scene.height])
     #temporary
@@ -44,7 +47,7 @@ def set_scene(num_scene):
     sigma_v = scene.sigma_v
     sigma_L = scene.sigma_L
     kappa = scene.kappa
-    derived_posteriors.set_scene(num_scene)
+    derived_posteriors.set_scene(num_scene, custom_scene = custom_scene)
 
 
 def integrate_class(k, x0, T, N_steps):

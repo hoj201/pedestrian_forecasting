@@ -12,29 +12,34 @@ from adjustText import adjust_text
 from sklearn.metrics import roc_curve, auc, precision_recall_curve
 from visualization_routines import singular_distribution_to_image
 from helper_routines import convolve_and_score
+from train_random_walk import learn_sigma_RW
+from process_data import BB_ts_to_curve as bbts
 
 from data import scenes as test_scenes
 from data import sets as test_sets
 from data import random_sigmas
+from data import all_data
+import os
+
+def mkdir(fname):
+    try:
+        os.mkdir(fname)
+    except:
+        pass
 
 from sys import argv
 
-if len(argv) < 2:
-    scene_number = 0
-    test_scene = test_scenes[0]
-    scene = test_scene
-    test_set = test_sets[0]
-else:
-    scene_number = int(argv[1])
-    test_scene = test_scenes[int(argv[1])]
-    scene = test_scene
-    test_set = test_sets[int(argv[1])]
-    generate_distributions.set_scene(int(argv[1]))
-    path = "../annotations/" + argv[2] + "/video" + argv[3] + "/reference.jpg"
-inds = range(len(test_set))
-if len(argv) > 4:
-        st = argv[4]
-        inds = map(int, st.split(","))
+sn = argv[1]
+data = all_data[sn]
+
+import json
+with open("scene_order.json") as f:
+    st = f.read()
+json_acceptable_string = st.replace("'", "\"")
+dic = json.loads(json_acceptable_string)
+order = dic['order']
+folders = dic['folders']
+
 
 def rho_true(subj, T, test_set, bbox_ls):
     """ Computes the integral of rho_true over a bounding box"""
@@ -85,9 +90,14 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import matplotlib.animation as anim
     import types
-    st = time.time()
-    print time.time()
-    def f(i):
+    def f(name, ind, i, test_set):
+        
+        mkdir("/pickles/ours/{}".format(name))
+        mkdir("/pickles/ours/{}/{}".format(name, ind))
+        mkdir("/pickles/linear/{}".format(name, ind))
+        mkdir("/pickles/linear/{}/{}".format(name, ind))
+        mkdir("/pickles/rand/{}".format(name))
+        mkdir("/pickles/rand/{}/{}".format(name, ind))
         test_BB_ts = test_set[i]
 
         from process_data import BB_ts_to_curve
@@ -129,7 +139,7 @@ if __name__ == "__main__":
         ttr_ours = np.array([])
         ppr_lin = np.array([])
         ttr_lin = np.array([])
-        reference = mpimg.imread(path)
+        reference = mpimg.imread(folders[sn])
         for ((x_arr_ours, w_arr_ours), (x_arr_lin, w_arr_lin)) in ours:
             if n == 0:
                 n += 1
@@ -150,12 +160,13 @@ if __name__ == "__main__":
                 pr_ours, tr_ours, bboxes = evaluate_ours(bounds, rho, rhol, rt, width, 1.6 * scene.kappa * t_final/float(N_steps) * n, debug_level=0)
 
                 rand_rho = map(np.array, ([[x_hat[0]], [x_hat[1]]], [1]))
-                rand_walk, _ = classifier(bounds, width, rho, t_final/float(N_steps) * n * random_sigmas[scene_number])
-                np.save("pickles/rand/{}/pr_agent_{}_time_{}".format(scene_number, i, n), rand_walk)
-                np.save("pickles/rand/{}/tr_agent_{}_time_{}".format(scene_number, i, n), tr_ours)
+                sigma = learn_sigma_RW(map(bbts, data[ind][2]))
+                rand_walk, _ = classifier(bounds, width, rho, t_final/float(N_steps) * n * sigma)
+                np.save("pickles/rand/{}/{}/pr_agent_{}_time_{}".format(name,ind, i, n), rand_walk)
+                np.save("pickles/rand/{}/{}/tr_agent_{}_time_{}".format(name, ind, i, n), tr_ours)
 
-                np.save("pickles/ours/{}/pr_agent_{}_time_{}".format(scene_number, i, n), pr_ours)
-                np.save("pickles/ours/{}/tr_agent_{}_time_{}".format(scene_number, i, n), tr_ours)
+                np.save("pickles/ours/{}/{}/pr_agent_{}_time_{}".format(name, ind, i, n), pr_ours)
+                np.save("pickles/ours/{}/{}/tr_agent_{}_time_{}".format(name, ind, i, n), tr_ours)
                 w_arr_lin /= np.sum(w_arr_lin) if  np.sum(w_arr_lin) > 0 else 1
                 #whr = np.where(w_arr > 0)[0]
                 #x_arr = x_arr.transpose()[whr].transpose()
@@ -164,8 +175,8 @@ if __name__ == "__main__":
                 #plt.contourf(X,Y,Z, 30, cmap='viridis')
                 rho = (x_arr_lin, w_arr_lin)
                 pr_lin, tr_lin = evaluate_lin(bounds, rhol, rt, width, debug_level=0)
-                np.save("pickles/linear/{}/pr_agent_{}_time_{}".format(scene_number, i, n), pr_lin)
-                np.save("pickles/linear/{}/tr_agent_{}_time_{}".format(scene_number, i, n), tr_lin)
+                np.save("pickles/linear/{}/{}/pr_agent_{}_time_{}".format(name, ind,i, n), pr_lin)
+                np.save("pickles/linear/{}/{}/tr_agent_{}_time_{}".format(name, ind, i, n), tr_lin)
                 if len(ppr_ours) == 0:
 		            ppr_ours = np.array([pr_ours])
 		            ttr_ours = np.array([tr_ours])
@@ -250,9 +261,9 @@ if __name__ == "__main__":
 
                 axarr[1][1].plot(xs, ys)
 
-                plt.savefig("images/precision_recall/{}/pr_agent{}_T{}.png".format(scene_number, i, int(t_final/float(N_steps) * n)))
+                #plt.savefig("images/precision_recall//pr_agent{}_T{}.png".formatsn, i, int(t_final/float(N_steps) * n)))
                 #plt.show()
-                plt.close('all')
+                #plt.close('all')
             n += 1
             
 
@@ -267,39 +278,50 @@ if __name__ == "__main__":
         ax.legend()
         plt.savefig("images/precision_recall/{}/{}AUC_for_agent_{}.png".format(scene_number, scene_number, i))
         plt.close('all')
-	return (ppr_ours, ttr_ours, ppr_lin, ttr_lin)
+        return (ppr_ours, ttr_ours, ppr_lin, ttr_lin)
 
     from joblib import Parallel, delayed
-    arr = Parallel(n_jobs=18)(delayed(f)(x) for x in inds)
-    print time.time()
-    print time.time() - st
-    mn = min([len(x[0]) for x in arr])
-    concat_pr = arr[0][0][:mn]
-    concat_tr = arr[0][1][:mn]
-    concat_pr_lin = arr[0][2][:mn]
-    concat_tr_lin = arr[0][3][:mn]
-    for agent in range(1, len(arr)):
-        concat_pr = np.concatenate((concat_pr, arr[agent][0][:mn]), axis=1)
-        concat_tr = np.concatenate((concat_tr, arr[agent][1][:mn]), axis=1)
-        concat_pr_lin = np.concatenate((concat_pr_lin, arr[agent][2][:mn]), axis=1)
-        concat_tr_lin = np.concatenate((concat_tr_lin, arr[agent][3][:mn]), axis=1)
-    auc_ours = []
-    auc_lin = []
-    for t in range(mn):
-    	false_positive_rate, true_positive_rate, thresholds = roc_curve(concat_tr[t], concat_pr[t])
-    	auc_ours.append(auc(false_positive_rate, true_positive_rate))
-        false_positive_rate, true_positive_rate, thresholds = roc_curve(concat_tr_lin[t], concat_pr_lin[t])
-        auc_lin.append(auc(false_positive_rate, true_positive_rate))
-    xs = np.array(range(mn)) * 5
-    plt.figure()
-    ax = plt.gca()
-    ax.set_ylim([-.1, 1.2])
-    ax.set_xlabel('Frames')
-    ax.set_ylabel('AUC')
-    plt.title("AUC for scene {}".format(scene_number))
-    ax.plot(xs, auc_ours, label = "Ours")
-    ax.plot(xs, auc_lin, label = "Linear")
-    ax.legend()
-    plt.savefig("images/precision_recall/AUC_for_scene{}.png".format(scene_number))
-    plt.clf()
+
+    for i in range(10):
+        test_set = data[i]
+        name = order[sn]
+        names = [name for x in range(len(test_set))]
+        test_sets = [test_set for x in range(len(test_set))]
+        inds = range(len(test_set))
+        nums = [i for x in range(len(test_set))]
+        params = zip(names, nums, inds, test_sets)
+        generate_distributions.set_scene(-1, custom_scene=data[i][0])
+        
+        arr = Parallel(n_jobs=18)(delayed(f)(x, y, z, w) for x, y, z, w in params)
+    #print time.time()
+    #print time.time() - st
+    #mn = min([len(x[0]) for x in arr])
+    #concat_pr = arr[0][0][:mn]
+    #concat_tr = arr[0][1][:mn]
+    #concat_pr_lin = arr[0][2][:mn]
+    #concat_tr_lin = arr[0][3][:mn]
+    #for agent in range(1, len(arr)):
+    #    concat_pr = np.concatenate((concat_pr, arr[agent][0][:mn]), axis=1)
+    #    concat_tr = np.concatenate((concat_tr, arr[agent][1][:mn]), axis=1)
+    #    concat_pr_lin = np.concatenate((concat_pr_lin, arr[agent][2][:mn]), axis=1)
+    #    concat_tr_lin = np.concatenate((concat_tr_lin, arr[agent][3][:mn]), axis=1)
+    #auc_ours = []
+    #auc_lin = []
+    #for t in range(mn):
+   # 	false_positive_rate, true_positive_rate, thresholds = roc_curve(concat_tr[t], concat_pr[t])
+    #	auc_ours.append(auc(false_positive_rate, true_positive_rate))
+    #    false_positive_rate, true_positive_rate, thresholds = roc_curve(concat_tr_lin[t], concat_pr_lin[t])
+    #    auc_lin.append(auc(false_positive_rate, true_positive_rate))
+    #xs = np.array(range(mn)) * 5
+    #plt.figure()
+    #ax = plt.gca()
+    #ax.set_ylim([-.1, 1.2])
+    #ax.set_xlabel('Frames')
+    #ax.set_ylabel('AUC')
+    #plt.title("AUC for scene {}".format(scene_number))
+    #ax.plot(xs, auc_ours, label = "Ours")
+    #ax.plot(xs, auc_lin, label = "Linear")
+    #ax.legend()
+    #plt.savefig("images/precision_recall/AUC_for_scene{}.png".format(scene_number))
+    #plt.clf()
 

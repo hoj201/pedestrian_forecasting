@@ -58,6 +58,7 @@ public:
 	Point _start;			// start of trajectory
 	Point _end;				// end of trajectory
   Point _end2;
+  	String folder_path;
 	
 	bool VISUALIZE;
 };

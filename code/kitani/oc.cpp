@@ -262,7 +262,7 @@ void OC::computeForecastDist	(string output_filename)
 		
 		_D += N[1];
 		FileStorage fs;
-		fs.open("kitani/oc_demo/frames/frame"+ to_string(n) + ".xml",FileStorage::WRITE);
+		fs.open("kitani/" + folder_path + "/frames/frame"+ to_string(n) + ".xml",FileStorage::WRITE);
 		stringstream ss;
 		ss << "img";
 		fs << ss.str() << _D;

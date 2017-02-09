@@ -39,6 +39,7 @@ def set_scene(num_scene, custom_scene=None):
     sigma_L = scene.sigma_L
     p_of_lin = scene.P_of_c[-1]
     scene_scale = np.array([scene.width, scene.height])
+    posteriors.set_scene(num_scene, custom_scene=custom_scene)
 
 
 #"mathematically correct" version

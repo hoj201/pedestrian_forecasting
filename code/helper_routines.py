@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 import numpy as np
 from scipy.special import erf
+from data import scenes
+
+def ct(scene_num, width):
+    ctx = int(np.ceil(scenes[scene_num].width/width))
+    cty = int(np.ceil(scenes[scene_num].height/width))
+    return ctx, cty
 
 def convolve_and_score( pts, weights, sigma, bbox_ls):
     """ Smooths a singular distribution, and integrates it over a list of bboxes

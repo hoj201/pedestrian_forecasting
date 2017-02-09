@@ -1,4 +1,5 @@
 from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import KFold
 import pickle
 import process_data
 from scene import Scene
@@ -13,6 +14,7 @@ else:
     fname = "test"
 print "Initializing a scene from " + folder
 BB_ts_list, width, height = process_data.get_BB_ts_list(folder,label="Biker")
+kf = KFold(n_splits = 10)
 train_set, test_set = train_test_split( BB_ts_list, random_state = 0 )
 test_scene = Scene( train_set, width, height )
 #print "Display clusters"

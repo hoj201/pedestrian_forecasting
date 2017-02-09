@@ -220,6 +220,7 @@ def trajectories_to_director_field( trajectories, width, height, step = 10, k_ma
     av_dir = np.power( reduce( lambda x,y: x*y, directions[0]+1j*directions[1]), 1.0 / directions.shape[1])
     alpha_guess[0,0] = np.log( av_dir ).imag
     from scipy.optimize import minimize
+    print jac_cost
     res = minimize( cost, alpha_guess, jac = jac_cost, 
             args = (points, directions, k_max, width, height),
             method ='Newton-CG')

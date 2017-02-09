@@ -1,11 +1,17 @@
 from kitscr import raster
-with open('../annotations/gates/video1/annotations.txt','r') as f:
-    lines = f.readlines()
+import os
+import matplotlib.pyplot as plt
+import numpy as np
+from data import all_data
+from process_data import BB_ts_to_curve as bbts
 
-from sys import argv
-width = int(argv[1])
-new_width = int(argv[2])
+import json
 
+with open('scene_order.json') as f:
+    st = f.read()
+json_acceptable_string = st.replace("'", "\"")
+dic = json.loads(json_acceptable_string)
+order = dic['order']
 
 """
     The format of the Stanford Drone Dataset is:
@@ -23,118 +29,121 @@ new_width = int(argv[2])
     ... I think this is irrelevent... hopefully
 """
 
-def decode_line(line):
-    sid, xL, yL, xR, yU, time, _, _, _, atype = line.split(' ')
-    return int(sid), int(xL), int(yL), int(xR), int(yU), int(time), atype
 
-def id_and_time(line):
-    sid,_,_,_,_,time,_ = decode_line(line)
-    return sid, time
+def mkdir(fname):
+    try:
+        os.mkdir(fname)
+    except:
+        pass
 
-virat_dict = {'"Pedestrian"\n':1, '"Biker"\n':4, '"Car"\n':2}
-sid_current = None
 
-runner_index = 0
-duration = 0
-lines = map(decode_line, lines)
-sids = list(set([x[0] for x in lines]))
-dic = dict(zip(sids, [[] for s in sids]))
-[dic[x[0]].append(x) for x in lines]
-import matplotlib.pyplot as plt
-import numpy as np
-names = open("virat/walk_basenames.txt", "w")
+for sn, scene in enumerate(all_data):
+    scene_name = order[sn]
+    print scene_name
+    mkdir("virat/" + scene_name)
+    width = 200
+    for trial, (test_scene, _, train_set) in enumerate(scene):
+        mkdir("virat/" + scene_name + "/{}".format(trial))
 
-for sid in dic.keys():
-    print sid
-    t = 0
-    #TIME, X, Y
-    func = lambda x: (x[5], int((x[1] + x[3])/2), int((x[2] + x[4])/2))
-    data_points = sorted( map(func, dic[sid]), key=lambda x: int(x[0]))
-    px = []
-    sts = []
-    
-    for inds, data in enumerate(data_points[1:]):
-        ind = inds + 1
-        start = [data_points[ind-1][1], data_points[ind-1][2]]
-        sts.append(start)
-        end = [data_points[ind][1], data_points[ind][2]]
-        xs = raster(start, end)
-        xs = xs[:len(xs)-1]
-        for i in range(len(xs)):
-            xs[i][0] = int(float(new_width)/width *xs[i][0])
-            xs[i][1] = int(float(new_width)/width * xs[i][1])
-        px += xs
+        runner_index = 0
+        duration = 0
 
-    st = ""
-    runs = []
-    last = xs[0]
-    in_run = False
-    run_start = 0
-    for ind, x in enumerate(px):
-        if last == x and not in_run:
-            in_run = True
-            run_start = ind
-        if last != x and in_run:
-            runs.append([run_start, ind])
+        names = open("virat/{}/{}/walk_basenames.txt".format(scene_name, trial), "w")
+        for ind, agent in enumerate(train_set):
+            agent = bbts(agent)
+            agent[0] += test_scene.width/2.0
+            agent[1] = (-1 * agent[1] + test_scene.height/2)
+            agent *= 200.0
+            data_points = [(int(x), int(y)) for x,y in list(agent.transpose())]
+            t = 0
+            #TIME, X, Y
+
+
+
+            px = []
+            sts = []
+
+
+            for inds, data in enumerate(data_points[1:]):
+                ind = inds + 1
+                start = [data_points[ind-1][0], data_points[ind-1][1]]
+                sts.append(start)
+                end = [data_points[ind][0], data_points[ind][1]]
+                xs = raster(start, end)
+                xs = xs[:len(xs)-1]
+                for i in range(len(xs)):
+                    xs[i][0] = int(xs[i][0])
+                    xs[i][1] = int(xs[i][1])
+                px += xs
+
+            st = ""
+            runs = []
+            last = xs[0]
             in_run = False
-        last = x
-    pxs = []
-    start = 0
-    for run in runs:
-        if start < run[0]:
-            pxs += px[start:run[0]]
-        if run[1] - run[0] % 2 == 0:
-            elems = px[run[1]-1:run[0]]
-        else:
-            elems = px[run[1]:run[0]]
-        for i in range(0, (len(elems)-1)/2):
-            elems[2*i + 1][0] +=1
-        pxs += elems
-        start = run[1]
-    
-    for x in pxs:
+            run_start = 0
+            for ind, x in enumerate(px):
+                if last == x and not in_run:
+                    in_run = True
+                    run_start = ind
+                if last != x and in_run:
+                    runs.append([run_start, ind])
+                    in_run = False
+                last = x
+            pxs = []
+            start = 0
+            for run in runs:
+                if start < run[0]:
+                    pxs += px[start:run[0]]
+                if run[1] - run[0] % 2 == 0:
+                    elems = px[run[1]-1:run[0]]
+                else:
+                    elems = px[run[1]:run[0]]
+                for i in range(0, (len(elems)-1)/2):
+                    elems[2*i + 1][0] +=1
+                pxs += elems
+                start = run[1]
 
-        st += "{} {} {} {} {}".format(t, x[0],  x[1], 0, 0) + "\n"
-        t += 1
+            for x in pxs:
 
-    #pts = np.array(pxs).transpose()
-    #plt.plot(pts[0], pts[1])
-    #plt.show()
+                st += "{} {} {} {} {}".format(t, x[0],  x[1], 0, 0) + "\n"
+                t += 1
 
-    #inc = raw_input("should include? ")
-    #if len(inc) == 0:
-    #    print "not including"
-    #    continue
+            #pts = np.array(pxs).transpose()
+            #plt.plot(pts[0], pts[1])
+            #plt.show()
 
-    if len(pxs) > 15:
-        with open("virat/virat_{}.txt".format(sid), "w") as f:
-            f.write(st)
-        names.write("virat_{}.txt".format(sid) + "\n")
-names.close()
-
-
+            #inc = raw_input("should include? ")
+            #if len(inc) == 0:
+            #    print "not including"
+            #    continue
+            with open("virat/{}/{}/{}.txt".format(scene_name, trial, ind), "w") as f:
+                f.write(st)
+            names.write("{}.txt".format(ind) + "\n")
+        names.close()
 
 
-#for line in lines:
-#    sid, xL, yL, xR, yU, time, atype = line
-#    print "XL: {} XR: {} YD: {} YU{}".format(xL, xR, yL, yU)
-#    x = int((xL + xR)/2)
-#    y = int((yL + yR)/2)#
-#
-#    if sid != sid_current:
-#        sid_current = sid
-#        sid, t_initial = id_and_time( lines[runner_index])
-#        while sid is sid_current:
-#            runner_index +=1
-#            sid,_ = id_and_time(lines[runner_index])
-#        runner_index -= 1
-#        _,t_final = id_and_time( lines[runner_index] )
-#        duration = t_final - t_initial
-#    width = xR-xL
-#    height = yU-yL
-#    vtype = virat_dict[atype]
-#    elements = map(str, [sid, duration, time, xL, yU, width, height, vtype])
-#    string = " ".join(elements)
-#    f_virat.write(string + '\n')
 
-#f_virat.close()
+
+        #for line in lines:
+        #    sid, xL, yL, xR, yU, time, atype = line
+        #    print "XL: {} XR: {} YD: {} YU{}".format(xL, xR, yL, yU)
+        #    x = int((xL + xR)/2)
+        #    y = int((yL + yR)/2)#
+        #
+        #    if sid != sid_current:
+        #        sid_current = sid
+        #        sid, t_initial = id_and_time( lines[runner_index])
+        #        while sid is sid_current:
+        #            runner_index +=1
+        #            sid,_ = id_and_time(lines[runner_index])
+        #        runner_index -= 1
+        #        _,t_final = id_and_time( lines[runner_index] )
+        #        duration = t_final - t_initial
+        #    width = xR-xL
+        #    height = yU-yL
+        #    vtype = virat_dict[atype]
+        #    elements = map(str, [sid, duration, time, xL, yU, width, height, vtype])
+        #    string = " ".join(elements)
+        #    f_virat.write(string + '\n')
+
+        #f_virat.close()
