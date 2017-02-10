@@ -6,6 +6,10 @@
 
 %  For todo notes
 \usepackage{todonotes}
+\newcommand{\henry}[1]{\todo[inline,color=yellow!50]{HENRY: #1}}
+\newcommand{\ram}[1]{\todo[inline,color=red!50]{RAM: #1}}
+\newcommand{\owen}[1]{\todo[inline,color=blue!50]{OWEN: #1}}
+
 
 %  For drawing Bayesian networks
 \usepackage{tikz}
@@ -87,12 +91,9 @@ That autonomous vehicles will come to dominate our streets is imminent.
 This motivates the need for a real-time probabilistic forecasting algorithm for pedestrians, cyclists, and other agents,
 as it forms a necessary step in assessing the risk (and therefore the cost) we should expect to incur in our brave new world.
 How can we minimize risk and maximize comfort if we can not predict it?
-``But I don't want comfort. I want God, I want poetry, I want real danger, I want freedom, I want goodness. I want sin.''
-We'll, too bad! comfort and safety will soon rule with an AI-based iron fist! In this paper, we present a novel approach to probabilistic forecasting for pedestrians based on weighted sums of ordinary differential equations.
-The resulting algorithm is embarrassingly parallelizeable, and trained on historical trajectory information in a fixed scene.
-When compared with MDP-based methods, our algorithm appears to be superior from the standpoint of precision and recall.
-Civilization is sterilization
-\todo[inline]{for the love of god please don't forget to write the actual abstract}
+In this paper, we present a novel approach to probabilistic forecasting for pedestrians based on weighted sums of ordinary differential equations.
+The resulting algorithm is embarrassingly parallel at run-time, and is trained on historical trajectory information within a fixed scene.
+We observe good performance with respect to precision and recall, which serve as useful metric from the vantage point of safety.
 \end{abstract}
 
 \IEEEpeerreviewmaketitle
@@ -107,7 +108,6 @@ Second, the predictions must be generated at faster than real-time rates to ensu
 Finally, long-time horizon forecasts are preferable since they can make planning over long-time horizons feasible, which can reduce the conservativeness and aggressiveness of controllers \cite{}.
 
 \todo[inline]{Should we include a figure here showing what our algorithm looks like?}
-
 This paper presents an algorithm for real-time, long-term prediction of pedestrian behavior which can subsequently be used by autonomous agents.
 
 As depicted in Figure \ref{fig:}, this approach relies upon ... 
@@ -143,8 +143,6 @@ The desired posteriors were difficult if not impossible to compute in closed for
 The resulting accuracy of such methods can only be known in a probabilistic sense in that the error bounds are themselves random variables.
 Moreover, high accuracy can come at a high computational cost prohibitive for real-time computation.
 Speed and analytic error bounds were not a primary objective of \cite{Karasev2016}, and thus were not addressed in that publication.
-
-\todo[inline]{I could also mention \emph{Inferring ``Dark Matter'' and ``Dark Energy'' from Videos}.  It is another IOC model, and is cited in \cite{Ballan2016}.  However, this paper is awful, and I don't even know how to describe it if we presumable wanted to describe the results.  Here is an actual sentence from the results section of the paper: \emph{``The trajectory prediction (NLL and MHD) is more accurate is constrained scene (1 2) than free scenes (3 4).''}.}
 
 One difficulty which IOC models can suffer occurs when the initial and final conditions are very separated across a complex domains, analogous to the notion of conjugate points in optimal control.
 This can occur when agents make very sharp turns due to intermediate goals on the way toward reaching their final destination.
@@ -554,7 +552,8 @@ In keeping with our measurement model, the ground truth compared against was a g
 \todo[inline]{figure{plot}}
 \label{fig:auc_vs_time}
 
-We then computed the ROC curve at each frame for each predictor, and the AUC of that curve. \todo[inline]{How much detail should I put about why we chose to use the AUC as a metric?} The AUCs at each time step were averaged across all test trajectories, and across all scenes. This formed the plot of mean AUC vs time ({figure n+1}). 
+We then computed the ROC curve at each frame for each predictor, and the AUC of that curve. \owen{How much detail should I put about why we chose to use the AUC as a metric?}
+\henry{I think it reads okay as it is.} The AUCs at each time step were averaged across all test trajectories, and across all scenes. This formed the plot of mean AUC vs time ({figure n+1}). 
 %\figure{Ours vs kitani, show confidence }
 %\caption{Though Kitani et. al.'s algorithm has superior data, we see that our algorithm's uncertainty makes our algorithm safer to use than theirs.}
 
