@@ -40483,3 +40483,1810 @@ sigma_L = 0.001867
 398
 399
 1485688405.0
+(4, 806)
+(4, 806)
+[ 0.00797546  0.57484663]
+[ 0.12668712 -0.58159509]
+(4, 806)
+[ 0.00797546  0.57484663]
+[ 0.12668712 -0.58159509]
+[ 101.59509202    4.5398773 ]
+[ 125.33742331  235.82822086]
+
+LoadTerminalPts()
+  start:[101, 4]
+  end:[125, 235]
+  end2: [0, 0]
+
+LoadRewardWeights()
+[]
+0
+  Number of weights loaded:20
+
+LoadFeatures()
+  Number of feature maps loaded:20
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+28.2956
+0
+22.8786
+0
+18.142
+0
+13.7979
+0
+9.72903
+0
+5.8844
+0
+3.71027
+0
+3.36807
+0
+3.00806
+0
+2.64819
+0
+2.51727
+0
+2.35254
+0
+2.16489
+0
+2.04227
+0
+1.96719
+0
+1.85199
+0
+1.73874
+0
+1.68732
+0
+1.61908
+0
+1.53857
+0
+1.45966
+0
+1.42865
+0
+1.37503
+0
+1.31494
+0
+1.25818
+0
+1.23267
+0
+1.19052
+0
+1.14365
+0
+1.099
+0
+1.07767
+0
+1.04398
+0
+1.00629
+0
+0.968201
+0
+0.950684
+0
+0.923553
+  Converged in 235 steps.
+  Writing:kitani/oc_demo/output/walk_valuefunction.xml
+
+ComputePolicy()
+  Writing: kitani/oc_demo/output/walk_policy.xml
+
+ComputeForecastDist()
+Wrote frame 0
+Wrote frame 1
+Wrote frame 2
+Wrote frame 3
+Wrote frame 4
+Wrote frame 5
+Wrote frame 6
+Wrote frame 7
+Wrote frame 8
+Wrote frame 9
+Wrote frame 10
+Wrote frame 11
+Wrote frame 12
+Wrote frame 13
+Wrote frame 14
+Wrote frame 15
+Wrote frame 16
+Wrote frame 17
+Wrote frame 18
+Wrote frame 19
+Wrote frame 20
+Wrote frame 21
+Wrote frame 22
+Wrote frame 23
+Wrote frame 24
+Wrote frame 25
+Wrote frame 26
+Wrote frame 27
+Wrote frame 28
+Wrote frame 29
+Wrote frame 30
+Wrote frame 31
+Wrote frame 32
+Wrote frame 33
+Wrote frame 34
+Wrote frame 35
+Wrote frame 36
+Wrote frame 37
+Wrote frame 38
+Wrote frame 39
+Wrote frame 40
+Wrote frame 41
+Wrote frame 42
+Wrote frame 43
+Wrote frame 44
+Wrote frame 45
+Wrote frame 46
+Wrote frame 47
+Wrote frame 48
+Wrote frame 49
+Wrote frame 50
+Wrote frame 51
+Wrote frame 52
+Wrote frame 53
+Wrote frame 54
+Wrote frame 55
+Wrote frame 56
+Wrote frame 57
+Wrote frame 58
+Wrote frame 59
+Wrote frame 60
+Wrote frame 61
+Wrote frame 62
+Wrote frame 63
+Wrote frame 64
+Wrote frame 65
+Wrote frame 66
+Wrote frame 67
+Wrote frame 68
+Wrote frame 69
+Wrote frame 70
+Wrote frame 71
+Wrote frame 72
+Wrote frame 73
+Wrote frame 74
+Wrote frame 75
+Wrote frame 76
+Wrote frame 77
+Wrote frame 78
+Wrote frame 79
+Wrote frame 80
+Wrote frame 81
+Wrote frame 82
+Wrote frame 83
+Wrote frame 84
+Wrote frame 85
+Wrote frame 86
+Wrote frame 87
+Wrote frame 88
+Wrote frame 89
+Wrote frame 90
+Wrote frame 91
+Wrote frame 92
+Wrote frame 93
+Wrote frame 94
+Wrote frame 95
+Wrote frame 96
+Wrote frame 97
+Wrote frame 98
+Wrote frame 99
+Wrote frame 100
+Wrote frame 101
+Wrote frame 102
+Wrote frame 103
+Wrote frame 104
+Wrote frame 105
+Wrote frame 106
+Wrote frame 107
+Wrote frame 108
+Wrote frame 109
+Wrote frame 110
+Wrote frame 111
+Wrote frame 112
+Wrote frame 113
+Wrote frame 114
+Wrote frame 115
+Wrote frame 116
+Wrote frame 117
+Wrote frame 118
+Wrote frame 119
+Wrote frame 120
+Wrote frame 121
+Wrote frame 122
+Wrote frame 123
+Wrote frame 124
+Wrote frame 125
+Wrote frame 126
+Wrote frame 127
+Wrote frame 128
+Wrote frame 129
+Wrote frame 130
+Wrote frame 131
+Wrote frame 132
+Wrote frame 133
+Wrote frame 134
+Wrote frame 135
+Wrote frame 136
+Wrote frame 137
+Wrote frame 138
+Wrote frame 139
+Wrote frame 140
+Wrote frame 141
+Wrote frame 142
+Wrote frame 143
+Wrote frame 144
+Wrote frame 145
+Wrote frame 146
+Wrote frame 147
+Wrote frame 148
+Wrote frame 149
+Wrote frame 150
+Wrote frame 151
+Wrote frame 152
+Wrote frame 153
+Wrote frame 154
+Wrote frame 155
+Wrote frame 156
+Wrote frame 157
+Wrote frame 158
+Wrote frame 159
+Wrote frame 160
+Wrote frame 161
+Wrote frame 162
+Wrote frame 163
+Wrote frame 164
+Wrote frame 165
+Wrote frame 166
+Wrote frame 167
+Wrote frame 168
+Wrote frame 169
+Wrote frame 170
+Wrote frame 171
+Wrote frame 172
+Wrote frame 173
+Wrote frame 174
+Wrote frame 175
+Wrote frame 176
+Wrote frame 177
+Wrote frame 178
+Wrote frame 179
+Wrote frame 180
+Wrote frame 181
+Wrote frame 182
+Wrote frame 183
+Wrote frame 184
+Wrote frame 185
+Wrote frame 186
+Wrote frame 187
+Wrote frame 188
+Wrote frame 189
+Wrote frame 190
+Wrote frame 191
+Wrote frame 192
+Wrote frame 193
+Wrote frame 194
+Wrote frame 195
+Wrote frame 196
+Wrote frame 197
+Wrote frame 198
+Wrote frame 199
+Wrote frame 200
+Wrote frame 201
+Wrote frame 202
+Wrote frame 203
+Wrote frame 204
+Wrote frame 205
+Wrote frame 206
+Wrote frame 207
+Wrote frame 208
+Wrote frame 209
+Wrote frame 210
+Wrote frame 211
+Wrote frame 212
+Wrote frame 213
+Wrote frame 214
+Wrote frame 215
+Wrote frame 216
+Wrote frame 217
+Wrote frame 218
+Wrote frame 219
+Wrote frame 220
+Wrote frame 221
+Wrote frame 222
+Wrote frame 223
+Wrote frame 224
+Wrote frame 225
+Wrote frame 226
+Wrote frame 227
+Wrote frame 228
+Wrote frame 229
+Wrote frame 230
+Wrote frame 231
+Wrote frame 232
+Wrote frame 233
+Wrote frame 234
+Wrote frame 235
+Wrote frame 236
+Wrote frame 237
+Wrote frame 238
+Wrote frame 239
+Wrote frame 240
+Wrote frame 241
+Wrote frame 242
+Wrote frame 243
+Wrote frame 244
+Wrote frame 245
+Wrote frame 246
+Wrote frame 247
+Wrote frame 248
+Wrote frame 249
+Wrote frame 250
+Wrote frame 251
+Wrote frame 252
+Wrote frame 253
+Wrote frame 254
+Wrote frame 255
+Wrote frame 256
+Wrote frame 257
+Wrote frame 258
+Wrote frame 259
+Wrote frame 260
+Wrote frame 261
+Wrote frame 262
+Wrote frame 263
+Wrote frame 264
+Wrote frame 265
+Wrote frame 266
+Wrote frame 267
+Wrote frame 268
+Wrote frame 269
+Wrote frame 270
+Wrote frame 271
+Wrote frame 272
+Wrote frame 273
+Wrote frame 274
+Wrote frame 275
+Wrote frame 276
+Wrote frame 277
+Wrote frame 278
+Wrote frame 279
+Wrote frame 280
+Wrote frame 281
+Wrote frame 282
+Wrote frame 283
+Wrote frame 284
+Wrote frame 285
+Wrote frame 286
+Wrote frame 287
+Wrote frame 288
+Wrote frame 289
+Wrote frame 290
+Wrote frame 291
+Wrote frame 292
+Wrote frame 293
+Wrote frame 294
+Wrote frame 295
+Wrote frame 296
+Wrote frame 297
+Wrote frame 298
+Wrote frame 299
+Wrote frame 300
+Wrote frame 301
+Wrote frame 302
+Wrote frame 303
+Wrote frame 304
+Wrote frame 305
+Wrote frame 306
+Wrote frame 307
+Wrote frame 308
+Wrote frame 309
+Wrote frame 310
+Wrote frame 311
+Wrote frame 312
+Wrote frame 313
+Wrote frame 314
+Wrote frame 315
+Wrote frame 316
+Wrote frame 317
+Wrote frame 318
+Wrote frame 319
+Wrote frame 320
+Wrote frame 321
+Wrote frame 322
+Wrote frame 323
+Wrote frame 324
+Wrote frame 325
+Wrote frame 326
+Wrote frame 327
+Wrote frame 328
+Wrote frame 329
+Wrote frame 330
+Wrote frame 331
+Wrote frame 332
+Wrote frame 333
+Wrote frame 334
+Wrote frame 335
+Wrote frame 336
+Wrote frame 337
+Wrote frame 338
+Wrote frame 339
+Wrote frame 340
+Wrote frame 341
+Wrote frame 342
+Wrote frame 343
+Wrote frame 344
+Wrote frame 345
+Wrote frame 346
+Wrote frame 347
+Wrote frame 348
+Wrote frame 349
+Wrote frame 350
+Wrote frame 351
+Wrote frame 352
+Wrote frame 353
+Wrote frame 354
+Wrote frame 355
+Wrote frame 356
+Wrote frame 357
+Wrote frame 358
+Wrote frame 359
+Wrote frame 360
+Wrote frame 361
+Wrote frame 362
+Wrote frame 363
+Wrote frame 364
+Wrote frame 365
+Wrote frame 366
+Wrote frame 367
+Wrote frame 368
+Wrote frame 369
+Wrote frame 370
+Wrote frame 371
+Wrote frame 372
+Wrote frame 373
+Wrote frame 374
+Wrote frame 375
+Wrote frame 376
+Wrote frame 377
+Wrote frame 378
+Wrote frame 379
+Wrote frame 380
+Wrote frame 381
+Wrote frame 382
+Wrote frame 383
+Wrote frame 384
+Wrote frame 385
+Wrote frame 386
+Wrote frame 387
+Wrote frame 388
+Wrote frame 389
+Wrote frame 390
+Wrote frame 391
+Wrote frame 392
+Wrote frame 393
+Wrote frame 394
+Wrote frame 395
+Wrote frame 396
+Wrote frame 397
+Wrote frame 398
+Wrote frame 399
+Wrote frame 400
+Wrote frame 401
+  Writing:kitani/oc_demo/output/walk_forecast.jpg
+
+Press any key to finish.
+
+(4, 806)
+[ 0.00797546  0.57484663]
+[ 0.12668712 -0.58159509]
+[ 101.59509202    4.5398773 ]
+[ 125.33742331  235.82822086]
+TIME: 0.00032114982605
+
+LoadTerminalPts()
+  start:[101, 4]
+  end:[125, 235]
+  end2: [0, 0]
+
+LoadRewardWeights()
+[]
+0
+  Number of weights loaded:20
+
+LoadFeatures()
+  Number of feature maps loaded:20
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+3.40282e+38
+0
+28.2956
+0
+22.8786
+0
+18.142
+0
+13.7979
+0
+9.72903
+0
+5.8844
+0
+3.71027
+0
+3.36807
+0
+3.00806
+0
+2.64819
+0
+2.51727
+0
+2.35254
+0
+2.16489
+0
+2.04227
+0
+1.96719
+0
+1.85199
+0
+1.73874
+0
+1.68732
+0
+1.61908
+0
+1.53857
+0
+1.45966
+0
+1.42865
+0
+1.37503
+0
+1.31494
+0
+1.25818
+0
+1.23267
+0
+1.19052
+0
+1.14365
+0
+1.099
+0
+1.07767
+0
+1.04398
+0
+1.00629
+0
+0.968201
+0
+0.950684
+0
+0.923553
+  Converged in 235 steps.
+  Writing:kitani/oc_demo/output/walk_valuefunction.xml
+
+ComputePolicy()
+  Writing: kitani/oc_demo/output/walk_policy.xml
+
+ComputeForecastDist()
+Wrote frame 0
+Wrote frame 1
+Wrote frame 2
+Wrote frame 3
+Wrote frame 4
+Wrote frame 5
+Wrote frame 6
+Wrote frame 7
+Wrote frame 8
+Wrote frame 9
+Wrote frame 10
+Wrote frame 11
+Wrote frame 12
+Wrote frame 13
+Wrote frame 14
+Wrote frame 15
+Wrote frame 16
+Wrote frame 17
+Wrote frame 18
+Wrote frame 19
+Wrote frame 20
+Wrote frame 21
+Wrote frame 22
+Wrote frame 23
+Wrote frame 24
+Wrote frame 25
+Wrote frame 26
+Wrote frame 27
+Wrote frame 28
+Wrote frame 29
+Wrote frame 30
+Wrote frame 31
+Wrote frame 32
+Wrote frame 33
+Wrote frame 34
+Wrote frame 35
+Wrote frame 36
+Wrote frame 37
+Wrote frame 38
+Wrote frame 39
+Wrote frame 40
+Wrote frame 41
+Wrote frame 42
+Wrote frame 43
+Wrote frame 44
+Wrote frame 45
+Wrote frame 46
+Wrote frame 47
+Wrote frame 48
+Wrote frame 49
+Wrote frame 50
+Wrote frame 51
+Wrote frame 52
+Wrote frame 53
+Wrote frame 54
+Wrote frame 55
+Wrote frame 56
+Wrote frame 57
+Wrote frame 58
+Wrote frame 59
+Wrote frame 60
+Wrote frame 61
+Wrote frame 62
+Wrote frame 63
+Wrote frame 64
+Wrote frame 65
+Wrote frame 66
+Wrote frame 67
+Wrote frame 68
+Wrote frame 69
+Wrote frame 70
+Wrote frame 71
+Wrote frame 72
+Wrote frame 73
+Wrote frame 74
+Wrote frame 75
+Wrote frame 76
+Wrote frame 77
+Wrote frame 78
+Wrote frame 79
+Wrote frame 80
+Wrote frame 81
+Wrote frame 82
+Wrote frame 83
+Wrote frame 84
+Wrote frame 85
+Wrote frame 86
+Wrote frame 87
+Wrote frame 88
+Wrote frame 89
+Wrote frame 90
+Wrote frame 91
+Wrote frame 92
+Wrote frame 93
+Wrote frame 94
+Wrote frame 95
+Wrote frame 96
+Wrote frame 97
+Wrote frame 98
+Wrote frame 99
+Wrote frame 100
+Wrote frame 101
+Wrote frame 102
+Wrote frame 103
+Wrote frame 104
+Wrote frame 105
+Wrote frame 106
+Wrote frame 107
+Wrote frame 108
+Wrote frame 109
+Wrote frame 110
+Wrote frame 111
+Wrote frame 112
+Wrote frame 113
+Wrote frame 114
+Wrote frame 115
+Wrote frame 116
+Wrote frame 117
+Wrote frame 118
+Wrote frame 119
+Wrote frame 120
+Wrote frame 121
+Wrote frame 122
+Wrote frame 123
+Wrote frame 124
+Wrote frame 125
+Wrote frame 126
+Wrote frame 127
+Wrote frame 128
+Wrote frame 129
+Wrote frame 130
+Wrote frame 131
+Wrote frame 132
+Wrote frame 133
+Wrote frame 134
+Wrote frame 135
+Wrote frame 136
+Wrote frame 137
+Wrote frame 138
+Wrote frame 139
+Wrote frame 140
+Wrote frame 141
+Wrote frame 142
+Wrote frame 143
+Wrote frame 144
+Wrote frame 145
+Wrote frame 146
+Wrote frame 147
+Wrote frame 148
+Wrote frame 149
+Wrote frame 150
+Wrote frame 151
+Wrote frame 152
+Wrote frame 153
+Wrote frame 154
+Wrote frame 155
+Wrote frame 156
+Wrote frame 157
+Wrote frame 158
+Wrote frame 159
+Wrote frame 160
+Wrote frame 161
+Wrote frame 162
+Wrote frame 163
+Wrote frame 164
+Wrote frame 165
+Wrote frame 166
+Wrote frame 167
+Wrote frame 168
+Wrote frame 169
+Wrote frame 170
+Wrote frame 171
+Wrote frame 172
+Wrote frame 173
+Wrote frame 174
+Wrote frame 175
+Wrote frame 176
+Wrote frame 177
+Wrote frame 178
+Wrote frame 179
+Wrote frame 180
+Wrote frame 181
+Wrote frame 182
+Wrote frame 183
+Wrote frame 184
+Wrote frame 185
+Wrote frame 186
+Wrote frame 187
+Wrote frame 188
+Wrote frame 189
+Wrote frame 190
+Wrote frame 191
+Wrote frame 192
+Wrote frame 193
+Wrote frame 194
+Wrote frame 195
+Wrote frame 196
+Wrote frame 197
+Wrote frame 198
+Wrote frame 199
+Wrote frame 200
+Wrote frame 201
+Wrote frame 202
+Wrote frame 203
+Wrote frame 204
+Wrote frame 205
+Wrote frame 206
+Wrote frame 207
+Wrote frame 208
+Wrote frame 209
+Wrote frame 210
+Wrote frame 211
+Wrote frame 212
+Wrote frame 213
+Wrote frame 214
+Wrote frame 215
+Wrote frame 216
+Wrote frame 217
+Wrote frame 218
+Wrote frame 219
+Wrote frame 220
+Wrote frame 221
+Wrote frame 222
+Wrote frame 223
+Wrote frame 224
+Wrote frame 225
+Wrote frame 226
+Wrote frame 227
+Wrote frame 228
+Wrote frame 229
+Wrote frame 230
+Wrote frame 231
+Wrote frame 232
+Wrote frame 233
+Wrote frame 234
+Wrote frame 235
+Wrote frame 236
+Wrote frame 237
+Wrote frame 238
+Wrote frame 239
+Wrote frame 240
+Wrote frame 241
+Wrote frame 242
+Wrote frame 243
+Wrote frame 244
+Wrote frame 245
+Wrote frame 246
+Wrote frame 247
+Wrote frame 248
+Wrote frame 249
+Wrote frame 250
+Wrote frame 251
+Wrote frame 252
+Wrote frame 253
+Wrote frame 254
+Wrote frame 255
+Wrote frame 256
+Wrote frame 257
+Wrote frame 258
+Wrote frame 259
+Wrote frame 260
+Wrote frame 261
+Wrote frame 262
+Wrote frame 263
+Wrote frame 264
+Wrote frame 265
+Wrote frame 266
+Wrote frame 267
+Wrote frame 268
+Wrote frame 269
+Wrote frame 270
+Wrote frame 271
+Wrote frame 272
+Wrote frame 273
+Wrote frame 274
+Wrote frame 275
+Wrote frame 276
+Wrote frame 277
+Wrote frame 278
+Wrote frame 279
+Wrote frame 280
+Wrote frame 281
+Wrote frame 282
+Wrote frame 283
+Wrote frame 284
+Wrote frame 285
+Wrote frame 286
+Wrote frame 287
+Wrote frame 288
+Wrote frame 289
+Wrote frame 290
+Wrote frame 291
+Wrote frame 292
+Wrote frame 293
+Wrote frame 294
+Wrote frame 295
+Wrote frame 296
+Wrote frame 297
+Wrote frame 298
+Wrote frame 299
+Wrote frame 300
+Wrote frame 301
+Wrote frame 302
+Wrote frame 303
+Wrote frame 304
+Wrote frame 305
+Wrote frame 306
+Wrote frame 307
+Wrote frame 308
+Wrote frame 309
+Wrote frame 310
+Wrote frame 311
+Wrote frame 312
+Wrote frame 313
+Wrote frame 314
+Wrote frame 315
+Wrote frame 316
+Wrote frame 317
+Wrote frame 318
+Wrote frame 319
+Wrote frame 320
+Wrote frame 321
+Wrote frame 322
+Wrote frame 323
+Wrote frame 324
+Wrote frame 325
+Wrote frame 326
+Wrote frame 327
+Wrote frame 328
+Wrote frame 329
+Wrote frame 330
+Wrote frame 331
+Wrote frame 332
+Wrote frame 333
+Wrote frame 334
+Wrote frame 335
+Wrote frame 336
+Wrote frame 337
+Wrote frame 338
+Wrote frame 339
+Wrote frame 340
+Wrote frame 341
+Wrote frame 342
+Wrote frame 343
+Wrote frame 344
+Wrote frame 345
+Wrote frame 346
+Wrote frame 347
+Wrote frame 348
+Wrote frame 349
+Wrote frame 350
+Wrote frame 351
+Wrote frame 352
+Wrote frame 353
+Wrote frame 354
+Wrote frame 355
+Wrote frame 356
+Wrote frame 357
+Wrote frame 358
+Wrote frame 359
+Wrote frame 360
+Wrote frame 361
+Wrote frame 362
+Wrote frame 363
+Wrote frame 364
+Wrote frame 365
+Wrote frame 366
+Wrote frame 367
+Wrote frame 368
+Wrote frame 369
+Wrote frame 370
+Wrote frame 371
+Wrote frame 372
+Wrote frame 373
+Wrote frame 374
+Wrote frame 375
+Wrote frame 376
+Wrote frame 377
+Wrote frame 378
+Wrote frame 379
+Wrote frame 380
+Wrote frame 381
+Wrote frame 382
+Wrote frame 383
+Wrote frame 384
+Wrote frame 385
+Wrote frame 386
+Wrote frame 387
+Wrote frame 388
+Wrote frame 389
+Wrote frame 390
+Wrote frame 391
+Wrote frame 392
+Wrote frame 393
+Wrote frame 394
+Wrote frame 395
+Wrote frame 396
+Wrote frame 397
+Wrote frame 398
+Wrote frame 399
+Wrote frame 400
+Wrote frame 401
+  Writing:kitani/oc_demo/output/walk_forecast.jpg
+
+Press any key to finish.
+

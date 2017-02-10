@@ -8,15 +8,14 @@ def mkdir(fname):
     except:
         pass
 
-with open("scene_order.json") as f:
-    st = f.read()
-json_acceptable_string = st.replace("'", "\"")
-dic = json.loads(json_acceptable_string)
+from json_help import read_json
+dic = read_json("scene_order.json")
 order = dic['order']
+params = read_json("params.json")
 
 for name in order:
     mkdir("kitani/{}".format(name))
-    for ind in range(10):
+    for ind in range(params['nfold']):
         mkdir("kitani/{}/{}".format(name, ind))
         mkdir("kitani/{}/{}/output".format(name, ind))
         mkdir("kitani/{}/{}/frames".format(name, ind))

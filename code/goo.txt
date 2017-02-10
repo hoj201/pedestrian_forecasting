@@ -1,0 +1,4 @@
+data.py:    assert len(row) == 10
+make_scene.py:kf = KFold(n_splits = 10)
+make_shittons_scenes.py:kf = KFold(n_splits = 10)
+prepare_folders.py:    for ind in range(10):

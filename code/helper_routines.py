@@ -1,11 +1,13 @@
 #!/usr/bin/env python
+
 import numpy as np
 from scipy.special import erf
 from data import scenes
 
-def ct(scene_num, width):
-    ctx = int(np.ceil(scenes[scene_num].width/width))
-    cty = int(np.ceil(scenes[scene_num].height/width))
+
+def ct(scene, width):
+    ctx = int(np.ceil(scene.width/width))
+    cty = int(np.ceil(scene.height/width))
     return ctx, cty
 
 def convolve_and_score( pts, weights, sigma, bbox_ls):

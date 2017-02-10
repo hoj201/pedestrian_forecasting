@@ -91,7 +91,6 @@ if __name__ == "__main__":
     import matplotlib.animation as anim
     import types
     def f(name, ind, i, test_set):
-        
         mkdir("/pickles/ours/{}".format(name))
         mkdir("/pickles/ours/{}/{}".format(name, ind))
         mkdir("/pickles/linear/{}".format(name, ind))
@@ -104,7 +103,7 @@ if __name__ == "__main__":
         curve = BB_ts_to_curve( test_BB_ts)
 
         x_hat = curve[:,1]
-        
+
         v_hat = (curve[:,10] - curve[:,0])/10
         print "x_hat = " + str(x_hat)
         print "v_hat = " + str(v_hat)
@@ -161,7 +160,7 @@ if __name__ == "__main__":
 
                 rand_rho = map(np.array, ([[x_hat[0]], [x_hat[1]]], [1]))
                 sigma = learn_sigma_RW(map(bbts, data[ind][2]))
-                rand_walk, _ = classifier(bounds, width, rho, t_final/float(N_steps) * n * sigma)
+                rand_walk, _ = classifier(bounds, width, rand_rho, t_final/float(N_steps) * n * sigma)
                 np.save("pickles/rand/{}/{}/pr_agent_{}_time_{}".format(name,ind, i, n), rand_walk)
                 np.save("pickles/rand/{}/{}/tr_agent_{}_time_{}".format(name, ind, i, n), tr_ours)
 

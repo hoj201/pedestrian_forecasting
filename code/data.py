@@ -21,11 +21,9 @@ set = sets[0] #TODO: Probably should not use a python keyword here
 
 random_sigmas = [learn_sigma_RW(curves) for curves in map(lambda x: map(bbts, x), sets)]
 
-import json
-with open("scene_order.json") as f:
-    st = f.read()
-_json_acceptable_string = st.replace("'", "\"")
-_dic = json.loads(_json_acceptable_string)
+from json_help import read_json
+_dic = read_json("scene_order.json")
+params = read_json("params.json")
 
 all_data = []
 _order = _dic['order']
@@ -38,5 +36,6 @@ for folder in _order:
                 open("scenes/{}/sets/{}".format(folder, num),'r') as g, \
                 open("scenes/{}/train_sets/{}".format(folder, num),'r') as h:
                 row.append((pickle.load(f), pickle.load(g), pickle.load(h)))
-    assert len(row) == 10
+    
+    assert len(row) == params['nfold']
     all_data.append(row)

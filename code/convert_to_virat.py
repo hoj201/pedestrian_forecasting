@@ -70,10 +70,7 @@ for sn, scene in enumerate(all_data):
                 sts.append(start)
                 end = [data_points[ind][0], data_points[ind][1]]
                 xs = raster(start, end)
-                xs = xs[:len(xs)-1]
-                for i in range(len(xs)):
-                    xs[i][0] = int(xs[i][0])
-                    xs[i][1] = int(xs[i][1])
+                #xs = xs[:len(xs)]
                 px += xs
 
             st = ""
@@ -91,6 +88,8 @@ for sn, scene in enumerate(all_data):
                 last = x
             pxs = []
             start = 0
+            
+
             for run in runs:
                 if start < run[0]:
                     pxs += px[start:run[0]]
@@ -102,6 +101,14 @@ for sn, scene in enumerate(all_data):
                     elems[2*i + 1][0] +=1
                 pxs += elems
                 start = run[1]
+
+            for ind in range(len(pxs)-1):
+                curr = pxs[ind]
+                nxt = pxs[ind+1]
+                diffx = curr[0] - nxt[0]
+                diffy = curr[1] - nxt[1]
+                assert (abs(diffx) == 1) != (abs(diffy) ==1)
+
 
             for x in pxs:
 
@@ -115,7 +122,7 @@ for sn, scene in enumerate(all_data):
             #inc = raw_input("should include? ")
             #if len(inc) == 0:
             #    print "not including"
-            #    continue
+             #    continue
             with open("virat/{}/{}/{}.txt".format(scene_name, trial, ind), "w") as f:
                 f.write(st)
             names.write("{}.txt".format(ind) + "\n")

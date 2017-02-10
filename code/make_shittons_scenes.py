@@ -6,18 +6,17 @@ from scene import Scene
 from sys import argv
 import os
 import json
+from json_help import read_json
 file = argv[1]
-
-with open(file) as f:
-    st = f.read()
-json_acceptable_string = st.replace("'", "\"")
-dic = json.loads(json_acceptable_string)
+dic = read_json(file)
 
 folder = dic['folder']
 fname = dic['filename']
 print "Initializing a scene from " + folder
 BB_ts_list, width, height = process_data.get_BB_ts_list(folder,label="Biker")
-kf = KFold(n_splits = 10)
+params = read_json("params.json")
+print params['nfold']
+kf = KFold(n_splits = params['nfold'])
 
 def mkdir(fname):
     try:

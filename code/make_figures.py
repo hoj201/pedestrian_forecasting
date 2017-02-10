@@ -3,8 +3,9 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
 import os
-from data import sets, scenes
+from data import sets, scenes, all_data
 from process_data import BB_ts_to_curve as bbts
+from helper_routines import ct
 import json
 file = argv[1]
 with open(file) as f:
@@ -12,13 +13,24 @@ with open(file) as f:
 json_acceptable_string = st.replace("'", "\"")
 dic = json.loads(json_acceptable_string)
 scene_number = dic['scene_number']
-scene = scenes[scene_number]
-sett = sets[scene_number]
-width = dic['width']
-height = dic['height']
-folders = dic['folders']
+split_index = dic['split_index']
+scene = all_data[scene_number][split_index][0]
+test_set = all_data[scene_number][split_index][1]
+with open("scene_order.json") as f:
+    st = f.read()
+json_acceptable_string = st.replace("'", "\"")
+scene_order = json.loads(json_acceptable_string)
+scene_name = scene_order['order'][scene_number]
+width, height = ct(scene, scene.width/40.0)
+reference = scene_order['folders'][scene_number] + "reference.jpg"
+folders = [ x + "{}/{}/".format(scene_name, split_index) for x in dic['folders']]
 labels = dic['labels']
-reference = dic['reference']
+
+
+
+
+
+
 agent = dic['agent']
 times = dic['times']
 
@@ -28,7 +40,7 @@ methods = [[np.load(x + f) for f in fnames] for x in folders]
 mx = np.amax(np.array([[np.amax(x) for x in row] for row in methods]))
 nummth = len(methods)
 numt = len(times)
-curve = bbts(sett[agent])
+curve = bbts(test_set[agent])
 begin = curve[:, 0]
 end = curve[:, -1]
 

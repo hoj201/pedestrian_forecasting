@@ -1,7 +1,7 @@
 \documentclass[conference]{IEEEtran}
 \usepackage{times}
 
-%  For math environment
+%  For math environment 
 \usepackage{amsmath,amssymb,amsthm}
 
 %  For todo notes
@@ -92,6 +92,7 @@ We'll, too bad! comfort and safety will soon rule with an AI-based iron fist! In
 The resulting algorithm is embarrassingly parallelizeable, and trained on historical trajectory information in a fixed scene.
 When compared with MDP-based methods, our algorithm appears to be superior from the standpoint of precision and recall.
 Civilization is sterilization
+\todo[inline]{for the love of god please don't forget to write the actual abstract}
 \end{abstract}
 
 \IEEEpeerreviewmaketitle
@@ -104,6 +105,8 @@ To aid during safe control design for such systems, a prediction algorithm must 
 First, since safety is paramount, the prediction algorithm should avoid misclassifying areas as unoccupied.
 Second, the predictions must be generated at faster than real-time rates to ensure that they can be used within a control loop.
 Finally, long-time horizon forecasts are preferable since they can make planning over long-time horizons feasible, which can reduce the conservativeness and aggressiveness of controllers \cite{}.
+
+\todo[inline]{Should we include a figure here showing what our algorithm looks like?}
 
 This paper presents an algorithm for real-time, long-term prediction of pedestrian behavior which can subsequently be used by autonomous agents.
 
@@ -528,12 +531,61 @@ More precisely, the full computation of our approximation of $\rho_t(x_t)$ would
   We then measure the standard deviation of $(x_i(t) - x_{i,synth}(t)) / t$ over $i$ and at few time, $t \in \{ 0, 100, 200 \}$ in order to obtain $\kappa$.
   
  \subsection{ Precision, accuracy, etc.}
+In this section we establish our methods for evaluating the quality of our predictions, and comparing them against the model from [8] and a random walk.
+We implemented our model as well as the evaluation code in Python 2.6. Our implementation is available online.
 
-\todo[inline]{The results section goes here.  Tables, charts.  All that shit.}
+\todo[inline]{embed link to github} 
+%\begin{figure}
+%\includegraphics[width=0.5\textwidth]{figures/coupa_vis.eps}
+%\caption{Trajectory batches sampled for cross validation}
+%\label{fig:data_set}
+%\end{figure}
+
+Our data came from the Stanford Drone Dataset, in the form of hand annotated bounding boxes around agents (e.g. cars, pedestrians, bicycles). Our datasets used the bicycle data. We did a 10-fold cross validation on 4 different scenes of varying complexity. Our analysis used the same partitions of the trajectories for all three predictors. % shows the sample for the ``Coupa'' scene from the Stanford Dataset.
+
+\todo[inline]{include visualization of vector fields \& learned value function?}
+
+The algorithm provided by Kitani et. al. was given additional information when making predictions that neither ours nor the random walk model were provided, namely the endpoint of the test trajectory. Without these data the implementation of the predictor provided by the authors devolves into a random walk.
+\todo[inline]{\\figure{ All three algorithms side by side}
+\\caption{The grid used to evaluate the predicted distributions. The circle denotes the start of a trajectory and the X denotes the end. } }
+
+The output distributions of the three algorithms were compared using their integrals over the cells of a suitably fine regular grid over our domain. These integrals can be seen in {figure n}. 
+In keeping with our measurement model, the ground truth compared against was a grid that was identically zero except on a bounding box around the measurement at time $t$. The dimensions of the bounding box were the average bounding box dimensions in the training data set. 
+\todo[inline]{figure{plot}}
+\label{fig:auc_vs_time}
+
+We then computed the ROC curve at each frame for each predictor, and the AUC of that curve. \todo[inline]{How much detail should I put about why we chose to use the AUC as a metric?} The AUCs at each time step were averaged across all test trajectories, and across all scenes. This formed the plot of mean AUC vs time ({figure n+1}). 
+%\figure{Ours vs kitani, show confidence }
+%\caption{Though Kitani et. al.'s algorithm has superior data, we see that our algorithm's uncertainty makes our algorithm safer to use than theirs.}
+
+Disregarding small time scales where any algorithm will be reasonably accurate, our predictor behaves much better than any of the others at moderately large $t$, where we capture the  behavior of the agent without suffering the misplaced confidence observed in Kitani et. al.'s predictions. At large $t$, their aptitude comes from knowing the end point of the trajectory.  
+
+\begin{center}
+	\renewcommand{\arraystretch}{1.5}% Spread rows out...
+	\begin{tabular}{||c | c c  c ||} 
+		\hline
+		& Our Predictor & Random Walk & Kitani et. al. \\ [0.5ex] 
+		\hline 
+		$\frac{\mathrm{t}}{\mathrm{frame}}$ & 0.0169s & flop & 0.0614s \\
+		\hline
+	\label{tab:time}
+	\end{tabular}
+\end{center}
+
+The running time per frame for each algorithm was generated using run times for 400 frames, averaged across several agents and scenes, shown in \ref{tab:time}. Our algorithm implementation leveraged its embarassing parallelism using a relatively naive parallelization scheme, which split the computation of frames among 18 cores. It's highly probable that our run times would significantly decrease using an implementation of our algorithm in C that uses a more clever scheme. Kitani et. al. was timed with minimal modification to the source code provided by the authors. 
+
+We see that under our current implementation, we are beating Kitani et. al.'s algorithm at the relevant time scales, and are running more than 3 times faster that their algorithm. More significantly, our algorithm runs at almost 60FPS. Figure \ref{fig:auc_vs_time} shows that at all time scales, our algorithm has very good predictive capability, and Figure \ref{fig:ours_grid} shows the qualitative merit of our predictions on several scenes.
+
+
+
+%\todo[inline]{The results section goes here.  Tables, charts.  All that shit.}
 
 
 \section{Conclusion} 
 \label{sec:conclusion}
+
+Avenues of improvement:
+update predictions when given additional measurements
 
 The conclusion goes here.
 
