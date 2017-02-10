@@ -29,9 +29,8 @@ all_data = []
 _order = _dic['order']
 for folder in _order:
     row = []
-    for num in os.listdir("scenes/{}/scenes/".format(folder)):
-           if num == ".DS_Store":
-               continue
+    for i in range(params['nfold']):
+           num = "{}.pkl".format(i)
            with open("scenes/{}/scenes/{}".format(folder, num),'r') as f, \
                 open("scenes/{}/sets/{}".format(folder, num),'r') as g, \
                 open("scenes/{}/train_sets/{}".format(folder, num),'r') as h:
