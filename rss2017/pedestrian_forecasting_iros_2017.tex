@@ -554,6 +554,9 @@ In keeping with our measurement model, the ground truth compared against was a g
 \todo[inline]{figure{plot}}
 \label{fig:auc_vs_time}
 
+\label{fig:total_rocs}
+
+
 We then computed the ROC curve at each frame for each predictor, and the AUC of that curve. \todo[inline]{How much detail should I put about why we chose to use the AUC as a metric?} The AUCs at each time step were averaged across all test trajectories, and across all scenes. This formed the plot of mean AUC vs time ({figure n+1}). 
 %\figure{Ours vs kitani, show confidence }
 %\caption{Though Kitani et. al.'s algorithm has superior data, we see that our algorithm's uncertainty makes our algorithm safer to use than theirs.}
@@ -576,9 +579,6 @@ The running time per frame for each algorithm was generated using run times for 
 
 We see that under our current implementation, we are beating Kitani et. al.'s algorithm at the relevant time scales, and are running more than 3 times faster that their algorithm. More significantly, our algorithm runs at almost 60FPS. Figure \ref{fig:auc_vs_time} shows that at all time scales, our algorithm has very good predictive capability, and Figure \ref{fig:ours_grid} shows the qualitative merit of our predictions on several scenes.
 
-
-
-%\todo[inline]{The results section goes here.  Tables, charts.  All that shit.}
 
 
 \section{Conclusion} 
