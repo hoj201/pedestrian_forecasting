@@ -10,6 +10,8 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows,positioning}
 \usepackage{tikz-cd}
+\usepackage{comment}
+\usepackage{color}  % For Highlighting
 
 %  For theorems, etc
 \newtheorem{thm}{Theorem}
@@ -19,6 +21,7 @@
 \usepackage[numbers]{natbib}
 \usepackage{multicol}
 \usepackage[bookmarks=true]{hyperref}
+\newcommand{\Ram}[1]{\textcolor{red}{#1}}
 
 % Custom commands
 \newcommand{\pder}[2]{\ensuremath{\frac{\partial #1}{\partial #2}}}
@@ -208,44 +211,43 @@ Many of the choices we make are motivated by a balance between model quality and
 
 \subsection{The Sensor Model}
 At time $t=0$, we obtain a noisy reading of position, $\hat{x}_0 \in \mathbb{R}^2$.
-We assume that given the true position, $x_0 \in \mathbb{R}^2$, that the measurement $\hat{x}_0$ is independent of all other variables and the posterior $\Pr( \hat{x}_0 \mid x_0)$
-is something easily computable, such as a Gaussian.
-We assume the same measurement model for a measurement of initial velocity $\hat{v}_0$.
+We assume that given the true position, $x_0 \in \mathbb{R}^2$, that the measurement $\hat{x}_0$ is independent of all other variables \Ram{what other variables are there??} and the posterior $\Pr( \hat{x}_0 \mid x_0)$ is known.
+%something easily computable, such as a Gaussian.
+We assume a similar measurement model for the measured initial velocity $\hat{v}_0$.
 
 \subsection{The Agent Model}
 All agents are initialized within some rectangular region $D \subset \mathbb{R}^2$.
 We denote the true position of an agent by $x_t$.
 We should never expect to know $x_t$ and the nature of its evolution precisely, and any model should account for its own (inevitable) imprecision.
 We do this by fitting a deterministic model to the data and then smoothing the results.
-
 Specifically, our motion model consists of a modeled trajectory $\check{x}_t$, which is probabilistically related to the true position by $x_t$ via a known and easily computable posterior, $\Pr(x_t \mid \check{x}_t)$.
 
 Once initialized, agents come in two flavors: linear and nonlinear.
-The linear agent model evolves according to the equation $\check{x}_t = x_0 + t v_0$ and so we have the posterior
+The linear agent model evolves according to the equation $\check{x}_t = x_0 + t v_0$ and so we have the posterior:
 \begin{align*}
 	\Pr( \check{x}_t \mid x_0, v_0, lin) = \delta( \check{x}_t - x_0 - t v_0 ).
 \end{align*}
-We will also assume the posteriors, $\Pr(x_0 \mid lin)$ and $\Pr( v_0 \mid lin, x_0)$ are simple expressions such as Gaussians or uniform distributions
+\Ram{have to explain what $\delta$ is} We also assume the posteriors, $\Pr(x_0 \mid lin)$ and $\Pr( v_0 \mid lin, x_0)$ are known.
+%simple expressions such as Gaussians or uniform distributions
 
-If the agent is of nonlinear type, then we assume the dynamics take the form
+If the agent is of nonlinear type, then we assume the dynamics take the form:
 \begin{align}
 	\frac{d \check{x}_t}{dt} = s \cdot X_k(\check{x}_t) \label{eq:ode}
 \end{align}
-where $X_k$ is a vector-field from a finite collection $\{X_1, \dots, X_n\}$, and $s \in \mathbb{R}$.
+where $X_k$ is a vector-field from a finite collection $\{X_1, \dots, X_n\}$, and $s \in \mathbb{R}$. \Ram{probably will have to explain what a vector field is...}.
 More specifically, we assume that each $X_k$ has the property that $\| X_k(x) \| = 1$ for all $x \in D$.
 This property ensures that speed is constant in time, and it has the further advantage of being the (local) generator
 of solutions to an optimal navigation problem (see Appendix \ref{app:ioc}).
-The stationary vector-fields $X_1,\dots,X_n$ are learned from the data-set (see \S \ref{sec:implementation}).
+As we describe in \S \ref{sec:implementation}, the stationary vector-fields $X_1,\dots,X_n$ are learned from the dataset.
 
-It is assumed that $k$ and $s$ are both constant in time, so that $\check{x}_t$ is determined from the
-triple $(x_0,k,s)$ by integrating \eqref{eq:ode} with the initial condition $x_0$.
+It is assumed that $k$ and $s$ are both constant in time, so that $\check{x}_t$ is determined from the triple $(x_0,k,s)$ by integrating \eqref{eq:ode} with the initial condition $x_0$.
 In other words, we have the posterior
 \begin{align}
 	\Pr( \check{x}_t \mid x_0 , k , s) = \delta( \check{x}_t - \Phi^{t}_{k,s}( x_0) ) \label{eq:x_check | ksx}
 \end{align}
-where $\Phi^{t}_{k,s}$ is the flow-map of the vector field $s \,X_k$ up to time $t$.
-It is notable, that the variables $k,s$ and $x_0$ determine $v_0$.
-Thus we also have the posterior
+where $\Phi^{t}_{k,s}$ is the flow-map of the vector field $s \,X_k$ up to time $t$ \Ram{will probably have to explain what flow map is or at least cite something...}.
+Note the variables $k,s$ and $x_0$ determine $v_0$.
+Thus we have the posterior
 \begin{align}
 	\Pr( v_0 \mid k, s, x_0) = \delta( v_0 -s X_k( x_0) ). \label{eq:v | ksx}
 \end{align}
@@ -253,7 +255,8 @@ In summary, the agent models are parametrized by the set
 \begin{align}
 	\mathcal{M} = \{ lin \} \cup \left( \mathbb{R} \times \{ 1 , \dots, n \} \right) \label{eq:models}
 \end{align}
-and each flavor determines the sort of motion we should expect from the agent model.
+and each flavor determines the type of motion we should expect from the agent model.
+
 \subsection{The Full Model}
 Concatenating the measurement model with our motion models yields the Bayesian network, where $M \in \mathcal{M}$ denotes the model of the agent:
 \begin{align}
@@ -283,32 +286,31 @@ In particular
 	&= \left( \sum_{k} \int \Pr( x_t, k , s  \mid \hat{x}_0, \hat{v}_0 ) ds \right) \\
 	&\quad + \Pr( x_t, lin \mid \hat{x}_0, \hat{v}_0 ). \label{eq:decomposition}
 \end{align}
-The final term $\Pr( x_t, lin \mid \hat{x}_0, \hat{v}_0 )$ is expressible in terms of the error function, and would pose a negligible burden in terms of numerical computation.
-The primary computational burden derives from the sum $\sum_{k} \int \Pr( x_t, k , s  \mid \hat{x}_0, \hat{v}_0 ) ds$.
+The final term $\Pr( x_t, lin \mid \hat{x}_0, \hat{v}_0 )$ is expressible in terms of the error function \Ram{what error function?}, and would pose a negligible burden in terms of numerical computation.
+The primary computational burden derives from computing $\sum_{k} \int \Pr( x_t, k , s  \mid \hat{x}_0, \hat{v}_0 ) ds$.
 
 \section{Efficient Probability Propagation} \label{sec:efficient}
 As mentioned, many of the modeling choices were born out of a balance between accuracy and real-time computability.
 One of the major modeling choices, that agents move approximately according to a small number of ODEs, is the most prominent such choice.
-In this section we give some details on how this modeling choice can be leveraged to compute $\rho$ quickly, and accurately.
-In particular, we illustrate how to compute an accurate approximation of the the posterior $\Pr( x_t, k,s \mid \hat{x}_0, \hat{v}_0)$
-by integrating the vector-fields $X_1, \dots, X_n$ on a fixed grid.
+This section details how this modeling choice can be leveraged to compute $\rho$ quickly and accurately.
+In particular, we illustrate how to compute an accurate approximation of the the posterior $\Pr( x_t, k,s \mid \hat{x}_0, \hat{v}_0)$ by integrating the vector-fields $X_1, \dots, X_n$ on a fixed grid.
 
-To begin, from \eqref{eq:pgm} we can see that
+To begin, from \eqref{eq:pgm}  notice that
 \begin{align}
 	&\Pr( x_t, k,s,\mid \hat{x}_0, \hat{v}_0) \propto \Pr( x_t, k,s,\hat{x}_0, \hat{v}_0) \\
 	&= \int \Pr( x_t, \check{x}_t , \hat{x}_0, \hat{v}_0, k,s) d\check{x}_t \\
 	&= \int \Pr( x_t \mid \check{x}_t ) \Pr(\check{x}_t , \hat{x}_0, \hat{v}_0, k,s) d\check{x}_t \label{eq:convolve}
 \end{align}
 We see from the last line that $\Pr( x_t, k,s,\mid \hat{x}_0, \hat{v}_0)$ is proportional to a convolution of the joint distribution $\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s)$.
-Assuming, for the moment, that such a convolution can be performed efficiently we will focus on computation of $\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s)$.
+Assuming, for the moment, that such a convolution can be performed efficiently, we focus on computation of $\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s)$.
 
-Again, \eqref{eq:pgm} implies
+Again, \eqref{eq:pgm} implies  \Ram{this next set of equations seem broken during typesetting}
 \begin{align}
 	&\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s) = \int \Pr( \check{x}_t , x_0, \hat{x}_0, v_0, \hat{v}_0, k,s) dx_0 \, dv_0 \\
 		&=  \int \Pr( \check{x}_t \mid  x_0, k,s, v_0) \Pr( \hat{v}_0 \mid v_0) \Pr( v_0 \mid k,s,x_0) \\
 		& \hspace{20ex} \Pr(\hat{x}_0, x_0, k, s) dx_0 \, dv_0 \\
 \end{align}
-Substitution of \eqref{eq:x_check | ksx} and \eqref{eq:v | ksx} yeilds
+Substitution of \eqref{eq:x_check | ksx} and \eqref{eq:v | ksx} yields  \Ram{this next set of equations seem broken during typesetting}
 \begin{align}
 		&= \int \delta\left( \check{x}_t - \Phi_{k,s}^{t}( x_0) \right) \delta\left( v_0 - s X_k (x_0) \right) \\
 		&\hspace{20ex}\Pr( \hat{v}_0 \mid v_0) \Pr(\hat{x}_0, x_0,k, s) dx_0\, dv_0
@@ -337,15 +339,15 @@ for constants
 	c_{k,s,\alpha} =  \left. \left[ \Pr(\hat{x}_0, x_0, k, s) \Psi( \hat{v}_0 \mid k,s,x_0 )  | \Delta x | \right] \right|_{x_0 = x_0^\alpha} \label{eq:constants}
 \end{align}
 and error of magnitude $\| \varepsilon_0 \|_{L^1} \sim \mathcal{O}( | \Delta x | )$ with respect to the $L^1$-norm in $x_0$.
-The coefficients, $c_{k,s,\alpha}$, can be computed efficiently as product of the posteriors appearing in the PGM.
-Substitution of \eqref{eq:approximation 1} into the final line of \eqref{eq:push forward} yields
+The coefficients, $c_{k,s,\alpha}$, can be computed efficiently as product of the posteriors appearing in the PGM \Ram{this acronym was never defined...}.
+Substitution of \eqref{eq:approximation 1} into the final line of \eqref{eq:push forward} yields:
 \begin{align*}
 	\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s) = \sum_\alpha c_{k,s,\alpha} \delta \left( \check{x}_t - \Phi_{k,s}( x_0^\alpha) \right) + \varepsilon_t( \check{x}_t)
 \end{align*}
 where $\varepsilon_t( \check{x}_t) = \int \delta\left( \check{x}_t - \Phi_{k,s}^{t}( x_0) \right)  \varepsilon_0(x_0) dx_0$.
 The first term is computable by flowing the points of the grid, $x_0^\alpha$, by the evolution of the vector field $s X_k$.
 The second term, $\varepsilon_t$, may be viewed as an error term.
-In fact, this method of approximating $\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s)$ as a sum of Dirac-deltas is adaptive, in that the error term does not grow in total mass.
+In fact, this method of approximating $\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s)$ as a sum of Dirac-deltas is adaptive, in that the error term does not grow in total mass:
 
 \begin{thm} \label{thm:error}
 	The error term, $\varepsilon_t$, is of size $\mathcal{O}( \Delta x)$ in the $L^1$-norm, for fixed $k,s,\hat{x}_0$, and $\hat{v}_0$.
@@ -363,14 +365,13 @@ As $\varepsilon_0$ is of magnitude $\mathcal{O}( \Delta x)$ the result follows.
 \end{proof}
 
 While this allows us to compute posteriors over the output of our models, $\check{x}_t$.  We ultimately care about densities over the true position.
-The following corollary of Theorem \ref{thm:error} addresses this.
+The following corollary of Theorem \ref{thm:error} addresses this:
 \begin{cor} \label{cor:error}
-	Then the density
+	The density
 	\begin{align}
 		\sum_\alpha c_{k,s,\alpha} \left. \Pr( x_t \mid \check{x}_t ) \right|_{ \check{x}_t = \Phi_{k,s}^t( x_0^\alpha) } \label{eq:approximation 2}
 	\end{align}
-	is an approximation of $\Pr( x_t, k, s, \hat{x}_0, \hat{v}_0)$
-	with a constant in time error bound of magnitude $\mathcal{O}( |\Delta x| )$.
+	is an approximation of $\Pr( x_t, k, s, \hat{x}_0, \hat{v}_0)$ with a constant in time error bound of magnitude $\mathcal{O}( |\Delta x| )$.
 \end{cor}
 \begin{proof}
 	By \eqref{eq:convolve}
@@ -400,8 +401,8 @@ The following corollary of Theorem \ref{thm:error} addresses this.
 \end{proof}
 
 Corollary \ref{cor:error} justifies using \eqref{eq:approximation 2} as an approximation of $\Pr( x_t, k,s,\hat{x}_0, \hat{v}_0)$.
-So we've reduce the problem of computing $\rho_t(x_t)$ to the problem of computing the coefficient $c_{k,s,\alpha}$ and the points $\Phi_{k,s}^t(x_0^\alpha)$ for all $k,s$ and points $x_0^{\alpha} \in \Lambda$.
-We can reduce this burden further by exploiting the following symmetry.
+In particular, this reduces the problem of computing $\rho_t(x_t)$ to the problem of computing the coefficient $c_{k,s,\alpha}$ and the points $\Phi_{k,s}^t(x_0^\alpha)$ for all $k,s$ and points $x_0^{\alpha} \in \Lambda$.
+We can reduce this burden further by exploiting the following symmetry:
 \begin{thm} \label{thm:symmetry}
 	$\Phi_{k,s}^t = \Phi_{k,1}^{st}$.
 \end{thm}
@@ -413,10 +414,9 @@ We can reduce this burden further by exploiting the following symmetry.
 	Substitution of $t$ with $\tau = t/s$ yields $x(\tau) = \Phi_{k,1}^{s \tau} (x_0)$.
 	As $x(\tau) = \Phi_{k,s}^{\tau}(x_0)$ as well, the result follows.
 \end{proof}
+\noindent Thus, computation of $\Phi_{k,s}^t( x_0^{\alpha})$ for all $s$ and $t$ boils down to computing $\Phi_{k,1}^t(x_0^{\alpha})$ for all $t$.
 
-Thus, computation of $\Phi_{k,s}^t( x_0^{\alpha})$ for all $s$ and $t$ boils down to computing $\Phi_{k,1}^t(x_0^{\alpha})$ for all $t$.
-
-At this point, we may summarize the steps needed to compute an accurate approximation of $\rho_t(x_t)$.
+At this point, we may summarize the steps needed to compute an accurate approximation of $\rho_t(x_t)$ \Ram{maybe you want to make this an algorithm, but putting it in an algorithm box}:
 \begin{enumerate}
 	\item Compute the constants $c_{k,s,\alpha}$ from \eqref{eq:constants}.
 	\item Compute $\Phi_{k,1}^t(x_0^{\alpha})$ for each $k$ and each point $x_0^{\alpha}$ in the grid over a time-interval $[-T,T]$.
@@ -424,12 +424,12 @@ At this point, we may summarize the steps needed to compute an accurate approxim
 	\item Use Corollary \ref{cor:error} to obtain an $\mathcal{O}( | \Delta x | )$ approximation of $\Pr(x_t ,k,s,\hat{x}_0 , \hat{v}_0)$.
 	\item Use \eqref{eq:decomposition} to compute $\Pr( x_t, \hat{x}_0, \hat{v}_0)$ and normalize in the variable $x_t$ to obtain an $\mathcal{O}( | \Delta |)$ approximation of  $\rho_t( x_t)$. 
 \end{enumerate}
-The first two steps are where bulk of the floating point operations would occur.
-Fortunately, these two steps are embarassingly parallel.
+The first two steps are where the bulk of the work occurs.
+Fortunately, these two steps are embarrassingly parallel.
 For fixed $k$ and $\alpha$, the computation of $\Phi_{k,1}^t(x_0^{\alpha})$ on the interval $[-T,T]$ takes $\mathcal{O}(T)$ time using a an explicit finite difference scheme, and computation for each $(k,\alpha)$ may be performed in parallel with another such pair.
 Similarly, computation $c_{k,s,\alpha}$ constitutes a series of parallel function evaluations over triples $(k,s,\alpha)$.
 If the posteriors represented by the edge in \eqref{eq:pgm} are quick to compute then computation of all coefficients $c_{k,s,\alpha}$ is equally quick.
-More precisely, the full computation of our approximation of $\rho_t(x_t)$ would take $\mathcal{O}( T n | \Gamma | / N )$ time given $N$ processing units and $n$ vector fields.
+More precisely, the full computation of our approximation of $\rho_t(x_t)$ would take $\mathcal{O}( T n | \Gamma | / N )$ time given $N$ processing units and $n$ vector fields \Ram{you may just want to write all of this down as a theorem.}.
 
 
 %  Describe how $\Pr(x \mid k)$, the director-fields, and $\sigma_x$ are learned without using math.
@@ -450,7 +450,7 @@ More precisely, the full computation of our approximation of $\rho_t(x_t)$ would
   From this data we will tune the parameters of the model appropriately.
   The parameters of the model which must be chosen or learned are
   
-  \subsection{Learning the vector fields}
+  \subsection{Learning the Vector Fields}
   Before we can even begin to learn vector-fields, we must learn the number of such vector-fields we have.
   To do this we use a simple clustering algorithm on the trajectories, to categorize them into groups.
   In principal, any clustering algorithm could accomplish this.
