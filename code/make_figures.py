@@ -29,8 +29,6 @@ labels = dic['labels']
 
 
 
-
-
 agent = dic['agent']
 times = dic['times']
 
@@ -44,23 +42,26 @@ curve = bbts(test_set[agent])
 begin = curve[:, 0]
 end = curve[:, -1]
 
-fig, axarr = plt.subplots(nummth, numt, sharex='col', sharey='row')
-for ax in axarr.flatten():
-    ax.axis('off')
-for ct, ax in enumerate(axarr[0, :]):
-    ax.text(0, scene.height/2 + dic['fontspacing'], "t={}".format(times[ct]), ha="center", va="center",  size=dic['fontsize'], color=dic['fontcolor'])
-for ct, ax in enumerate(axarr[:, 0]):
-    ax.text(-scene.width/2 - dic['fontspacing'], 0, labels[ct], ha="center", va="center", rotation=90,  size=dic['fontsize'], color=dic['fontcolor'])
+#fig, axarr = plt.subplots(nummth, numt, sharex='col', sharey='row')
+#for ax in axarr.flatten():
+#    ax.axis('off')
+#for ct, ax in enumerate(axarr[0, :]):
+#    ax.text(0, scene.height/2 + dic['fontspacing'], "t={}".format(times[ct]), ha="center", va="center",  size=dic['fontsize'], color=dic['fontcolor'])
+#for ct, ax in enumerate(axarr[:, 0]):
+#    ax.text(-scene.width/2 - dic['fontspacing'], 0, labels[ct], ha="center", va="center", rotation=90,  size=dic['fontsize'], color=dic['fontcolor'])
 
 for parad in range(nummth):
     for time in range(numt):
-        tmp = axarr[parad][time]
+        plt.clf()
+        tmp = plt.gca()
+        tmp.axis("off")
         tmp.imshow(methods[parad][time].reshape(width, height).transpose(), origin="lower", extent=[-scene.width/2,scene.width/2,-scene.height/2,scene.height/2], cmap="viridis")
         tmp.imshow(mpimg.imread(reference), extent=[-scene.width/2, scene.width/2,-scene.height/2,scene.height/2], alpha=0.5)
         tmp.plot(curve[0, :times[time]], curve[1, :times[time]], c="white")
         tmp.scatter(begin[0], begin[1], marker="o", c="white", edgecolors="none", s=dic['markersize'])
         tmp.scatter(end[0], end[1], marker="x", c="white", edgecolors="none", s=dic['markersize'])
         tmp.scatter(curve[0, times[time]], curve[1, times[time]], marker="D", c="white",  edgecolors="none", s=dic['markersize'])
-plt.suptitle(dic['title'], size=dic['titlesize'])
-plt.subplots_adjust( wspace=dic['imgspacing'], hspace=dic['imgspacing'])
-plt.savefig("{}x{} grid.eps".format(nummth, numt), format="eps")
+        plt.savefig("images/{}_{}_split_{}_agent_{}_time_{}.eps".format(scene_name, labels[parad], split_index, agent, times[time]), format="eps", bbox_inches="tight")
+#plt.suptitle(dic['title'], size=dic['titlesize'])
+#plt.subplots_adjust( wspace=dic['imgspacing'], hspace=dic['imgspacing'])
+#plt.savefig("{}x{} grid.eps".format(nummth, numt), format="eps")

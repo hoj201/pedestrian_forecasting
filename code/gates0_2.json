@@ -1,0 +1,14 @@
+{'scene_number':3,
+ 'split_index':0,
+ 'folders': ['pickles/ours/', 'pickles/rand/'],
+ 'labels':['Ours', 'Random Walk'],
+ 'agent': 2,
+ 'times':[5,100,300],
+ 'title': "Comparison",
+ 'fontsize': 15,
+ 'markersize': 30,
+ 'imgspacing': -0.1,
+ 'fontspacing': 0.1,
+ 'fontcolor': 'black',
+ 'titlesize': 20
+}

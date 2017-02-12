@@ -3,10 +3,9 @@
 
 %  For math environment 
 \usepackage{amsmath,amssymb,amsthm}
-
+\usepackage{caption}
 %  For todo notes
 \usepackage{todonotes}
-
 %  For drawing Bayesian networks
 \usepackage{tikz}
 \usetikzlibrary{arrows,positioning}
@@ -89,7 +88,7 @@ as it forms a necessary step in assessing the risk (and therefore the cost) we s
 How can we minimize risk and maximize comfort if we can not predict it?
 ``But I don't want comfort. I want God, I want poetry, I want real danger, I want freedom, I want goodness. I want sin.''
 We'll, too bad! comfort and safety will soon rule with an AI-based iron fist! In this paper, we present a novel approach to probabilistic forecasting for pedestrians based on weighted sums of ordinary differential equations.
-The resulting algorithm is embarrassingly parallelizeable, and trained on historical trajectory information in a fixed scene.
+The resulting algorithm is embarrassingly parallelizeable, and trained on historical trajectory information within a fiscene.
 When compared with MDP-based methods, our algorithm appears to be superior from the standpoint of precision and recall.
 Civilization is sterilization
 \todo[inline]{for the love of god please don't forget to write the actual abstract}
@@ -532,16 +531,17 @@ More precisely, the full computation of our approximation of $\rho_t(x_t)$ would
   
  \subsection{ Precision, accuracy, etc.}
 In this section we establish our methods for evaluating the quality of our predictions, and comparing them against the model from [8] and a random walk.
-We implemented our model as well as the evaluation code in Python 2.6. Our implementation is available online.
+We implemented our model as well as the evaluation code in Python 2.6. Our implementation is available online \footnote{https://github.com/hoj201/pedestrian\_forecasting}.
 
-\todo[inline]{embed link to github} 
 %\begin{figure}
 %\includegraphics[width=0.5\textwidth]{figures/coupa_vis.eps}
 %\caption{Trajectory batches sampled for cross validation}
 %\label{fig:data_set}
 %\end{figure}
 
-Our data came from the Stanford Drone Dataset, in the form of hand annotated bounding boxes around agents (e.g. cars, pedestrians, bicycles). Our datasets used the bicycle data. We did a 10-fold cross validation on 4 different scenes of varying complexity. Our analysis used the same partitions of the trajectories for all three predictors. % shows the sample for the ``Coupa'' scene from the Stanford Dataset.
+
+
+Our data came from the Stanford Drone Dataset, in the form of hand annotated bounding boxes around agents (e.g. cars, pedestrians, bicycles). Our datasets used the bicycle data. We did a 10-fold cross validation on 4 different scenes of varying complexity. Our analysis used the same partitions of the trajectories for all three predictors. There .% shows the sample for the ``Coupa'' scene from the Stanford Dataset.
 
 \todo[inline]{include visualization of vector fields \& learned value function?}
 
@@ -553,29 +553,31 @@ The output distributions of the three algorithms were compared using their integ
 In keeping with our measurement model, the ground truth compared against was a grid that was identically zero except on a bounding box around the measurement at time $t$. The dimensions of the bounding box were the average bounding box dimensions in the training data set. 
 \todo[inline]{figure{plot}}
 \label{fig:auc_vs_time}
-
 \label{fig:total_rocs}
 
-
-We then computed the ROC curve at each frame for each predictor, and the AUC of that curve. \todo[inline]{How much detail should I put about why we chose to use the AUC as a metric?} The AUCs at each time step were averaged across all test trajectories, and across all scenes. This formed the plot of mean AUC vs time ({figure n+1}). 
 %\figure{Ours vs kitani, show confidence }
 %\caption{Though Kitani et. al.'s algorithm has superior data, we see that our algorithm's uncertainty makes our algorithm safer to use than theirs.}
 
-Disregarding small time scales where any algorithm will be reasonably accurate, our predictor behaves much better than any of the others at moderately large $t$, where we capture the  behavior of the agent without suffering the misplaced confidence observed in Kitani et. al.'s predictions. At large $t$, their aptitude comes from knowing the end point of the trajectory.  
-
+Disregarding small time scales where any algorithm will be reasonably accurate, our predictor behaves much better than any of the others at moderately large $t$, where we capture the  behavior of the agent without suffering the misplaced confidence observed in Kitani et. al.'s predictions. At large $t$, their aptitude comes from knowing the end point of the trajectory.
+\begin{table}
 \begin{center}
+	\caption{Runtimes}
+	\label{tab:time}
 	\renewcommand{\arraystretch}{1.5}% Spread rows out...
 	\begin{tabular}{||c | c c  c ||} 
 		\hline
 		& Our Predictor & Random Walk & Kitani et. al. \\ [0.5ex] 
 		\hline 
-		$\frac{\mathrm{t}}{\mathrm{frame}}$ & 0.0169s & flop & 0.0614s \\
+		$\frac{\mathrm{time}}{\mathrm{frame}}$ & 0.0169s & flop & 0.0614s \\
 		\hline
-	\label{tab:time}
+		
 	\end{tabular}
-\end{center}
+	
 
-The running time per frame for each algorithm was generated using run times for 400 frames, averaged across several agents and scenes, shown in \ref{tab:time}. Our algorithm implementation leveraged its embarassing parallelism using a relatively naive parallelization scheme, which split the computation of frames among 18 cores. It's highly probable that our run times would significantly decrease using an implementation of our algorithm in C that uses a more clever scheme. Kitani et. al. was timed with minimal modification to the source code provided by the authors. 
+\end{center}
+\end{table}
+
+The running time per frame for each algorithm was generated using run times for 400 frames, averaged across several agents and scenes, shown in Table~\ref{tab:time}. Our algorithm implementation leveraged its embarassing parallelism using a relatively naive parallelization scheme, which split the computation of frames among 18 cores. It's highly probable that our run times would significantly decrease using an implementation of our algorithm in C that uses a more clever scheme. Kitani et. al. was timed with minimal modification to the source code provided by the authors. 
 
 We see that under our current implementation, we are beating Kitani et. al.'s algorithm at the relevant time scales, and are running more than 3 times faster that their algorithm. More significantly, our algorithm runs at almost 60FPS. Figure \ref{fig:auc_vs_time} shows that at all time scales, our algorithm has very good predictive capability, and Figure \ref{fig:ours_grid} shows the qualitative merit of our predictions on several scenes.
 
