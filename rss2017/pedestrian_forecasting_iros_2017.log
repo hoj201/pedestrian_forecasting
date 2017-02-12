@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2015.5.24)  12 FEB 2017 16:25
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2015.5.24)  12 FEB 2017 16:30
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -884,22 +884,22 @@ Underfull \vbox (badness 1755) has occurred while \output is active []
 
 
 ]
-LaTeX Font Info:    Try loading font information for OMS+ptm on input line 186.
+LaTeX Font Info:    Try loading font information for OMS+ptm on input line 188.
 
 
 (/usr/local/texlive/2015/texmf-dist/tex/latex/psnfss/omsptm.fd
 File: omsptm.fd 
 )
 LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <10> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 186.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 188.
  [2]
-Underfull \hbox (badness 5490) in paragraph at lines 231--237
+Underfull \hbox (badness 5490) in paragraph at lines 233--239
 \OT1/ptm/m/n/10 where $\OML/cmm/m/it/10 X[]$ \OT1/ptm/m/n/10 is a vector-field 
 from a fi-nite col-lec-tion
  []
 
 
-Underfull \hbox (badness 3343) in paragraph at lines 299--302
+Underfull \hbox (badness 3343) in paragraph at lines 301--304
 \OT1/ptm/m/n/10 pro-por-tional to a con-vo-lu-tion of the joint dis-tri-bu-tion
 
  []
@@ -907,62 +907,62 @@ Underfull \hbox (badness 3343) in paragraph at lines 299--302
 [3] [4]
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 482.
+(hyperref)                removing `math shift' on input line 484.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\mathop' on input line 482.
+(hyperref)                removing `\mathop' on input line 484.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\mathgroup' on input line 482.
+(hyperref)                removing `\mathgroup' on input line 484.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\symoperators' on input line 482.
+(hyperref)                removing `\symoperators' on input line 484.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\nmlimits@' on input line 482.
+(hyperref)                removing `\nmlimits@' on input line 484.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `subscript' on input line 482.
+(hyperref)                removing `subscript' on input line 484.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\mid' on input line 482.
+(hyperref)                removing `\mid' on input line 484.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 482.
+(hyperref)                removing `math shift' on input line 484.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 482.
+(hyperref)                removing `math shift' on input line 484.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\mathop' on input line 482.
+(hyperref)                removing `\mathop' on input line 484.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\mathgroup' on input line 482.
+(hyperref)                removing `\mathgroup' on input line 484.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\symoperators' on input line 482.
+(hyperref)                removing `\symoperators' on input line 484.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\nmlimits@' on input line 482.
+(hyperref)                removing `\nmlimits@' on input line 484.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 482.
+(hyperref)                removing `math shift' on input line 484.
 
 
-Underfull \hbox (badness 3407) in paragraph at lines 490--493
+Underfull \hbox (badness 3407) in paragraph at lines 492--495
 []\OT1/ptm/m/n/10 We will let $[]\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 k\OT1/cmr/m/
 n/10 ) = (\OML/cmm/m/it/10 n \OT1/cmr/m/n/10 + 1)[]$ \OT1/ptm/m/n/10 and $[]\OT
 1/cmr/m/n/10 (\OML/cmm/m/it/10 s\OT1/cmr/m/n/10 ) \OMS/cmsy/m/n/10 ^^X
@@ -970,7 +970,7 @@ n/10 ) = (\OML/cmm/m/it/10 n \OT1/cmr/m/n/10 + 1)[]$ \OT1/ptm/m/n/10 and $[]\OT
 
 [5]
 
-LaTeX Warning: Reference `fig:ours_grid' on page 6 undefined on input line 583.
+LaTeX Warning: Reference `fig:ours_grid' on page 6 undefined on input line 585.
 
 
 [6] (./pedestrian_forecasting_iros_2017.bbl
@@ -996,68 +996,55 @@ Before submitting the final camera ready copy, remember to:
  uses only Type 1 fonts and that every step in the generation
  process uses the appropriate paper size.
 
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 644.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 646.
 [8
 
 ]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 644.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 646.
  (./pedestrian_forecasting_iros_2017.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 644.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 644.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 646.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 646.
+Package rerunfilecheck Info: File `pedestrian_forecasting_iros_2017.out' has no
+t changed.
+(rerunfilecheck)             Checksum: B73E7D4C7E05ACF2E4846EAF39153F99;1106.
 
-
-Package rerunfilecheck Warning: File `pedestrian_forecasting_iros_2017.out' has
- changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `pedestrian_forecasting_iros_2017.ou
-t':
-(rerunfilecheck)             Before: 4C082F9EF99CD7F62E58C570CDC3A383;1104
-(rerunfilecheck)             After:  8CA8CCD72C3A7CF4DCE1826B85C9BF65;1106.
 
 LaTeX Warning: There were undefined references.
 
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 644.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 646.
  ) 
 Here is how much of TeX's memory you used:
- 20275 strings out of 493089
- 395633 string characters out of 6134842
- 463010 words of memory out of 5000000
- 23324 multiletter control sequences out of 15000+600000
+ 20281 strings out of 493089
+ 395781 string characters out of 6134842
+ 463222 words of memory out of 5000000
+ 23329 multiletter control sequences out of 15000+600000
  43124 words of font info for 91 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 62i,16n,82p,635b,804s stack positions out of 5000i,500n,10000p,200000b,80000s
-pdfTeX warning (dest): name{table.caption.6} has been referenced but does not
- exist, replaced by a fixed one
-
-{/usr/local/texlive/2015/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/local/tex
-live/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/local/texl
-ive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx7.pfb></usr/local/texliv
-e/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/local/texlive
-/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/
-2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi5.pfb></usr/local/texlive/20
-15/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2015
-/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2015/t
-exmf-dist/fonts/type1/public/amsfonts/cm/cmr5.pfb></usr/local/texlive/2015/texm
-f-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/local/texlive/2015/texmf-d
-ist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2015/texmf-dist
-/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2015/texmf-dist/
-fonts/type1/public/amsfonts/cm/cmsy5.pfb></usr/local/texlive/2015/texmf-dist/fo
-nts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2015/texmf-dist/font
-s/type1/public/amsfonts/symbols/msbm10.pfb></usr/local/texlive/2015/texmf-dist/
-fonts/type1/urw/times/utmb8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type
-1/urw/times/utmbi8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw/tim
-es/utmr8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw/times/utmri8a
-.pfb>
-Output written on pedestrian_forecasting_iros_2017.pdf (8 pages, 238953 bytes).
+ 62i,16n,82p,635b,831s stack positions out of 5000i,500n,10000p,200000b,80000s
+{/usr/local/texlive/2015/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/local/t
+exlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/local/te
+xlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx7.pfb></usr/local/texl
+ive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/local/texli
+ve/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texliv
+e/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi5.pfb></usr/local/texlive/
+2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/20
+15/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2015
+/texmf-dist/fonts/type1/public/amsfonts/cm/cmr5.pfb></usr/local/texlive/2015/te
+xmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/local/texlive/2015/texmf
+-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2015/texmf-di
+st/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2015/texmf-dis
+t/fonts/type1/public/amsfonts/cm/cmsy5.pfb></usr/local/texlive/2015/texmf-dist/
+fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2015/texmf-dist/fo
+nts/type1/public/amsfonts/symbols/msbm10.pfb></usr/local/texlive/2015/texmf-dis
+t/fonts/type1/urw/times/utmb8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/ty
+pe1/urw/times/utmbi8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw/t
+imes/utmr8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw/times/utmri
+8a.pfb>
+Output written on pedestrian_forecasting_iros_2017.pdf (8 pages, 239419 bytes).
 
 PDF statistics:
- 344 PDF objects out of 1000 (max. 8388607)
- 311 compressed objects within 4 object streams
- 89 named destinations out of 1000 (max. 500000)
+ 345 PDF objects out of 1000 (max. 8388607)
+ 312 compressed objects within 4 object streams
+ 90 named destinations out of 1000 (max. 500000)
  155 words of extra memory for PDF output out of 10000 (max. 10000000)
 

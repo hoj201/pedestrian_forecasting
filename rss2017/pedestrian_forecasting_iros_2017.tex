@@ -171,6 +171,8 @@ The primary contributions of this paper are:
 
 \todo[inline]{I feel like your first contribution should be broken into two separate contributions: first you propose an accurate motion model. Second you describe a computationally expedient method for pedestrian forecasting. Third you prove hard bounds on how accurate your prediction is. I also don't think the second and two things are contributions they are just things that illustrate that the aforementioned contributions are actually useful contributions.}
 
+\todo[inline]{We also seem to focus our attention on image based methods where we work in 2D...is this typical? If so that may be worth mentioning early on...}
+
 We should note that there are a number of things that we do not do, that similar papers to ours typically include (notably \cite{Ballan2016,Karasev2016}).
 For example, we do not concern ourselves with detection and tracking. 
 Nor do we concern ourselves with updating our prediction as new data comes along.
@@ -185,28 +187,28 @@ The rest of the paper is organized as follows:
 \begin{itemize}
 	\item We describe our motion model as a Bayesian network (\S \ref{sec:model}).
 	\item We then describe how to compute probability densities for an agent's position efficiently (\S \ref{sec:efficient}).
-	\item Finally, we demonstrate the model by training and testing it on the Stanford drone dataset (\S \ref{sec:implementation}).
+	\item Finally, we demonstrate the model by training and testing it on the Stanford drone dataset (\S \ref{sec:implementation}). \todo[inline]{Have to cite the Stanford drone paper...}.
 \end{itemize}
 
 \section{Model}\label{sec:model}
-Our goal is to generate a time-dependent probability density over $\mathbb{R}^2$, which predicts the true location of an agent in the future.
+This paper's goal is to generate a time-dependent probability density over $\mathbb{R}^2$, which predicts the true location of an agent in the future.
 The input to the algorithm at runtime is a noisy measurement of position and velocity, $\hat{x}_0, \hat{v}_0 \in \mathbb{R}^2$.
 If the (unknown) location of agent at time $t$ is given by $x_t \in \mathbb{R}^2$, then the distribution we seek is the posterior $\rho_t(x_t) := \Pr( x_t \mid \hat{x}_0, \hat{v}_0 )$.
 
-In order to numerically compute $\rho_t$ we will build a probabilistic graphical model.
+To numerically compute $\rho_t$, we build a probabilistic graphical model.
 Our model assumes we have noisy information about agents, and each agent moves with some intention through the world in a way that is roughly approximated by a model.
-This allows our model to be divided into three parts:
+Our model can be divided into three parts:
 \begin{enumerate}
-	\item Reality:  This is parametrized by the true position for all time, $x_t$, and the initial velocity of the agent $v_0$.
-	\item The measurements:  This is represented by our sensor readings $\hat{x}_0$ and $\hat{v}_0$ and are independent of all other variables given the true initial position and velocity, $x_o, v_0$.
-	\item The motion model:  This is represented by a trajectory $\check{x}_t$ and depends on a variety of other variables which will be described shortly.
+	\item Reality: This is parametrized by the true position for all time, $x_t$, and the initial velocity of the agent $v_0$.
+	\item Measurements:  This is represented by our sensor readings $\hat{x}_0$ and $\hat{v}_0$ and are independent of all other variables given the true initial position and velocity, $x_o, v_0$.
+	\item Motion Model: This is represented by a trajectory $\check{x}_t$ and depends on a variety of other variables which are described below.
 \end{enumerate}
-We will now elaborate on these three components, and relate them to one another.
-Many of the choices we make will be motivated by a balance between model quality and computational speed (see \S \ref{sec:efficient}).
+We now elaborate on these three components, and relate them to one another.
+Many of the choices we make are motivated by a balance between model quality and computational speed (see \S \ref{sec:efficient}).
 
 \subsection{The Sensor Model}
 At time $t=0$, we obtain a noisy reading of position, $\hat{x}_0 \in \mathbb{R}^2$.
-We assume that given the true position, $x_0$, that the measurement $\hat{x}_0$ is independent of all other variables and the posterior $\Pr( \hat{x}_0 \mid x_0)$
+We assume that given the true position, $x_0 \in \mathbb{R}^2$, that the measurement $\hat{x}_0$ is independent of all other variables and the posterior $\Pr( \hat{x}_0 \mid x_0)$
 is something easily computable, such as a Gaussian.
 We assume the same measurement model for a measurement of initial velocity $\hat{v}_0$.
 
