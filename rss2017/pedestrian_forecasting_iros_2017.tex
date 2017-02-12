@@ -37,7 +37,7 @@
 \title{Real-Time Probabilistic Pedestrian Forecasting}
 
 % You will get a Paper-ID when submitting a pdf file to the conference system
-\author{Author Names Omitted for Anonymous Review. Paper-ID [add your ID here]}
+\author{We can put our names in here, also lets make sure we are actually using the IROS template...}
 
 %\author{\authorblockN{Michael Shell}
 %\authorblockA{School of Electrical and\\Computer Engineering\\
@@ -91,10 +91,10 @@ We'll, too bad! comfort and safety will soon rule with an AI-based iron fist! In
 The resulting algorithm is embarrassingly parallelizeable, and trained on historical trajectory information within a fiscene.
 When compared with MDP-based methods, our algorithm appears to be superior from the standpoint of precision and recall.
 Civilization is sterilization
-\todo[inline]{for the love of god please don't forget to write the actual abstract}
+\todo[inline]{Seriously lets make this real.}
 \end{abstract}
 
-\IEEEpeerreviewmaketitle
+%\IEEEpeerreviewmaketitle
 
 \section{Introduction}
 
@@ -105,7 +105,7 @@ First, since safety is paramount, the prediction algorithm should avoid misclass
 Second, the predictions must be generated at faster than real-time rates to ensure that they can be used within a control loop.
 Finally, long-time horizon forecasts are preferable since they can make planning over long-time horizons feasible, which can reduce the conservativeness and aggressiveness of controllers \cite{}.
 
-\todo[inline]{Should we include a figure here showing what our algorithm looks like?}
+\todo[inline]{We should include a figure here showing what our algorithm looks like?}
 
 This paper presents an algorithm for real-time, long-term prediction of pedestrian behavior which can subsequently be used by autonomous agents.
 
@@ -117,51 +117,48 @@ The presented approach significantly outperforms...
 
 \subsection{Background}
 Most forecasting algorithm are well characterized by the underlying evolution model they adopt.
-Such models come in a variety flavors, and are adapted to the task at hand (e.g. see \cite{Helbing1992} for crowd modeling).
-The present article concerns the construction of useful motion models for pedestrians which can aide the task of real-time forecasting for autonomous agents.
-The most simple approach to forecasting with motion models would be to forward integrate a Kalman filter \cite{kalman1960new} based upon the observed heading.
-Over short time scales this may perform quite well, but the resulting distribution will devolve into a large Gaussian mass over longer time scales.
-\citet{Schneider2013} found this quality to be a typical property of the extended Kalman filter and Kalman filter with deterministic nonlinear drift.
-In particular, such models seemed useless for forecasts beyond $2$ seconds in the future, especially when the pedestrian made a turn.
+Such models come in a variety flavors, and are adapted to the task at hand (e.g. crowd modeling \cite{Helbing1992} ).
+This paper is focused on the construction of useful motion models for pedestrians that can aide the task of real-time forecasting for autonomous agents.
+The simplest approach to forecasting with motion models forward integrates a Kalman filter \cite{kalman1960new} based upon the observed heading.
+Over short time scales this method may perform well, but the resulting distribution devolves into a Gaussian mass over longer time scales.
+This is a typical property of the extended Kalman filter and Kalman filter with deterministic nonlinear drift \cite{Schneider2013}.
+In particular, such models are less useful for forecasts beyond $2$ seconds in the future, especially when a pedestrian turns.
 Nonetheless, these stochastic linear models serve as a reasonable default in the absence of any contextual knowledge.
-For example, \citet{Kooji2014} uses a motion model of this variety parametrized by some latent variables, such as the pedestrians awareness of nearby vehicles, to predict when and how a pedestrian may cross a street.
+For example, \citet{Kooji2014} uses a motion model of this variety, parametrized by latent variables, such as the pedestrian's awareness of nearby vehicles, to predict when and how a pedestrian may cross a street without leveraging any environmental context.
 
-While \cite{Kooji2014} illustrated the use of contextual information, such as the pedestrian's own awareness of her surroundings, the motion model did not leverage any data from the environment.
-Perhaps this is a strength when no such data is available, but it is a lost opportunity otherwise.
-More sophisticated models that attempt to leverage environmental data include inverse optimal control (IOC) based models such as \cite{Ziebart2008,Ziebart2009,Kitani2012,Karasev2016}.
+More sophisticated models that attempt to leverage environmental data include inverse optimal control (IOC) based models \cite{Ziebart2008,Ziebart2009,Kitani2012,Karasev2016}.
 These IOC models have the often desirable property of attributing intention and goal-seeking behavior to the agents.
-For example \citet{Kitani2012} extracted a very simple Markov decision process (MDP) evolving on a finite 2D lattice by training on a small collection of features and trajectories.
-The resulting MDP is very light weight, parametrized by only a small collection of coefficients equal in number to that of the feature maps.
-Secondly, given an initial and final state, the probability distribution of the pedestrian at intermediate states is easily computable because it basically comes down to matrix multiplication.
-The speed of this computation, makes the algorithm of \cite{Kitani2012} a reasonable baseline for comparison for the algorithm which will be presented in this paper.
+For example, \citet{Kitani2012} extracted a Markov Decision Process (MDP) evolving on a finite 2D lattice by training on a small collection of features and trajectories.
+The resulting MDP is light-weight since it is parametrized by only a small collection of coefficients equal in number to that of the feature maps.
+Moreover, given an initial and final state, the probability distribution of the pedestrian at intermediate states is computable using matrix multiplication.
+The speed of this computation, makes the algorithm of \cite{Kitani2012} a reasonable baseline for comparison for the algorithm that is presented in this paper.
 
-Since the publication of \cite{Kitani2012} a few generalizations of their approach have be born.
-For example, time dependent information, such as traffic signals, are incorporated in \cite{Karasev2016}, by relaxing the Markov property and considering a switched Markov process.
-\citet{Karasev2016} generalizes \cite{Kitani2012} by replacing the finite-state space with a continuous one, and using a Markov jump process in the motion model.
-The desired posteriors were difficult if not impossible to compute in closed for, and so they used a sample based method: a Rao-Blackwellized particle filter\cite{Doucet2000}.
+The approach presented by \citet{Kitani2012} has been generalized in a variety of ways.
+For example, time-dependent information, such as traffic signals, are incorporated by \citet{Karasev2016}, by relaxing the Markov property and considering a switched Markov process.
+Other generalizations by \citet{Karasev2016} include replacing the finite-state space with a continuous one, and using a Markov jump process in the motion model.
+Unfortunately the desired posteriors are difficult to compute in closed form, and as a result a sampling based method: a Rao-Blackwellized particle filter~\cite{Doucet2000} is employed.
 The resulting accuracy of such methods can only be known in a probabilistic sense in that the error bounds are themselves random variables.
-Moreover, high accuracy can come at a high computational cost prohibitive for real-time computation.
-Speed and analytic error bounds were not a primary objective of \cite{Karasev2016}, and thus were not addressed in that publication.
+Moreover, accuracy can come at a large computational expensive which is prohibitive during real-time computation.
+%Speed and analytic error bounds were not a primary objective of \cite{Karasev2016}, and thus were not addressed in that publication.
 
-\todo[inline]{I could also mention \emph{Inferring ``Dark Matter'' and ``Dark Energy'' from Videos}.  It is another IOC model, and is cited in \cite{Ballan2016}.  However, this paper is awful, and I don't even know how to describe it if we presumable wanted to describe the results.  Here is an actual sentence from the results section of the paper: \emph{``The trajectory prediction (NLL and MHD) is more accurate is constrained scene (1 2) than free scenes (3 4).''}.}
+%\todo[inline]{I could also mention \emph{Inferring ``Dark Matter'' and ``Dark Energy'' from Videos}.  It is another IOC model, and is cited in \cite{Ballan2016}.  However, this paper is awful, and I don't even know how to describe it if we presumable wanted to describe the results.  Here is an actual sentence from the results section of the paper: \emph{``The trajectory prediction (NLL and MHD) is more accurate is constrained scene (1 2) than free scenes (3 4).''}.}
 
-One difficulty which IOC models can suffer occurs when the initial and final conditions are very separated across a complex domains, analogous to the notion of conjugate points in optimal control.
-This can occur when agents make very sharp turns due to intermediate goals on the way toward reaching their final destination.
+One limitation of IOC models occurs when the initial and final conditions are separated across a complex domains, analogous to the notion of conjugate points in optimal control.
+\todo[inline]{What is the limitation?}
+This can occur when agents make sharp turns due to intermediate goals on the way toward reaching their final destination.
 To address this, \citet{Ballan2016} adopted an empiricists approach, computing ``turning maps'' and attempting to infer how agents behave in a given patch based on it's feature and the behavior of previous agents on similar patches.
-Similar to \cite{Karasev2016}, the motion model was a Markov jump process and the relevant posteriors were approximated using sample based techniques.
-Again, the same criticisms in regards to speed an accuracy lodged at \cite{Karasev2016} can also be lodged at \cite{Ballan2016}, and again, we should note that speed/high accuracy were not a priority there.
-However, the motion model of \citet{Ballan2016} was merely an illustrative choice in the more ambitious pursuit of creating a flexible paradigm for pedestrian forecasting.
-In particular, a motion model on one scene ought to be transferable to other scenes, and the representation of the ``objects'' in the scene ought to be flexible in order for behavior to be robust.
-Said differently, the way a forecasting algorithm executes ``knowledge transfer'' should not depend too rigidly on the finitely many labels some engineer managed to think of in a late-night brainstorming session.
+Similar to \citet{Karasev2016}, the motion model was a Markov jump process and the relevant posteriors were approximated using sample based techniques.
+%Again, the same criticisms in regards to speed an accuracy lodged at \cite{Karasev2016} can also be lodged at \cite{Ballan2016}, and again, we should note that speed/high accuracy were not a priority there.
+The objective of \citet{Ballan2016} was not only prediction, but the development of a motion model learned on one scene that could then subsequently be transferred to other scenes which required representations of ``objects'' in the scene that did not depend rigidly on the finitely many labels some engineer managed to think of in a late-night brainstorming session.
 The algorithm should be able to infer how to behave near a roundabout by using prior knowledge of more fundamental building blocks like pavement, curbs, and asphalt.
 
 Along similar lines to \cite{Ballan2016}, \citet{Walker2014} constructed an unsupervised approach towards forecasting.
 As before, the motion model was a Markov jump process, and the training set was a collection unlabeled videos.
 Unlike all the approaches mentioned thus far, the agents in \cite{Walker2014} were not manually specified.
 They were learned by detecting which sort of patches of video were likely to move, and how.
-The resulting predictions outperformed \cite{Kitani2012} when comparing the most likely path with the ground truth in mean Hausdorff distance.
+The resulting predictions outperformed \cite{Kitani2012} when comparing the most likely path with the ground truth using the mean Hausdorff distance.
 As in all methods mentioned thus far, computational speed and accuracy of any predicted posteriors were not a concern of \citet{Walker2014}, so no such results were reported.
-However, since the motion model was a Markov jump process we should expect the same painful trade-off between error and speed to occur as in \cite{Karasev2016} and \cite{Ballan2016}.
+However, since the motion model was a Markov jump process which required the application of a sample based technique, we should expect the same painful trade-off between error and speed to occur as in \cite{Karasev2016} and \cite{Ballan2016}.
 
 \subsection{Contributions}
 
@@ -169,22 +166,26 @@ The primary contributions of this paper are:
 \begin{itemize}
 	\item We provide a computationally expedient and accurate motion model for pedestrian forecasting.
 	\item We evaluate the precision, accuracy, and recall of our model
-	\item We compare our performance to that of a linear predictor and the MDP model of \cite{Kitani2012},
-	both in terms of precision and recall as well as computation time.
+	\item We compare our performance to that of a linear predictor and the MDP model of \cite{Kitani2012}, both in terms of precision and recall as well as computation time.
 \end{itemize}
 
+\todo[inline]{I feel like your first contribution should be broken into two separate contributions: first you propose an accurate motion model. Second you describe a computationally expedient method for pedestrian forecasting. Third you prove hard bounds on how accurate your prediction is. I also don't think the second and two things are contributions they are just things that illustrate that the aforementioned contributions are actually useful contributions.}
+
 We should note that there are a number of things that we do not do, that similar papers to ours typically include (notably \cite{Ballan2016,Karasev2016}).
-For example, we do not concern ourselves with detection and tracking. Nor do we concern ourselves with updating our prediction as new data comes along.
+For example, we do not concern ourselves with detection and tracking. 
+Nor do we concern ourselves with updating our prediction as new data comes along.
+\todo[inline]{You may want to mention that this is a straightforward extension but you don't consider it here}.
 Such questions are important, but beyond the scope of this paper, which concerns the underlying dynamic model.
 Papers such as \cite{Ballan2016,Karasev2016} pose a more comprehensive approach to pedestrian forecasting, where the motion model is a choice to be made.
 This paper presents one such choice.
-It is our opinion, that the motion model of many practical applications of forecasting ought to run in real time and that any relevant approximations ought to be equipped with hard error bounds.
+\todo[inline]{I don't understand what you are trying to say in the previous three sentences. As I understand it our goal is construct a model of the motion, a method to efficiently compute the future state and provide hard bounds that can then be used during autonomous vehicle control. May be I am misunderstanding it, but you make it seem like those two previous approaches are agnostic to the model and we on the other hand are very focused on the model. I'd argue the opposite is true.}.
+It is our opinion, that the motion model for many practical applications of forecasting must run in real-time and that any relevant approximations ought to be equipped with hard error bounds to ensure safety.
 
 The rest of the paper is organized as follows:
 \begin{itemize}
-	\item We describe our motion model as a Bayesian network. (\S \ref{sec:model})
-	\item We then describe how to compute probability densities for an agent's position efficiently. (\S \ref{sec:efficient})
-	\item Finally, we demonstrate the model by training and testing it on the Stanford drone dataset. (\S \ref{sec:implementation})
+	\item We describe our motion model as a Bayesian network (\S \ref{sec:model}).
+	\item We then describe how to compute probability densities for an agent's position efficiently (\S \ref{sec:efficient}).
+	\item Finally, we demonstrate the model by training and testing it on the Stanford drone dataset (\S \ref{sec:implementation}).
 \end{itemize}
 
 \section{Model}\label{sec:model}

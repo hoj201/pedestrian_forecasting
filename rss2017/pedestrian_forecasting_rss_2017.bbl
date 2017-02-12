@@ -1,0 +1,60 @@
+\begin{thebibliography}{8}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Abraham et~al.(2009)Abraham, Marsden, and Ratiu]{MTA}
+R~Abraham, J~E Marsden, and T~S Ratiu.
+\newblock \emph{Manifolds, Tensor Analysis, and Applications}, volume~75 of
+  \emph{Applied Mathematical Sciences}.
+\newblock Spinger, 3rd edition, 2009.
+
+\bibitem[Ballan et~al.(2016)Ballan, Castaldo, Alahi, Palmieri, and
+  Savarese]{Ballan2016}
+Lamberto Ballan, Francesco Castaldo, Alexandre Alahi, Francesco Palmieri, and
+  Silvio Savarese.
+\newblock Knowledge transfer for scene-specific motion prediction.
+\newblock In \emph{Proc. of European Conference on Computer Vision (ECCV)},
+  Amsterdam, Netherlands, October 2016.
+\newblock URL \url{http://arxiv.org/abs/1603.06987}.
+
+\bibitem[Helbing(1992)]{Helbing1992}
+D~Helbing.
+\newblock A fluid-dynamic model for the movement of pedestrians.
+\newblock \emph{Complex Systems}, 6:\penalty0 391--415, 1992.
+
+\bibitem[Kalman(1960)]{kalman1960new}
+R.E. Kalman.
+\newblock A new approach to linear filtering and prediction problems.
+\newblock \emph{Journal of Basic Engineering}, 82\penalty0 (1):\penalty0
+  35--45, 1960.
+
+\bibitem[Karasev et~al.(2016)Karasev, Ayvaci, Heisele, and Soatto]{Karasev2016}
+V.~Karasev, A.~Ayvaci, B.~Heisele, and S.~Soatto.
+\newblock Intent-aware long-term prediction of pedestrian motion.
+\newblock \emph{Proceedings of the International Conference on Robotics and
+  Automation (ICRA)}, May 2016.
+
+\bibitem[Kitani et~al.(2012)Kitani, Ziebart, Bagnell, and Hebert]{Kitani2012}
+Kris~M. Kitani, Brian~D. Ziebart, James~Andrew Bagnell, and Martial Hebert.
+\newblock \emph{Activity Forecasting}, pages 201--214.
+\newblock Springer Berlin Heidelberg, Berlin, Heidelberg, 2012.
+\newblock ISBN 978-3-642-33765-9.
+\newblock \doi{10.1007/978-3-642-33765-9_15}.
+
+\bibitem[Ziebart et~al.(2008)Ziebart, Maas, Bagnell, and Dey]{Ziebart2008}
+Brian~D. Ziebart, Andrew Maas, J.~Andrew Bagnell, and Anind~K. Dey.
+\newblock Maximum entropy inverse reinforcement learning.
+\newblock In \emph{Proc. AAAI}, pages 1433--1438, 2008.
+
+\bibitem[Ziebart et~al.(2009)Ziebart, Ratliff, Gallagher, Mertz, Peterson,
+  Bagnell, Hebert, Dey, and Srinivasa]{Ziebart2009}
+Brian~D. Ziebart, Nathan Ratliff, Garratt Gallagher, Christoph Mertz, Kevin
+  Peterson, J.~Andrew Bagnell, Martial Hebert, Anind~K. Dey, and Siddhartha
+  Srinivasa.
+\newblock Planning-based prediction for pedestrians.
+\newblock In \emph{IROS}, 2009.
+
+\end{thebibliography}

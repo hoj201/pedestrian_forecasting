@@ -8,10 +8,9 @@
 \BOOKMARK [1][-]{section.3}{Efficient Probability Propagation}{}% 8
 \BOOKMARK [1][-]{section.4}{Implementation and Experimental results}{}% 9
 \BOOKMARK [2][-]{subsection.4.1}{Learning the vector fields}{section.4}% 10
-\BOOKMARK [2][-]{subsection.4.2}{Learning Pr\( x0 M\) and Pr\(M\)}{section.4}% 11
-\BOOKMARK [2][-]{subsection.4.3}{Learning the measurement model}{section.4}% 12
-\BOOKMARK [2][-]{subsection.4.4}{Learning the noise model}{section.4}% 13
-\BOOKMARK [2][-]{subsection.4.5}{ Precision, accuracy, etc.}{section.4}% 14
-\BOOKMARK [1][-]{section.5}{Conclusion}{}% 15
-\BOOKMARK [1][-]{section*.12}{Appendix}{}% 16
-\BOOKMARK [2][-]{subsection.Appendix.A.1}{Inverse Optimal Control}{section*.12}% 17
+\BOOKMARK [2][-]{subsection.4.2}{Learning the posteriors}{section.4}% 11
+\BOOKMARK [2][-]{subsection.4.3}{Learning the variance parameters}{section.4}% 12
+\BOOKMARK [2][-]{subsection.4.4}{ Precision, accuracy, etc.}{section.4}% 13
+\BOOKMARK [1][-]{section.5}{Conclusion}{}% 14
+\BOOKMARK [1][-]{section*.6}{Appendix}{}% 15
+\BOOKMARK [2][-]{subsection.Appendix.A.1}{Inverse Optimal Control}{section*.6}% 16
