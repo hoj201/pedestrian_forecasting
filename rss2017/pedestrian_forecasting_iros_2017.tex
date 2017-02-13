@@ -22,6 +22,8 @@
 %\usepackage{multicol}
 \usepackage[bookmarks=true]{hyperref}
 \newcommand{\Ram}[1]{\textcolor{red}{#1}}
+\newcommand{\Hoj}[1]{\textcolor{blue}{#1}}
+
 
 % Custom commands
 \newcommand{\pder}[2]{\ensuremath{\frac{\partial #1}{\partial #2}}}
@@ -92,16 +94,13 @@ Other generalizations by \cite{Karasev2016} include replacing the finite-state s
 Unfortunately the desired posteriors are difficult to compute in closed form, and as a result a sampling based method: a Rao-Blackwellized particle filter~\cite{Doucet2000} is employed.
 The resulting accuracy of such methods can only be known in a probabilistic sense in that the error bounds are themselves random variables.
 Moreover, accuracy can come at a large computational expensive which is prohibitive during real-time computation.
-%Speed and analytic error bounds were not a primary objective of \cite{Karasev2016}, and thus were not addressed in that publication.
 
-%\todo[inline]{I could also mention \emph{Inferring ``Dark Matter'' and ``Dark Energy'' from Videos}.  It is another IOC model, and is cited in \cite{Ballan2016}.  However, this paper is awful, and I don't even know how to describe it if we presumable wanted to describe the results.  Here is an actual sentence from the results section of the paper: \emph{``The trajectory prediction (NLL and MHD) is more accurate is constrained scene (1 2) than free scenes (3 4).''}.}
 
 One limitation of IOC models occurs when the initial and final conditions are separated across a complex domains, analogous to the notion of conjugate points in optimal control.
 In cases where there are many locally optimal solutions between a start and end goal, IOC type methods can yield non-robust and imprecise behavior.
 This can occur, for example, when agents make sharp turns due to intermediate criteria on the way toward reaching their final destination.
 To address this, \cite{Ballan2016} adopted an empiricists approach, computing ``turning maps'' and attempting to infer how agents behave in a given patch based on it's feature and the behavior of previous agents on similar patches.
 Similar to \cite{Karasev2016}, the motion model was a Markov jump process and the relevant posteriors were approximated using sample based techniques.
-%Again, the same criticisms in regards to speed an accuracy lodged at \cite{Karasev2016} can also be lodged at \cite{Ballan2016}, and again, we should note that speed/high accuracy were not a priority there.
 The objective of \cite{Ballan2016} was not only prediction, but the development of a motion model learned on one scene that could then subsequently be transferred to other scenes which required representations of ``objects'' in the scene that did not depend rigidly on the finitely many labels some engineer managed to think of in a late-night brainstorming session.
 The algorithm should be able to infer how to behave near a roundabout by using prior knowledge of more fundamental building blocks like pavement, curbs, and asphalt.
 
@@ -153,10 +152,17 @@ Our model can be divided into three parts:
 We now elaborate on these three components, and relate them to one another.
 Many of the choices we make are motivated by a balance between model quality and computational speed (see \S \ref{sec:efficient}).
 
+\subsection{The variables of the model}
+The model concerns the position of an agent $x_t \in \mathbb{R}^2$ for $t \in [0,T]$ for some $T>0$.
+We denote the position and velocity at time $t=0$ by $x_0$ and $v_0$ respectively.
+At $t=0$, we obtain a measurement of position and velocity, denotes by $\hat{x}_0$ and $\hat{v}_0$.
+Lastly, we have a variety of motion models, parametrized by a set $\mathcal{M}$ (described in the sequel).
+For each model $m \in \mathcal{M}$, a trajectory $\check{x}_t$ given the initial position and velocity $x_0$ and $v_0$.
+All these variables are probabilistically related to one another in a (sparse) Bayesian network, which we will describe next.
+
 \subsection{The Sensor Model}
 At time $t=0$, we obtain a noisy reading of position, $\hat{x}_0 \in \mathbb{R}^2$.
-We assume that given the true position, $x_0 \in \mathbb{R}^2$, that the measurement $\hat{x}_0$ is independent of all other variables \Ram{what other variables are there??} and the posterior $\Pr( \hat{x}_0 \mid x_0)$ is known.
-%something easily computable, such as a Gaussian.
+We assume that given the true position, $x_0 \in \mathbb{R}^2$, that the measurement $\hat{x}_0$ is independent of all other variables and the posterior $\Pr( \hat{x}_0 \mid x_0)$ is known.
 We assume a similar measurement model for the measured initial velocity $\hat{v}_0$.
 
 \subsection{The Agent Model}
@@ -169,31 +175,34 @@ Specifically, our motion model consists of a modeled trajectory $\check{x}_t$, w
 Once initialized, agents come in two flavors: linear and nonlinear.
 The linear agent model evolves according to the equation $\check{x}_t = x_0 + t v_0$ and so we have the posterior:
 \begin{align*}
-	\Pr( \check{x}_t \mid x_0, v_0, lin) = \delta( \check{x}_t - x_0 - t v_0 ).
+	\Pr( \check{x}_t \mid x_0, v_0, lin) = \delta( \check{x}_t - x_0 - t v_0 ) d\check{x}_t.
 \end{align*}
-\Ram{have to explain what $\delta$ is} We also assume the posteriors, $\Pr(x_0 \mid lin)$ and $\Pr( v_0 \mid lin, x_0)$ are known.
-%simple expressions such as Gaussians or uniform distributions
+where $\delta( \cdot )$ denotes the multivariate Dirac-delta distribution.
+We also assume the posteriors, $\Pr(x_0 \mid lin)$ and $\Pr( v_0 \mid lin, x_0)$ are known.
 
 If the agent is of nonlinear type, then we assume the dynamics take the form:
 \begin{align}
 	\frac{d \check{x}_t}{dt} = s \cdot X_k(\check{x}_t) \label{eq:ode}
 \end{align}
-where $X_k$ is a vector-field from a finite collection $\{X_1, \dots, X_n\}$, and $s \in \mathbb{R}$. \Ram{probably will have to explain what a vector field is...}.
+where $X_k$ is a vector-field\footnote{A vector-field, generally speaking, is an assignment of a velocity to each position in some space.  A vector-field on $\mathbb{R}^n$ is nothing but a map from $\mathbb{R}^n \to \mathbb{R}^n$.} drawn from a finite collection $\{X_1, \dots, X_n\}$, and $s \in \mathbb{R}$.
 More specifically, we assume that each $X_k$ has the property that $\| X_k(x) \| = 1$ for all $x \in D$.
 This property ensures that speed is constant in time, and it has the further advantage of being the (local) generator
 of solutions to an optimal navigation problem (see Appendix \ref{app:ioc}).
 As we describe in \S \ref{sec:implementation}, the stationary vector-fields $X_1,\dots,X_n$ are learned from the dataset.
 
 It is assumed that $k$ and $s$ are both constant in time, so that $\check{x}_t$ is determined from the triple $(x_0,k,s)$ by integrating \eqref{eq:ode} with the initial condition $x_0$.
-In other words, we have the posterior
+This insight allows us to use the motion model to generate the posterior for $\Pr( \check{x}_t \mid x_0, k, s)$.
+For each initial condition, $x_0$, we can solve \eqref{eq:ode} as an initial value problem, to obtain a point $\check{x}_t$ with initial condition $\check{x}_0 = x_0$.
+This process, which takes $\check{x}_0$ and outputs $\check{x}_t$, constitutes a map which is termed the flow-map \cite[Ch 4]{MTA}, and which we denote by $\Phi_{k,s}^t$.
+Explicitly, we have the posterior
 \begin{align}
-	\Pr( \check{x}_t \mid x_0 , k , s) = \delta( \check{x}_t - \Phi^{t}_{k,s}( x_0) ) \label{eq:x_check | ksx}
+	\Pr( \check{x}_t \mid x_0 , k , s) = \delta( \check{x}_t - \Phi^{t}_{k,s}( x_0) )  d\check{x}_t \label{eq:x_check | ksx}
 \end{align}
-where $\Phi^{t}_{k,s}$ is the flow-map of the vector field $s \,X_k$ up to time $t$ \Ram{will probably have to explain what flow map is or at least cite something...}.
+where $\Phi^{t}_{k,s}$ is the flow-map of the vector field $s \,X_k$ up to time $t$.
 Note the variables $k,s$ and $x_0$ determine $v_0$.
 Thus we have the posterior
 \begin{align}
-	\Pr( v_0 \mid k, s, x_0) = \delta( v_0 -s X_k( x_0) ). \label{eq:v | ksx}
+	\Pr( v_0 \mid k, s, x_0) = \delta( v_0 -s X_k( x_0) ) dv_0. \label{eq:v | ksx}
 \end{align}
 In summary, the agent models are parametrized by the set
 \begin{align}
@@ -230,7 +239,7 @@ In particular
 	&= \left( \sum_{k} \int \Pr( x_t, k , s  \mid \hat{x}_0, \hat{v}_0 ) ds \right) \\
 	&\quad + \Pr( x_t, lin \mid \hat{x}_0, \hat{v}_0 ). \label{eq:decomposition}
 \end{align}
-The final term $\Pr( x_t, lin \mid \hat{x}_0, \hat{v}_0 )$ is expressible in terms of the error function \Ram{what error function?}, and would pose a negligible burden in terms of numerical computation.
+The final term $\Pr( x_t, lin \mid \hat{x}_0, \hat{v}_0 )$ is expressible in terms of the error function \Ram{what error function?} \Hoj{The error function is a special function.  It's proportional to the CDF of the normal distribution.}, and would pose a negligible burden in terms of numerical computation.
 The primary computational burden derives from computing $\sum_{k} \int \Pr( x_t, k , s  \mid \hat{x}_0, \hat{v}_0 ) ds$.
 
 \section{Efficient Probability Propagation} \label{sec:efficient}
