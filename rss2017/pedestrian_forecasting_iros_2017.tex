@@ -3,6 +3,7 @@
 
 %  For math environment 
 \usepackage{amsmath,amssymb,amsthm}
+\usepackage[linesnumbered]{algorithm2e}
 \usepackage{caption}
 %  For todo notes
 \usepackage{todonotes}
@@ -239,7 +240,7 @@ In particular
 	&= \left( \sum_{k} \int \Pr( x_t, k , s  \mid \hat{x}_0, \hat{v}_0 ) ds \right) \\
 	&\quad + \Pr( x_t, lin \mid \hat{x}_0, \hat{v}_0 ). \label{eq:decomposition}
 \end{align}
-The final term $\Pr( x_t, lin \mid \hat{x}_0, \hat{v}_0 )$ is expressible in terms of the error function \Ram{what error function?} \Hoj{The error function is a special function.  It's proportional to the CDF of the normal distribution.}, and would pose a negligible burden in terms of numerical computation.
+The final term $\Pr( x_t, lin \mid \hat{x}_0, \hat{v}_0 )$ is expressible in closed form when the posteriors $\Pr( x_0 \mid lin)$ and $\Pr( v_0 \mid lin,x_0)$ are simple expressions such as Gaussians or uniform distributions. In either case, numerical computation of $\Pr(x_t, lin \mid \hat{x}_0, \hat{v}_0)$ poses a negligible burden in terms of numerical computation.
 The primary computational burden derives from computing $\sum_{k} \int \Pr( x_t, k , s  \mid \hat{x}_0, \hat{v}_0 ) ds$.
 
 \section{Efficient Probability Propagation} \label{sec:efficient}
@@ -257,22 +258,23 @@ To begin, from \eqref{eq:pgm}  notice that
 We see from the last line that $\Pr( x_t, k,s,\mid \hat{x}_0, \hat{v}_0)$ is proportional to a convolution of the joint distribution $\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s)$.
 Assuming, for the moment, that such a convolution can be performed efficiently, we focus on computation of $\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s)$.
 
-Again, \eqref{eq:pgm} implies  \Ram{this next set of equations seem broken during typesetting}
-\begin{align}
-	&\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s) = \int \Pr( \check{x}_t , x_0, \hat{x}_0, v_0, \hat{v}_0, k,s) dx_0 \, dv_0 \\
-		&=  \int \Pr( \check{x}_t \mid  x_0, k,s, v_0) \Pr( \hat{v}_0 \mid v_0) \Pr( v_0 \mid k,s,x_0) \\
-		& \hspace{20ex} \Pr(\hat{x}_0, x_0, k, s) dx_0 \, dv_0 \\
-\end{align}
-Substitution of \eqref{eq:x_check | ksx} and \eqref{eq:v | ksx} yields  \Ram{this next set of equations seem broken during typesetting}
-\begin{align}
+Again, \eqref{eq:pgm} implies
+\begin{align*}
+	&\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s) = \\
+	&= \int \Pr( \check{x}_t , x_0, \hat{x}_0, v_0, \hat{v}_0, k,s) dx_0 \, dv_0 \\
+	&= \int \Pr( \check{x}_t \mid  x_0, k,s, v_0) \Pr( \hat{v}_0 \mid v_0) \\
+	& \hspace{10ex}  \Pr( v_0 \mid k,s,x_0) \Pr(\hat{x}_0, x_0, k, s) dx_0 \, dv_0 \\
+\end{align*}
+Substitution of \eqref{eq:x_check | ksx} and \eqref{eq:v | ksx} yields
+\begin{align*}
 		&= \int \delta\left( \check{x}_t - \Phi_{k,s}^{t}( x_0) \right) \delta\left( v_0 - s X_k (x_0) \right) \\
-		&\hspace{20ex}\Pr( \hat{v}_0 \mid v_0) \Pr(\hat{x}_0, x_0,k, s) dx_0\, dv_0
-\end{align}
+		&\hspace{10ex}\Pr( \hat{v}_0 \mid v_0) \Pr(\hat{x}_0, x_0,k, s) dx_0\, dv_0
+\end{align*}
 Carrying out the integration over $v_0$ we observe
 \begin{align}
 \begin{split}
-	&\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s) = \\
-	&\int \delta\left( \check{x}_t - \Phi_{k,s}^{t}( x_0) \right) \Pr(\hat{x}_0, x_0, k, s) \Psi(\hat{v}_0 ;k,s,x_0) dx_0
+	\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s) &= \int \delta\left( \check{x}_t - \Phi_{k,s}^{t}( x_0) \right)  \\
+	&\hspace{1ex} \Pr(\hat{x}_0, x_0, k, s) \Psi(\hat{v}_0 ;k,s,x_0) dx_0
 \end{split}
 \label{eq:push forward}
 \end{align}
@@ -292,7 +294,7 @@ for constants
 	c_{k,s,\alpha} =  \left. \left[ \Pr(\hat{x}_0, x_0, k, s) \Psi( \hat{v}_0 \mid k,s,x_0 )  | \Delta x | \right] \right|_{x_0 = x_0^\alpha} \label{eq:constants}
 \end{align}
 and error of magnitude $\| \varepsilon_0 \|_{L^1} \sim \mathcal{O}( | \Delta x | )$ with respect to the $L^1$-norm in $x_0$.
-The coefficients, $c_{k,s,\alpha}$, can be computed efficiently as product of the posteriors appearing in the PGM \Ram{this acronym was never defined...}.
+The coefficients, $c_{k,s,\alpha}$, can be computed efficiently as product of the posteriors represented in our Bayesian network \eqref{eq:pgm}.
 Substitution of \eqref{eq:approximation 1} into the final line of \eqref{eq:push forward} yields:
 \begin{align*}
 	\Pr( \check{x}_t , \hat{x}_0, \hat{v}_0, k,s) = \sum_\alpha c_{k,s,\alpha} \delta \left( \check{x}_t - \Phi_{k,s}( x_0^\alpha) \right) + \varepsilon_t( \check{x}_t)
@@ -369,32 +371,28 @@ We can reduce this burden further by exploiting the following symmetry:
 \end{proof}
 \noindent Thus, computation of $\Phi_{k,s}^t( x_0^{\alpha})$ for all $s$ and $t$ boils down to computing $\Phi_{k,1}^t(x_0^{\alpha})$ for all $t$.
 
-At this point, we may summarize the steps needed to compute an accurate approximation of $\rho_t(x_t)$ \Ram{maybe you want to make this an algorithm, but putting it in an algorithm box}:
-\begin{enumerate}
-	\item Compute the constants $c_{k,s,\alpha}$ from \eqref{eq:constants}.
-	\item Compute $\Phi_{k,1}^t(x_0^{\alpha})$ for each $k$ and each point $x_0^{\alpha}$ in the grid over a time-interval $[-T,T]$.
-	\item Use Theorem \ref{thm:symmetry} so obtain $\Phi_{k,s}^t( x_0^\alpha)$ from $\Phi_{k,1}^t(x_0^{\alpha})$.
-	\item Use Corollary \ref{cor:error} to obtain an $\mathcal{O}( | \Delta x | )$ approximation of $\Pr(x_t ,k,s,\hat{x}_0 , \hat{v}_0)$.
-	\item Use \eqref{eq:decomposition} to compute $\Pr( x_t, \hat{x}_0, \hat{v}_0)$ and normalize in the variable $x_t$ to obtain an $\mathcal{O}( | \Delta |)$ approximation of  $\rho_t( x_t)$. 
-\end{enumerate}
-The first two steps are where the bulk of the work occurs.
-Fortunately, these two steps are embarrassingly parallel.
+At this point, we can state an algorithm for computing an $\mathcal{O}( \Delta x)$ approximation of $\rho_t(x_t)$:
+\begin{algorithm}
+	Compute the constants $c_{k,s,\alpha}$ from \eqref{eq:constants} \;
+	Compute $\Phi_{k,1}^t(x_0^{\alpha})$ for each $k$ and each point $x_0^{\alpha}$ in the grid over a time-interval $[-T,T]$.\;
+	Obtain $\Phi_{k,s}^t( x_0^\alpha)$ from $\Phi_{k,1}^t(x_0^{\alpha})$ (Theorem \ref{thm:symmetry}).\;
+	Obtain an $\mathcal{O}( | \Delta x | )$ approximation of $\Pr(x_t ,k,s,\hat{x}_0 , \hat{v}_0)$ (Corollary \ref{cor:error}).\;
+	Use \eqref{eq:pgm} and \eqref{eq:decomposition} to compute $\Pr( x_t, \hat{x}_0, \hat{v}_0)$.\;
+	Compute $\mu = \int \Pr( x_t, \hat{x}_0, \hat{v}_0) dx_t$\;
+	Compute the division $\rho_t( x_t) = \Pr(x_t , \hat{x}_0, \hat{v}_0 ) / \mu$.\;
+	\caption{Our algorithm for computing $\rho_t$.}
+\end{algorithm}
+
+Steps 1 and 2 are where the bulk of the work occurs.
+Fortunately, these two steps are embarrassingly parallel and yield tolerable computational complexity for real-time computation.
 For fixed $k$ and $\alpha$, the computation of $\Phi_{k,1}^t(x_0^{\alpha})$ on the interval $[-T,T]$ takes $\mathcal{O}(T)$ time using a an explicit finite difference scheme, and computation for each $(k,\alpha)$ may be performed in parallel with another such pair.
 Similarly, computation $c_{k,s,\alpha}$ constitutes a series of parallel function evaluations over triples $(k,s,\alpha)$.
 If the posteriors represented by the edge in \eqref{eq:pgm} are quick to compute then computation of all coefficients $c_{k,s,\alpha}$ is equally quick.
-More precisely, the full computation of our approximation of $\rho_t(x_t)$ would take $\mathcal{O}( T n | \Gamma | / N )$ time given $N$ processing units and $n$ vector fields \Ram{you may just want to write all of this down as a theorem.}.
-
-
-%  Describe how $\Pr(x \mid k)$, the director-fields, and $\sigma_x$ are learned without using math.
-%  Math will be relegated to the appendix.
-%  
-%  NOTE:  Learning $\kappa$.
-%  \begin{enumerate}
-%  	\item Learn vector-fields
-%	\item Generate approximate curves for each v.f.
-%	\item Compute $\kappa_k$ of best fit for each v.f.
-%	\item $\kappa = \min_k \{ \kappa_1,\dots,\kappa_n\}$.
-%  \end{enumerate}
+We summarize this in the following theorem
+\begin{thm}
+	Assuming we have an accurate scheme for integrating ODEs in a computation time proportional to the integration time-interval\footnote{For example, 4th order explicit Runge-Kutta}.  Algorithm 1 yields an $\mathcal{O}( \Delta x)$ accurate approximation of $\rho_t$ in $\mathcal{O}( T n | \Gamma | / N )$ time given $N$ processing units and $n$ vector fields.
+\end{thm}
+The proof is a matter of some simple book-keeping.
   
 \section{Implementation and Experimental results} \label{sec:implementation}
   Now that the model has been described, we can illustrate a more specific implementation of the model and the process of fitting the model to a dataset.
