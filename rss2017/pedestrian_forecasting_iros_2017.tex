@@ -1,4 +1,4 @@
-\documentclass[conference]{IEEEtran}
+\documentclass{IEEEconf}
 \usepackage{times}
 
 %  For math environment 
@@ -18,21 +18,14 @@
 \newtheorem{cor}{Corollary}
 
 % numbers option provides compact numerical references in the text. 
-\usepackage[numbers]{natbib}
-\usepackage{multicol}
+%\usepackage[numbers]{natbib}
+%\usepackage{multicol}
 \usepackage[bookmarks=true]{hyperref}
 \newcommand{\Ram}[1]{\textcolor{red}{#1}}
 
 % Custom commands
 \newcommand{\pder}[2]{\ensuremath{\frac{\partial #1}{\partial #2}}}
 
-\pdfinfo{
-   /Author (Hal 9000)
-   /Title  (Robots: Our new overlords)
-   /CreationDate (D:20101201120000)
-   /Subject (Robots)
-   /Keywords (Robots;Overlords)
-}
 
 \begin{document}
 
@@ -40,46 +33,7 @@
 \title{Real-Time Probabilistic Pedestrian Forecasting}
 
 % You will get a Paper-ID when submitting a pdf file to the conference system
-\author{We can put our names in here, also lets make sure we are actually using the IROS template...}
-
-%\author{\authorblockN{Michael Shell}
-%\authorblockA{School of Electrical and\\Computer Engineering\\
-%Georgia Institute of Technology\\
-%Atlanta, Georgia 30332--0250\\
-%Email: mshell@ece.gatech.edu}
-%\and
-%\authorblockN{Homer Simpson}
-%\authorblockA{Twentieth Century Fox\\
-%Springfield, USA\\
-%Email: homer@thesimpsons.com}
-%\and
-%\authorblockN{James Kirk\\ and Montgomery Scott}
-%\authorblockA{Starfleet Academy\\
-%San Francisco, California 96678-2391\\
-%Telephone: (800) 555--1212\\
-%Fax: (888) 555--1212}}
-
-
-% avoiding spaces at the end of the author lines is not a problem with
-% conference papers because we don't use \thanks or \IEEEmembership
-
-
-% for over three affiliations, or if they all won't fit within the width
-% of the page, use this alternative format:
-% 
-%\author{\authorblockN{Michael Shell\authorrefmark{1},
-%Homer Simpson\authorrefmark{2},
-%James Kirk\authorrefmark{3}, 
-%Montgomery Scott\authorrefmark{3} and
-%Eldon Tyrell\authorrefmark{4}}
-%\authorblockA{\authorrefmark{1}School of Electrical and Computer Engineering\\
-%Georgia Institute of Technology,
-%Atlanta, Georgia 30332--0250\\ Email: mshell@ece.gatech.edu}
-%\authorblockA{\authorrefmark{2}Twentieth Century Fox, Springfield, USA\\
-%Email: homer@thesimpsons.com}
-%\authorblockA{\authorrefmark{3}Starfleet Academy, San Francisco, California 96678-2391\\
-%Telephone: (800) 555--1212, Fax: (888) 555--1212}
-%\authorblockA{\authorrefmark{4}Tyrell Inc., 123 Replicant Street, Los Angeles, California 90210--4321}}
+\author{Henry O. Jacobs, Owen Hughes, Ram Vasudevan}
 
 
 \maketitle
@@ -123,18 +77,18 @@ Over short time scales this method may perform well, but the resulting distribut
 This is a typical property of the extended Kalman filter and Kalman filter with deterministic nonlinear drift \cite{Schneider2013}.
 In particular, such models are less useful for forecasts beyond $2$ seconds in the future, especially when a pedestrian turns.
 Nonetheless, these stochastic linear models serve as a reasonable default in the absence of any contextual knowledge.
-For example, \citet{Kooji2014} uses a motion model of this variety, parametrized by latent variables, such as the pedestrian's awareness of nearby vehicles, to predict when and how a pedestrian may cross a street without leveraging any environmental context.
+For example, \cite{Kooji2014} uses a motion model of this variety, parametrized by latent variables, such as the pedestrian's awareness of nearby vehicles, to predict when and how a pedestrian may cross a street without leveraging any environmental context.
 
 More sophisticated models that attempt to leverage environmental data include inverse optimal control (IOC) based models \cite{Ziebart2008,Ziebart2009,Kitani2012,Karasev2016}.
 These IOC models have the often desirable property of attributing intention and goal-seeking behavior to the agents.
-For example, \citet{Kitani2012} extracted a Markov Decision Process (MDP) evolving on a finite 2D lattice by training on a small collection of features and trajectories.
+For example, \cite{Kitani2012} extracted a Markov Decision Process (MDP) evolving on a finite 2D lattice by training on a small collection of features and trajectories.
 The resulting MDP is light-weight since it is parametrized by only a small collection of coefficients equal in number to that of the feature maps.
 Moreover, given an initial and final state, the probability distribution of the pedestrian at intermediate states is computable using matrix multiplication.
 The speed of this computation, makes the algorithm of \cite{Kitani2012} a reasonable baseline for comparison for the algorithm that is presented in this paper.
 
-The approach presented by \citet{Kitani2012} has been generalized in a variety of ways.
-For example, time-dependent information, such as traffic signals, are incorporated by \citet{Karasev2016}, by relaxing the Markov property and considering a switched Markov process.
-Other generalizations by \citet{Karasev2016} include replacing the finite-state space with a continuous one, and using a Markov jump process in the motion model.
+The approach presented by \cite{Kitani2012} has been generalized in a variety of ways.
+For example, time-dependent information, such as traffic signals, are incorporated by \cite{Karasev2016}, by relaxing the Markov property and considering a switched Markov process.
+Other generalizations by \cite{Karasev2016} include replacing the finite-state space with a continuous one, and using a Markov jump process in the motion model.
 Unfortunately the desired posteriors are difficult to compute in closed form, and as a result a sampling based method: a Rao-Blackwellized particle filter~\cite{Doucet2000} is employed.
 The resulting accuracy of such methods can only be known in a probabilistic sense in that the error bounds are themselves random variables.
 Moreover, accuracy can come at a large computational expensive which is prohibitive during real-time computation.
@@ -145,18 +99,18 @@ Moreover, accuracy can come at a large computational expensive which is prohibit
 One limitation of IOC models occurs when the initial and final conditions are separated across a complex domains, analogous to the notion of conjugate points in optimal control.
 \todo[inline]{What is the limitation?}
 This can occur when agents make sharp turns due to intermediate goals on the way toward reaching their final destination.
-To address this, \citet{Ballan2016} adopted an empiricists approach, computing ``turning maps'' and attempting to infer how agents behave in a given patch based on it's feature and the behavior of previous agents on similar patches.
-Similar to \citet{Karasev2016}, the motion model was a Markov jump process and the relevant posteriors were approximated using sample based techniques.
+To address this, \cite{Ballan2016} adopted an empiricists approach, computing ``turning maps'' and attempting to infer how agents behave in a given patch based on it's feature and the behavior of previous agents on similar patches.
+Similar to \cite{Karasev2016}, the motion model was a Markov jump process and the relevant posteriors were approximated using sample based techniques.
 %Again, the same criticisms in regards to speed an accuracy lodged at \cite{Karasev2016} can also be lodged at \cite{Ballan2016}, and again, we should note that speed/high accuracy were not a priority there.
-The objective of \citet{Ballan2016} was not only prediction, but the development of a motion model learned on one scene that could then subsequently be transferred to other scenes which required representations of ``objects'' in the scene that did not depend rigidly on the finitely many labels some engineer managed to think of in a late-night brainstorming session.
+The objective of \cite{Ballan2016} was not only prediction, but the development of a motion model learned on one scene that could then subsequently be transferred to other scenes which required representations of ``objects'' in the scene that did not depend rigidly on the finitely many labels some engineer managed to think of in a late-night brainstorming session.
 The algorithm should be able to infer how to behave near a roundabout by using prior knowledge of more fundamental building blocks like pavement, curbs, and asphalt.
 
-Along similar lines to \cite{Ballan2016}, \citet{Walker2014} constructed an unsupervised approach towards forecasting.
+Along similar lines to \cite{Ballan2016}, \cite{Walker2014} constructed an unsupervised approach towards forecasting.
 As before, the motion model was a Markov jump process, and the training set was a collection unlabeled videos.
 Unlike all the approaches mentioned thus far, the agents in \cite{Walker2014} were not manually specified.
 They were learned by detecting which sort of patches of video were likely to move, and how.
 The resulting predictions outperformed \cite{Kitani2012} when comparing the most likely path with the ground truth using the mean Hausdorff distance.
-As in all methods mentioned thus far, computational speed and accuracy of any predicted posteriors were not a concern of \citet{Walker2014}, so no such results were reported.
+As in all methods mentioned thus far, computational speed and accuracy of any predicted posteriors were not a concern of \cite{Walker2014}, so no such results were reported.
 However, since the motion model was a Markov jump process which required the application of a sample based technique, we should expect the same painful trade-off between error and speed to occur as in \cite{Karasev2016} and \cite{Ballan2016}.
 
 \subsection{Contributions}
@@ -636,7 +590,7 @@ where $v_t = \frac{d x_t}{dt}$, $\| \cdot \|_g$ is the norm with respect to $g$ 
 
 %% Use plainnat to work nicely with natbib. 
 
-\bibliographystyle{plainnat}
+\bibliographystyle{IEEEtran}
 \bibliography{references}
 
 \end{document}
