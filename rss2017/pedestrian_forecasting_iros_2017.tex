@@ -1,8 +1,12 @@
-\documentclass{IEEEconf}
-\usepackage{times}
+\documentclass[letterpaper,10pt,conference]{ieeeconf}
+%\usepackage{times}
+
+\IEEEoverridecommandlockouts 
+\overrideIEEEmargins   % Needed to meet printer requirements.
+\usepackage[T1]{fontenc}
 
 %  For math environment 
-\usepackage{amsmath,amssymb,amsthm}
+\usepackage{amsmath,amssymb}
 \usepackage[linesnumbered]{algorithm2e}
 \usepackage{caption}
 %  For todo notes
@@ -33,22 +37,30 @@
 \begin{document}
 
 % paper title
-\title{Real-Time Probabilistic Pedestrian Forecasting}
+\title{Real-Time Certified Probabilistic Pedestrian Forecasting}
+
+%%% first author
+\author{Henry O. Jacobs, Owen Hughes, Matthew Johnson-Roberson, and Ram Vasudevan
+ \thanks{ H.O. Jacobs, O. Hughes, and R.~Vasudevan are with the Department of Mechanical Engineering, University of Michigan, Ann Arbor, MI 48109
+{\scriptsize \{\texttt{hojacobs,owhughes,ramv}\}~\texttt{@umich.edu}}}
+\thanks{M. Johnson-Roberson is with the Department of Naval and Marine Engineering, University of Michigan, Ann Arbor, MI 48109\newline
+{\scriptsize \texttt{mattjr@umich.edu}}}
+}
 
 % You will get a Paper-ID when submitting a pdf file to the conference system
-\newcommand{\umich}{ \begin{affiliation} Dept. of Mechanical Eng. \\ University of Michigan \\ Ann Arbor, Michigan \end{affiliation}}
-\author{
-	Henry O. Jacobs \\
-	\umich \\
-	\email{hojacobs@umich.edu}
-	\and
- 	Owen Hughes \\
-	\umich \\
-	\email{owhughes@umich.edu}
- 	\and Ram Vasudevan \\
-	\umich \\
-	\email{ramv@umich.edu} \\
-}
+%\newcommand{\umich}{ \begin{affiliation} Dept. of Mechanical Eng. \\ University of Michigan \\ Ann Arbor, Michigan \end{affiliation}}
+%\author{
+%	Henry O. Jacobs \\
+%	\umich \\
+%	\email{hojacobs@umich.edu}
+%	\and
+% 	Owen Hughes \\
+%	\umich \\
+%	\email{owhughes@umich.edu}
+% 	\and Ram Vasudevan \\
+%	\umich \\
+%	\email{ramv@umich.edu} \\
+%}
 
 
 \maketitle
@@ -85,7 +97,7 @@ The presented approach significantly outperforms...
 
 \subsection{Background}
 Most forecasting algorithm are well characterized by the underlying evolution model they adopt.
-Such models come in a variety flavors, and are adapted to the task at hand (e.g. crowd modeling \cite{Helbing1992} ).
+Such models come in a variety flavors, and are adapted to the task at hand (e.g. crowd modeling \cite{Helbing1992}).
 This paper is focused on the construction of useful motion models for pedestrians that can aide the task of real-time forecasting for autonomous agents.
 The simplest approach to forecasting with motion models forward integrates a Kalman filter \cite{kalman1960new} based upon the observed heading.
 Over short time scales this method may perform well, but the resulting distribution devolves into a Gaussian mass over longer time scales.
@@ -165,7 +177,7 @@ Our model can be divided into three parts:
 We now elaborate on these three components, and relate them to one another.
 Many of the choices we make are motivated by a balance between model quality and computational speed (see \S \ref{sec:efficient}).
 
-\subsection{The variables of the model}
+\subsection{The Variables of the Model}
 The model concerns the position of an agent $x_t \in \mathbb{R}^2$ for $t \in [0,T]$ for some $T>0$.
 We denote the position and velocity at time $t=0$ by $x_0$ and $v_0$ respectively.
 At $t=0$, we obtain a measurement of position and velocity, denotes by $\hat{x}_0$ and $\hat{v}_0$.
