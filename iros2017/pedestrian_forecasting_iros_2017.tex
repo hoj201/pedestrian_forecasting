@@ -17,15 +17,12 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows,positioning}
 \usepackage{tikz-cd}
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.tex
 \usepackage{subcaption}
 \usepackage{graphicx}
 \usepackage{array}
 \newcolumntype{M}[1]{>{\centering\arraybackslash}m{#1}}
-=======
 \usepackage{comment}
 \usepackage{color}  % For Highlighting
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.tex
 
 %  For theorems, etc
 \newtheorem{thm}{Theorem}
@@ -88,6 +85,18 @@ When compared with MDP-based methods, our algorithm appears to be superior from 
 
 \section{Introduction}
 
+Autonomous systems acting in human-centric environments should be able to anticipate the behavior of neighboring humans to ensure safe operation. 
+Anticipating the future locations of individuals within a scene, for instance, is critical to synthesizing safe controllers for autonomous vehicles.
+To aid during safe control design for such systems, a prediction algorithm must satisfy several important criteria.
+First, since safety is paramount, the prediction algorithm should avoid misclassifying areas as unoccupied.
+Second, the predictions must be generated at faster than real-time rates to ensure that they can be used within a control loop.
+Finally, long-time horizon forecasts are preferable since they can make planning over long-time horizons feasible, which can reduce the conservativeness and aggressiveness of controllers \cite{}.
+
+This paper presents an algorithm for real-time, long-term prediction of pedestrian behavior which can subsequently be used by autonomous agents.
+
+As depicted in Figure \ref{fig:}, this approach relies upon ... 
+The presented approach significantly outperforms...
+
 \begin{figure}
 	\centering
 	\begin{subfigure}[b]{.45\linewidth}
@@ -111,22 +120,6 @@ When compared with MDP-based methods, our algorithm appears to be superior from 
 	\label{fig:gates-1-2}
 \end{figure}
 
-Autonomous systems acting in human-centric environments should be able to anticipate the behavior of neighboring humans to ensure safe operation. 
-Anticipating the future locations of individuals within a scene, for instance, is critical to synthesizing safe controllers for autonomous vehicles.
-To aid during safe control design for such systems, a prediction algorithm must satisfy several important criteria.
-First, since safety is paramount, the prediction algorithm should avoid misclassifying areas as unoccupied.
-Second, the predictions must be generated at faster than real-time rates to ensure that they can be used within a control loop.
-Finally, long-time horizon forecasts are preferable since they can make planning over long-time horizons feasible, which can reduce the conservativeness and aggressiveness of controllers \cite{}.
-
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.tex
-=======
-\todo[inline]{We should include a figure here showing what our algorithm looks like?}
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.tex
-
-This paper presents an algorithm for real-time, long-term prediction of pedestrian behavior which can subsequently be used by autonomous agents.
-
-As depicted in Figure \ref{fig:}, this approach relies upon ... 
-The presented approach significantly outperforms...
 
 %First, since safety is paramount, generated predictions must avoid misclassifying areas as unoccupied even though humans are present. 
 %Though this may unduly reduce the precision of the algorithm 
@@ -558,7 +551,6 @@ We summarize this in the following theorem:
   
  \subsection{Evaluating Performance}
 In this section we establish our methods for evaluating the quality of our predictions, and comparing them against the model from [8] and a random walk.
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.tex
 We implemented our model as well as the evaluation code in Python 2.6. Our implementation is available online \footnote{https://github.com/hoj201/pedestrian\_forecasting}.
 \begin{tabular}{||c | c c  c ||} 
 	\hline
@@ -609,21 +601,12 @@ We implemented our model as well as the evaluation code in Python 2.6. Our imple
 	
 	\end{tabular}
 \end{figure}
-=======
 We implement our model as well as the evaluation code in Python 2.6. 
 Our implementation is available online \footnote{https://github.com/hoj201/pedestrian\_forecasting} \Ram{owen can you please post this to a github that is distinct from hoj's, which we've used for paper writing and everything...}.
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.tex
-
-
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.tex
-
-
-=======
 Our data came from the Stanford Drone Dataset, in the form of hand annotated bounding boxes around agents (e.g. cars, pedestrians, bicycles). 
 Our datasets used the bicycle data. 
 We did a 10-fold cross validation on 4 different scenes of varying complexity. 
 Our analysis used the same partitions of the trajectories for all three predictors. There .% shows the sample for the ``Coupa'' scene from the Stanford Dataset.
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.tex
 
 Our data came from the Stanford Drone Dataset, in the form of hand annotated bounding boxes around agents (e.g. cars, pedestrians, bicycles). Our datasets used the bicycle data. We did a 2-fold cross validation on 4 different scenes of varying complexity. Our analysis used the same partitions of the trajectories for all three predictors.
 
