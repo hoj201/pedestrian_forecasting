@@ -410,21 +410,19 @@ At this point, we can state an algorithm for computing an $\mathcal{O}( \Delta x
 
 Steps 1 and 2 are where the bulk of the work occurs.
 Fortunately, these two steps are embarrassingly parallel and yield tolerable computational complexity for real-time computation.
-For fixed $k$ and $\alpha$, the computation of $\Phi_{k,1}^t(x_0^{\alpha})$ on the interval $[-T,T]$ takes $\mathcal{O}(T)$ time using a an explicit finite difference scheme, and computation for each $(k,\alpha)$ may be performed in parallel with another such pair.
+For fixed $k$ and $\alpha$, the computation of $\Phi_{k,1}^t(x_0^{\alpha})$ on the interval $[-T,T]$ takes $\mathcal{O}(T)$ time using an explicit finite difference scheme, and computation for each $(k,\alpha)$ may be performed in parallel with another such pair.
 Similarly, computation $c_{k,s,\alpha}$ constitutes a series of parallel function evaluations over triples $(k,s,\alpha)$.
-If the posteriors represented by the edge in \eqref{eq:pgm} are quick to compute then computation of all coefficients $c_{k,s,\alpha}$ is equally quick.
+If the posteriors represented by the arrows in \eqref{eq:pgm} are quick to compute then computation of all coefficients $c_{k,s,\alpha}$ is equally quick.
 We summarize this in the following theorem
 \begin{thm}
 	Assuming we have an accurate scheme for integrating ODEs in a computation time proportional to the integration time-interval\footnote{For example, 4th order explicit Runge-Kutta}.  Algorithm 1 yields an $\mathcal{O}( \Delta x)$ accurate approximation of $\rho_t$ in $\mathcal{O}( T n | \Gamma | / N )$ time given $N$ processing units and $n$ vector fields.
 \end{thm}
-The proof is a matter of some simple book-keeping.
   
 \section{Implementation and Experimental results} \label{sec:implementation}
   Now that the model has been described, we can illustrate a more specific implementation of the model and the process of fitting the model to a dataset.
   For the purpose of demonstration, we will use the Stanford Drone Dataset \cite{Robicquet2016}.
   More generally, we will assume that for a fixed scene we have a database of previously observed trajectories $\{ \hat{x}^1, \dots, \hat{x}^N\}$.
   From this data we will tune the parameters of the model appropriately.
-  The parameters of the model which must be chosen or learned are
   
   \subsection{Learning the Vector Fields}
   Before we can even begin to learn vector-fields, we must learn the number of such vector-fields we have.
