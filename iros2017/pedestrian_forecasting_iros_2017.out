@@ -10,10 +10,10 @@
 \BOOKMARK [1][-]{section.4}{Implementation and Experimental results}{}% 10
 \BOOKMARK [2][-]{subsection.4.1}{Learning the Vector Fields}{section.4}% 11
 \BOOKMARK [2][-]{subsection.4.2}{Learning Pr\( x0 M\) and Pr\(M\)}{section.4}% 12
-\BOOKMARK [2][-]{subsection.4.3}{Learning the measurement model}{section.4}% 13
-\BOOKMARK [2][-]{subsection.4.4}{Learning the noise model}{section.4}% 14
-\BOOKMARK [2][-]{subsection.4.5}{ Precision, accuracy, etc.}{section.4}% 15
+\BOOKMARK [2][-]{subsection.4.3}{Learning the Measurement Model}{section.4}% 13
+\BOOKMARK [2][-]{subsection.4.4}{Learning the Noise Model}{section.4}% 14
+\BOOKMARK [2][-]{subsection.4.5}{Evaluating Performance}{section.4}% 15
 \BOOKMARK [1][-]{section.5}{Conclusion}{}% 16
-\BOOKMARK [1][-]{section*.8}{Appendix}{}% 17
-\BOOKMARK [2][-]{subsection.Appendix.A.1}{Inverse Optimal Control}{section*.8}% 18
-\BOOKMARK [1][-]{section*.9}{References}{}% 19
+\BOOKMARK [1][-]{section*.7}{Appendix}{}% 17
+\BOOKMARK [2][-]{subsection.Appendix.A.1}{Inverse Optimal Control}{section*.7}% 18
+\BOOKMARK [1][-]{section*.8}{References}{}% 19
