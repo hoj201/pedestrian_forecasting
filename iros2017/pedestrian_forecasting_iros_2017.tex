@@ -434,89 +434,91 @@ We summarize this in the following theorem:
 \end{thm}
   
 \section{Implementation and Experimental results} \label{sec:implementation}
-  Now that the model has been described, we can illustrate a more specific implementation of the model and the process of fitting the model to a dataset.
-  For the purpose of demonstration, we will use the Stanford Drone Dataset \cite{Robicquet2016}.
-  More generally, we will assume that for a fixed scene we have a database of previously observed trajectories $\{ \hat{x}^1, \dots, \hat{x}^N\}$.
-  From this data we will tune the parameters of the model appropriately.
+  Given this model, we describe a specific implementation and the process of fitting the model to a dataset \Ram{lets be more explicit all you are fitting is the VF?}.
+  For the purposes of demonstration, we use the Stanford Drone Dataset \cite{Robicquet2016}.
+  More generally, we assume that for a fixed scene we have a database of previously observed trajectories $\{ \hat{x}^1, \dots, \hat{x}^N\}$.
+  From this data we tune the parameters of the model appropriately \Ram{again what parameters are being tuned explicitly}.
   
   \subsection{Learning the Vector Fields}
-  Before we can even begin to learn vector-fields, we must learn the number of such vector-fields we have.
-  To do this we use a simple clustering algorithm on the trajectories, to categorize them into groups.
-  In principal, any clustering algorithm could accomplish this.
-  For our algorithm we use the start and end point for each trajectory to obtain a point in $\mathbb{R}^4$.
-  We then cluster in $\mathbb{R}^4$ using Affinity propagation.
+  Before we begin to learn vector-fields, we must learn the number of possible vector-fields.
+  To do this we use a clustering algorithm on the trajectories observed in a scene to categorize them into groups.
+  %In principal, any clustering algorithm could accomplish this.
+  In particular, we use the start and end point for each trajectory to obtain a point in $\mathbb{R}^4$.
+  We then cluster in $\mathbb{R}^4$ using Affinity propagation \Ram{citation}.
   This clustering of the end-points induces a clustering of the trajectories.
-  So we obtain clusters $S_1, \dots, S_n$ consisting of trajectories from our data set, as well as a set of unclassified trajectories, $S_0$.
+  Suppose we obtain clusters $S_1, \dots, S_n$ consisting of trajectories from our data set, as well as a set of unclassified trajectories, $S_0$.
   
-  For each set $S_k$ we may learn a vector-field which is approximately compatible with that set.
-  We'd like to only consider vector-fields who's vectors have unit magnitude because we observe many of the trajectories in the data appear to have a roughly constant speed.
-  Therefore we assume the vector-field takes the form $X_k(x) = \left( \cos( \Theta_k(x) ) , \sin(\Theta_k(x)) \right)$ for some scalar function $\Theta_k(x)$.
+  For each set $S_k$ we learn a vector-field that is approximately compatible with that set.
+  %We'd like to only consider vector-fields who's vectors have unit magnitude because we observe many of the trajectories in the data appear to have a roughly constant speed.
+  Since most trajectories appearing in the dataset have roughly constant speed, we chose a vector-field that has unit magnitude. 
+  That is, we assume the vector-field takes the form $X_k(x) = \left( \cos( \Theta_k(x) ) , \sin(\Theta_k(x)) \right)$ for some scalar function $\Theta_k(x)$.
   Learning the vector-fields then boils down to learning the scalar function $\Theta_k$.
-  We will assume $\Theta_k$ takes the form
+  We assume $\Theta_k$ takes the form
   \begin{align*}
-  	\Theta_k(x) = \sum_{\alpha} \theta_{k,\alpha} L_{\alpha}(x)
+  	\Theta_k(x) = \sum_{\alpha} \theta_{k,\alpha} L_{\alpha}(x),
   \end{align*}
-  for some collection of coefficients, $\theta_{k,\alpha}$, and a fixed collection of basis functions, $L_{\alpha}$.
-  In our case, we've chosen $L_{\alpha}$ to be a set of low degree Legendre polynomials.
-  Learning $\Theta_k$ can be obtained by looking at all the velocities observed in the cluster, $S_k$.
+  for some collection of coefficients, $\theta_{k,\alpha}$, and a fixed collection of basis functions, $L_{\alpha}$ \Ram{are these the same $\alpha$ from earlier? If not please change to avoid confusion}.
+  In our case, we choose $L_{\alpha}$ to be a set of low degree Legendre polynomials.
+ $\Theta_k$ can be learned by computing the velocities observed in the cluster, $S_k$.
   These velocities may be obtained by a low order finite difference formula.
   Upon normalizing the velocities, we obtain a unit-length velocity vectors, $v_{i,k}$, anchored at each point, $x_{i,k}$, of $S_k$.
-  We can learn $\Theta_k$ by defining the cost-function
+  We learn $\Theta_k$ by defining the cost-function:
   \begin{align*}
   	C[ \Theta_k] = \sum_i \langle v_{i,k} , ( \cos(\Theta_k( x_{i,k}) , \sin( \Theta_k( x_{i,k} ) ) \rangle
   \end{align*}
   which penalizes $\Theta_k$ for producing a misalignment with the observed velocities at the observed points of $S_k$.
-  When $\Theta_{k}$ includes high order polynomials (e.g. beyond 5th order), we should also include a regularization term to bias the minimizes towards smoother outputs.
-  Using the $H^1$-norm times a fixed scalar would suffice.
-  
+  When $\Theta_{k}$ includes high order polynomials (e.g. beyond 5th order), we also include a regularization term to bias the cost towards smoother outputs.
+  Using the $H^1$-norm times a fixed scalar suffices as a regularization term. 
   
   \subsection{Learning $\Pr( x_0 \mid M)$ and $\Pr(M)$}
-  Let us begin by considering the nonlinear models first.
-  That is to say, we are concerned with $M = (k,s)$ for an integer $k$ and scalar $s$.
-  We'd like to compute $\Pr( x_0 \mid k,s)$ for each cluster $k=1,\dots,n$ and each speed $s \in \mathbb{R}$.
-  We will make the modeling assumption that $x_0$ is independent of $s$ given $k$, i.e. $\Pr( x_0 \mid k,s) = \Pr(x_0 \mid k)$.
-  Additionally, we will assume that $s$ and $k$ are independent.
+  
+  We begin by considering the nonlinear models first.
+%  That is to say, we are concerned with $M = (k,s)$ for an integer $k$ and scalar $s$.
+%  We'd like to compute $\Pr( x_0 \mid k,s)$ for each cluster $k=1,\dots,n$ and each speed $s \in \mathbb{R}$.
+  We make the modeling assumption that $x_0$ is independent of $s$ given $k$, i.e. $\Pr( x_0 \mid k,s) = \Pr(x_0 \mid k)$.
+  Additionally, we assume that $s$ and $k$ are independent.
   This means that we only need to learn $\Pr( x_0 \mid k)$, $\Pr(k)$, and $\Pr(s)$.
   
-  We will let $\Pr(k) = (n+1)^{-1}$ and $\Pr(s) \sim \mathcal{U}( [-s_{\max}, s_{\max} ] )$
-  where $s_{\max}>0$ is the largest observed speed in the dataset.  This implies that $\Pr(lin) = (n+1)^{-1}$ as well.
-  Other reasonable choices (such as $\Pr(k) \propto | S_k|$) could work, but we've chosen to be more conservative in this paper.
+  We let $\Pr(k) = (n+1)^{-1}$ and $\Pr(s) \sim \mathcal{U}( [-s_{\max}, s_{\max} ] )$  where $s_{\max}>0$ is the largest observed speed in the dataset.  
+  This implies that $\Pr(lin) = (n+1)^{-1}$ as well.
+  Other reasonable choices (such as $\Pr(k) \propto | S_k|$) could work, but we have chosen to be conservative in this paper.
   
-  In order to learn $\Pr( x_0 \mid k)$ we will assume that it's logarithm may be approximated by a low dimensional subspace of functions on $\mathbb{R}^2$.
-  That is to say, for each $k$ we will assume $\Pr( x_0 \mid k) = \frac{1}{Z_k} \exp( - V_k(x_0) )$ and $V_k$ is a function who's constant term is $0$ and is given by
+%  To learn $\Pr( x_0 \mid k)$, we assume that its logarithm may be approximated by a low dimensional subspace of functions on $\mathbb{R}^2$.
+%  That is to say, 
+  For each $k$ we assume $\Pr( x_0 \mid k) = \frac{1}{Z_k} \exp( - V_k(x_0) )$ and $V_k$ is a function whose constant term is $0$ and is given by:
   \begin{align*}
   	V_k(x_0; \mathbf{c} ) := \sum_{|\alpha|< d} c_{\alpha} L_{\alpha}( x_0)
   \end{align*}
   for a collection of basis functions, $L_{\alpha}$ and coefficients $\mathbf{c} = \{ c_{\alpha} \}_{|\alpha| < d}$.
-  We chose our basis functions to be the collection of tensor products from the first $6$ Legendre polynomials, normalized to the size of the domain.
+  We chose our basis functions to be the collection of tensor products from the first six Legendre polynomials, normalized to the size of the domain.
   Then, one may fit the coefficients $c_{\alpha}$ to the data by using a log-likelihood criterion.
-  The resulting (convex) optimization problem takes the form
+  The resulting (convex) optimization problem takes the form:
   \begin{align*}
   	\mathbf{c}^* = \inf_{ |\mathbf{c}| } \sum_{x \in S_k} V_k( x_0; \mathbf{c})
   \end{align*}
   Where the norm on $\mathbf{c}$ is a sup-norm.
   We can also bias this optimization towards more regular functions by adding a penalty to the cost function.
-  
-  Finally, we let $\Pr( x_0 \mid lin) \sim \mathcal{U}(D)$.
+    Finally, we let $\Pr( x_0 \mid lin) \sim \mathcal{U}(D)$.
   
   \subsection{Learning the Measurement Model}
-  We will assume a Gaussian noise model.  That is
+  We assume a Gaussian noise model.  
+  That is
   \begin{align*}
   	\Pr( \hat{x}_0 \mid x_0 ) \sim \mathcal{N}( x_0 , \sigma_x) \quad, \quad \Pr( \hat{v}_0 \mid v_0 ) \sim \mathcal{N}( v_0, \sigma_v).
   \end{align*}
   Therefore, our model is parametrized by the standard deviations $\sigma_x$ and $\sigma_v$.
-  We will assume that the true trajectory of an agent is fairly smooth compared to the noisy output of our measurement device.
+  We assume that the true trajectory of an agent is smooth compared to the noisy output of our measurement device.
   This justifies smoothing the trajectories, and using the difference between the smoothed signals and the raw data to learn the variance $\sigma_x$.
-  To obtain the results in this paper we have used a moving average of $4$ time steps (this is $0.13$ seconds in realtime).
-  We set $\sigma_v = 2 \sigma_x / \Delta t$ where $\Delta t > 0$ is the time-step size.  This choice is justified from the our use of finite difference's to estimate velocity.
-  In particular, if velocity is approximated via finite differencing as $v(t) \approx (x(t+h) - x(t))\,\Delta t^{-1} + \mathcal{O}(h)$
-  and the measurements are corrupted by Gaussian noise, then the measurement $\hat{v}(t)$ is related to $v(t)$ by Gaussian noise with roughly the same standard deviation as $(x(t+h) - x(t))\,\Delta t^{-1}$.
+  To obtain the results in this paper we have used a moving average of four time steps (this is $0.13$ seconds in realtime).
+  We set $\sigma_v = 2 \sigma_x / \Delta t$ where $\Delta t > 0$ is the time-step size.  
+  This choice is justified from the our use of finite differences to estimate velocity.
+  In particular, if velocity is approximated via finite differencing as $v(t) \approx (x(t+h) - x(t))\,\Delta t^{-1} + \mathcal{O}(h)$ and the measurements are corrupted by Gaussian noise, then the measurement $\hat{v}(t)$ is related to $v(t)$ by Gaussian noise with roughly the same standard deviation as $(x(t+h) - x(t))\,\Delta t^{-1}$.
   
   \subsection{Learning the Noise Model}
   Finally, we assume that the true position is related to the model by Gaussian noise with a growing variance.
   In particular, we assume $\Pr( x_t \mid \check{x}_t) \sim \mathcal{N}( \check{x}_t , \kappa t)$ for some constant $\kappa \geq 0$.
   The parameter, $\kappa$, must be learned.
-  We've taken an ad hoc approach in this paper, although more intelligent and theoretically sound alternatives likely exist.
+ % We've taken an adhoc approach in this paper, although more intelligent and theoretically sound alternatives likely exist.
   For each curve in $S_k$ we create a synthetic curve using the initial position and speed and integrating the corresponding vector-field, $s\, X_k$.
   So for each curve, $x_i(t)$, of $S_k$, we have a synthesized curve $x_{i,synth}(t)$ as well.
   We then measure the standard deviation of $(x_i(t) - x_{i,synth}(t)) / t$ over $i$ and at few time, $t \in \{ 0, 100, 200 \}$ in order to obtain $\kappa$.
@@ -524,7 +526,7 @@ We summarize this in the following theorem:
  \subsection{Evaluating Performance}
 In this section we establish our methods for evaluating the quality of our predictions, and comparing them against the model from [8] and a random walk.
 We implement our model as well as the evaluation code in Python 2.6. 
-Our implementation is available online \footnote{https://github.com/hoj201/pedestrian\_forecasting}.
+Our implementation is available online \footnote{https://github.com/hoj201/pedestrian\_forecasting} \Ram{owen can you please post this to a github that is distinct from hoj's, which we've used for paper writing and everything...}.
 
 %\begin{figure}
 %\includegraphics[width=0.5\textwidth]{figures/coupa_vis.eps}
@@ -532,9 +534,10 @@ Our implementation is available online \footnote{https://github.com/hoj201/pedes
 %\label{fig:data_set}
 %\end{figure}
 
-
-
-Our data came from the Stanford Drone Dataset, in the form of hand annotated bounding boxes around agents (e.g. cars, pedestrians, bicycles). Our datasets used the bicycle data. We did a 10-fold cross validation on 4 different scenes of varying complexity. Our analysis used the same partitions of the trajectories for all three predictors. There .% shows the sample for the ``Coupa'' scene from the Stanford Dataset.
+Our data came from the Stanford Drone Dataset, in the form of hand annotated bounding boxes around agents (e.g. cars, pedestrians, bicycles). 
+Our datasets used the bicycle data. 
+We did a 10-fold cross validation on 4 different scenes of varying complexity. 
+Our analysis used the same partitions of the trajectories for all three predictors. There .% shows the sample for the ``Coupa'' scene from the Stanford Dataset.
 
 \todo[inline]{include visualization of vector fields \& learned value function?}
 
@@ -579,6 +582,7 @@ We see that under our current implementation, we are beating Kitani et. al.'s al
 \section{Conclusion} 
 \label{sec:conclusion}
 
+\Ram{Matt can you please take a crack at this ....}
 Avenues of improvement:
 update predictions when given additional measurements
 

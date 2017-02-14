@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2015.5.24)  14 FEB 2017 12:25
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2015.5.24)  14 FEB 2017 15:15
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -963,19 +963,12 @@ Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
 (hyperref)                removing `math shift' on input line 473.
 
+[5]
 
-Underfull \hbox (badness 2426) in paragraph at lines 481--484
-[]\T1/ptm/m/n/10 We will let $[]\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 k\OT1/cmr/m/n
-/10 ) = (\OML/cmm/m/it/10 n \OT1/cmr/m/n/10 + 1)[]$ \T1/ptm/m/n/10 and $[]\OT1/
-cmr/m/n/10 (\OML/cmm/m/it/10 s\OT1/cmr/m/n/10 ) \OMS/cmsy/m/n/10 ^^X
- []
-
-[5] [6]
-
-LaTeX Warning: Reference `fig:ours_grid' on page 7 undefined on input line 575.
+LaTeX Warning: Reference `fig:ours_grid' on page 6 undefined on input line 578.
 
 
-(./pedestrian_forecasting_iros_2017.bbl)
+[6] (./pedestrian_forecasting_iros_2017.bbl)
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -988,11 +981,11 @@ Before submitting the final camera ready copy, remember to:
  process uses the US letter (8.5in X 11in) paper size.
 
 [7]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 636.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 636.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 640.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 640.
  (./pedestrian_forecasting_iros_2017.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 636.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 636.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 640.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 640.
 Package rerunfilecheck Info: File `pedestrian_forecasting_iros_2017.out' has no
 t changed.
 (rerunfilecheck)             Checksum: 4E583931A51B1B8BC8CC9508887533FF;1223.
@@ -1000,7 +993,7 @@ t changed.
 
 LaTeX Warning: There were undefined references.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 636.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 640.
  ) 
 Here is how much of TeX's memory you used:
  20448 strings out of 493089
@@ -1031,7 +1024,7 @@ nts/type1/urw/courier/ucrr8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type
 1/urw/times/utmb8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw/time
 s/utmbi8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw/times/utmr8a.
 pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on pedestrian_forecasting_iros_2017.pdf (7 pages, 261485 bytes).
+Output written on pedestrian_forecasting_iros_2017.pdf (7 pages, 260692 bytes).
 
 PDF statistics:
  332 PDF objects out of 1000 (max. 8388607)
