@@ -1,0 +1,56 @@
+This is BibTeX, Version 0.99d (TeX Live 2015)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: pedestrian_forecasting_iros_2017.aux
+The style file: IEEEtran.bst
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Database file #1: references.bib
+-- IEEEtran.bst version 1.11 (2003/04/02) by Michael Shell.
+-- http://www.ctan.org/tex-archive/macros/latex/contrib/supported/IEEEtran/
+-- See the "IEEEtran_bst_HOWTO.pdf" manual for usage information.
+
+Done.
+You've used 15 entries,
+            3975 wiz_defined-function locations,
+            905 strings with 10491 characters,
+and the built_in function-call counts, 9842 in all, are:
+= -- 712
+> -- 255
+< -- 61
++ -- 133
+- -- 48
+* -- 471
+:= -- 1471
+add.period$ -- 30
+call.type$ -- 15
+change.case$ -- 11
+chr.to.int$ -- 153
+cite$ -- 15
+duplicate$ -- 726
+empty$ -- 934
+format.name$ -- 59
+if$ -- 2273
+int.to.chr$ -- 0
+int.to.str$ -- 15
+missing$ -- 136
+newline$ -- 71
+num.names$ -- 14
+pop$ -- 367
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 2
+skip$ -- 765
+stack$ -- 0
+substring$ -- 354
+swap$ -- 525
+text.length$ -- 10
+text.prefix$ -- 0
+top$ -- 5
+type$ -- 0
+warning$ -- 0
+while$ -- 39
+width$ -- 17
+write$ -- 154

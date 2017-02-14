@@ -1,0 +1,102 @@
+\begin{thebibliography}{10}
+\providecommand{\url}[1]{#1}
+\csname url@rmstyle\endcsname
+\providecommand{\newblock}{\relax}
+\providecommand{\bibinfo}[2]{#2}
+\providecommand\BIBentrySTDinterwordspacing{\spaceskip=0pt\relax}
+\providecommand\BIBentryALTinterwordstretchfactor{4}
+\providecommand\BIBentryALTinterwordspacing{\spaceskip=\fontdimen2\font plus
+\BIBentryALTinterwordstretchfactor\fontdimen3\font minus
+  \fontdimen4\font\relax}
+\providecommand\BIBforeignlanguage[2]{{%
+\expandafter\ifx\csname l@#1\endcsname\relax
+\typeout{** WARNING: IEEEtran.bst: No hyphenation pattern has been}%
+\typeout{** loaded for the language `#1'. Using the pattern for}%
+\typeout{** the default language instead.}%
+\else
+\language=\csname l@#1\endcsname
+\fi
+#2}}
+
+\bibitem{Helbing1992}
+D.~Helbing, ``A fluid-dynamic model for the movement of pedestrians,''
+  \emph{Complex Systems}, vol.~6, pp. 391--415, 1992.
+
+\bibitem{kalman1960new}
+R.~Kalman, ``A new approach to linear filtering and prediction problems,''
+  \emph{Journal of Basic Engineering}, vol.~82, no.~1, pp. 35--45, 1960.
+
+\bibitem{Schneider2013}
+N.~Schneider and D.~M. Gavrila, ``Pedestrian path prediction with recursive
+  bayesian filters: A comparative study,'' in \emph{Proc. of the German
+  Conference on Patter Recognition}, 2013.
+
+\bibitem{Kooji2014}
+\emph{Context-Based Pedestrian Path Prediction}, 2014.
+
+\bibitem{Ziebart2008}
+B.~D. Ziebart, A.~Maas, J.~A. Bagnell, and A.~K. Dey, ``Maximum entropy inverse
+  reinforcement learning,'' in \emph{Proc. AAAI}, 2008, pp. 1433--1438.
+
+\bibitem{Ziebart2009}
+B.~D. Ziebart, N.~Ratliff, G.~Gallagher, C.~Mertz, K.~Peterson, J.~A. Bagnell,
+  M.~Hebert, A.~K. Dey, and S.~Srinivasa, ``Planning-based prediction for
+  pedestrians,'' in \emph{IROS}, 2009.
+
+\bibitem{Kitani2012}
+K.~M. Kitani, B.~D. Ziebart, J.~A. Bagnell, and M.~Hebert, \emph{Activity
+  Forecasting}.\hskip 1em plus 0.5em minus 0.4em\relax Berlin, Heidelberg:
+  Springer Berlin Heidelberg, 2012, pp. 201--214.
+
+\bibitem{Xie2013}
+D.~Xie, S.~Todorovic, and S.~Zhu, ``Inferring ``dark energy'' and ``dark
+  matter'' from image and video,'' in \emph{Proc. Int'l Conference on Computer
+  Vision}, 2013.
+
+\bibitem{Karasev2016}
+V.~Karasev, A.~Ayvaci, B.~Heisele, and S.~Soatto, ``Intent-aware long-term
+  prediction of pedestrian motion,'' \emph{Proceedings of the International
+  Conference on Robotics and Automation (ICRA)}, May 2016.
+
+\bibitem{Doucet2000}
+\BIBentryALTinterwordspacing
+A.~Doucet, N.~d. Freitas, K.~P. Murphy, and S.~J. Russell, ``Rao-blackwellised
+  particle filtering for dynamic bayesian networks,'' in \emph{Proceedings of
+  the 16th Conference on Uncertainty in Artificial Intelligence}, ser. UAI
+  '00.\hskip 1em plus 0.5em minus 0.4em\relax San Francisco, CA, USA: Morgan
+  Kaufmann Publishers Inc., 2000, pp. 176--183. [Online]. Available:
+  \url{http://dl.acm.org/citation.cfm?id=647234.720075}
+\BIBentrySTDinterwordspacing
+
+\bibitem{Ballan2016}
+\BIBentryALTinterwordspacing
+L.~Ballan, F.~Castaldo, A.~Alahi, F.~Palmieri, and S.~Savarese, ``Knowledge
+  transfer for scene-specific motion prediction,'' in \emph{Proc. of European
+  Conference on Computer Vision (ECCV)}, Amsterdam, Netherlands, October 2016.
+  [Online]. Available: \url{http://arxiv.org/abs/1603.06987}
+\BIBentrySTDinterwordspacing
+
+\bibitem{Walker2014}
+J.~Walker, A.~Gupta, and M.~Hebert, ``Patch to the future: Unsupervised visual
+  prediction,'' in \emph{Computer Vision and Pattern Recognition}, 2014.
+
+\bibitem{Robicquet2016}
+\BIBentryALTinterwordspacing
+A.~Robicquet, A.~Sadeghian, A.~Alahi, and S.~Savarese, \emph{Learning Social
+  Etiquette: Human Trajectory Understanding In Crowded Scenes}.\hskip 1em plus
+  0.5em minus 0.4em\relax Cham: Springer International Publishing, 2016, pp.
+  549--565. [Online]. Available:
+  \url{http://dx.doi.org/10.1007/978-3-319-46484-8_33}
+\BIBentrySTDinterwordspacing
+
+\bibitem{MTA}
+R.~Abraham, J.~E. Marsden, and T.~S. Ratiu, \emph{Manifolds, Tensor Analysis,
+  and Applications}, 3rd~ed., ser. Applied Mathematical Sciences.\hskip 1em
+  plus 0.5em minus 0.4em\relax Spinger, 2009, vol.~75.
+
+\bibitem{Rudin1991}
+W.~Rudin, \emph{Functional analysis. International series in pure and applied
+  mathematics}.\hskip 1em plus 0.5em minus 0.4em\relax McGraw-Hill, Inc., New
+  York, 1991.
+
+\end{thebibliography}
