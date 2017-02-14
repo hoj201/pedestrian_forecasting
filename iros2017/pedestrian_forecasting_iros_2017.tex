@@ -200,14 +200,15 @@ Specifically, our motion model consists of a modeled trajectory $\check{x}_t$, w
 
 Once initialized, agents come in two flavors: linear and nonlinear.
 The linear agent model evolves according to the equation $\check{x}_t = x_0 + t v_0$ and so we have the posterior:
-\begin{align*}
-	\Pr( \check{x}_t \mid x_0, v_0, lin) = \delta( \check{x}_t - x_0 - t v_0 ) d\check{x}_t.
-\end{align*}
-where $\delta( \cdot )$ denotes the multivariate Dirac-delta distribution.
+\begin{align}
+	\Pr( \check{x}_t  \in A \mid x_0, v_0, lin) = \int_A \delta( \check{x}_t - x_0 - t v_0 ) d\check{x}_t.
+\end{align}
+for all measurable sets $A \subset \mathbb{R}^2$, where $\delta( \cdot )$ denotes the multivariate Dirac-delta distribution.
+For the sake of convenience, from here on we drop the set $A$ and the integral when defining such posteriors since this equation is true for all measurable sets $A$.
 We also assume the posteriors, $\Pr(x_0 \mid lin)$ and $\Pr( v_0 \mid lin, x_0)$ are known.
 
 If the agent is of nonlinear type, then we assume the dynamics take the form:
-\begin{align}
+\begin{align}n
 	\frac{d \check{x}_t}{dt} = s \cdot X_k(\check{x}_t) \label{eq:ode}
 \end{align}
 where $X_k$ is a vector-field\footnote{A vector-field, generally speaking, is an assignment of a velocity to each position in some space.  A vector-field on $\mathbb{R}^n$ is nothing but a map from $\mathbb{R}^n \to \mathbb{R}^n$.} drawn from a finite collection $\{X_1, \dots, X_n\}$, and $s \in \mathbb{R}$.
@@ -220,17 +221,17 @@ It is assumed that $k$ and $s$ are both constant in time, so that $\check{x}_t$ 
 This insight allows us to use the motion model to generate the posterior for $\Pr( \check{x}_t \mid x_0, k, s)$.
 For each initial condition, $x_0$, we can solve \eqref{eq:ode} as an initial value problem, to obtain a point $\check{x}_t$ with initial condition $\check{x}_0 = x_0$.
 This process, which takes $\check{x}_0$ and outputs $\check{x}_t$, constitutes a map which is termed the flow-map \cite[Ch 4]{MTA}, and which we denote by $\Phi_{k,s}^t$.
-Explicitly, we have the posterior
+Explicitly, we have the posterior:
 \begin{align}
 	\Pr( \check{x}_t \mid x_0 , k , s) = \delta( \check{x}_t - \Phi^{t}_{k,s}( x_0) )  d\check{x}_t \label{eq:x_check | ksx}
 \end{align}
 where $\Phi^{t}_{k,s}$ is the flow-map of the vector field $s \,X_k$ up to time $t$.
 Note the variables $k,s$ and $x_0$ determine $v_0$.
-Thus we have the posterior
+Thus we have the posterior:
 \begin{align}
 	\Pr( v_0 \mid k, s, x_0) = \delta( v_0 -s X_k( x_0) ) dv_0. \label{eq:v | ksx}
 \end{align}
-In summary, the agent models are parametrized by the set
+In summary, the agent models are parametrized by the set:
 \begin{align}
 	\mathcal{M} = \{ lin \} \cup \left( \mathbb{R} \times \{ 1 , \dots, n \} \right) \label{eq:models}
 \end{align}
@@ -265,8 +266,9 @@ In particular
 	&= \left( \sum_{k} \int \Pr( x_t, k , s  \mid \hat{x}_0, \hat{v}_0 ) ds \right) \\
 	&\quad + \Pr( x_t, lin \mid \hat{x}_0, \hat{v}_0 ). \label{eq:decomposition}
 \end{align}
-The final term $\Pr( x_t, lin \mid \hat{x}_0, \hat{v}_0 )$ is expressible in closed form when the posteriors $\Pr( x_0 \mid lin)$ and $\Pr( v_0 \mid lin,x_0)$ are simple expressions such as Gaussians or uniform distributions. In either case, numerical computation of $\Pr(x_t, lin \mid \hat{x}_0, \hat{v}_0)$ poses a negligible burden in terms of numerical computation.
-The primary computational burden derives from computing $\sum_{k} \int \Pr( x_t, k , s  \mid \hat{x}_0, \hat{v}_0 ) ds$.
+The final term $\Pr( x_t, lin \mid \hat{x}_0, \hat{v}_0 )$ is expressible in closed form when the posteriors $\Pr( x_0 \mid lin)$ and $\Pr( v_0 \mid lin,x_0)$ have known expressions ( e.g. Gaussians or uniform distributions). 
+In this instance, the numerical computation of $\Pr(x_t, lin \mid \hat{x}_0, \hat{v}_0)$ poses a negligible burden.
+Instead the primary computational burden derives from computing $\sum_{k} \int \Pr( x_t, k , s  \mid \hat{x}_0, \hat{v}_0 ) ds$.
 
 \section{Efficient Probability Propagation} \label{sec:efficient}
 As mentioned, many of the modeling choices were born out of a balance between accuracy and real-time computability.

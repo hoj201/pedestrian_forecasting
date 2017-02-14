@@ -8,51 +8,49 @@ Reallocated singl_function (elt_size=4) to 100 items from 50.
 Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
 Reallocated singl_function (elt_size=4) to 100 items from 50.
 Database file #1: references.bib
-Warning--I didn't find a database entry for "Xie2013"
 -- IEEEtran.bst version 1.11 (2003/04/02) by Michael Shell.
 -- http://www.ctan.org/tex-archive/macros/latex/contrib/supported/IEEEtran/
 -- See the "IEEEtran_bst_HOWTO.pdf" manual for usage information.
 
 Done.
-You've used 14 entries,
+You've used 15 entries,
             3975 wiz_defined-function locations,
-            902 strings with 10348 characters,
-and the built_in function-call counts, 9355 in all, are:
-= -- 680
-> -- 242
+            905 strings with 10491 characters,
+and the built_in function-call counts, 9842 in all, are:
+= -- 712
+> -- 255
 < -- 61
-+ -- 127
-- -- 45
-* -- 449
-:= -- 1395
-add.period$ -- 28
-call.type$ -- 14
-change.case$ -- 10
++ -- 133
+- -- 48
+* -- 471
+:= -- 1471
+add.period$ -- 30
+call.type$ -- 15
+change.case$ -- 11
 chr.to.int$ -- 153
-cite$ -- 14
-duplicate$ -- 684
-empty$ -- 876
-format.name$ -- 55
-if$ -- 2160
+cite$ -- 15
+duplicate$ -- 726
+empty$ -- 934
+format.name$ -- 59
+if$ -- 2273
 int.to.chr$ -- 0
-int.to.str$ -- 14
-missing$ -- 127
-newline$ -- 68
-num.names$ -- 13
-pop$ -- 341
+int.to.str$ -- 15
+missing$ -- 136
+newline$ -- 71
+num.names$ -- 14
+pop$ -- 367
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 2
-skip$ -- 725
+skip$ -- 765
 stack$ -- 0
-substring$ -- 353
-swap$ -- 503
+substring$ -- 354
+swap$ -- 525
 text.length$ -- 10
 text.prefix$ -- 0
 top$ -- 5
 type$ -- 0
 warning$ -- 0
-while$ -- 38
-width$ -- 16
-write$ -- 146
-(There was 1 warning)
+while$ -- 39
+width$ -- 17
+write$ -- 154
