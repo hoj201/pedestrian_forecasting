@@ -1,11 +1,6 @@
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.log
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2015.5.24)  14 FEB 2017 15:30
-=======
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2015.5.24)  14 FEB 2017 15:15
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.log
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2015.5.24)  14 FEB 2017 16:52
 entering extended mode
  restricted \write18 enabled.
- file:line:error style messages enabled.
  %&-line parsing enabled.
 **pedestrian_forecasting_iros_2017.tex
 (./pedestrian_forecasting_iros_2017.tex
@@ -637,88 +632,26 @@ File: pgflibraryarrows.meta.code.tex 2013/12/13 v3.0.0 (rcs-revision 1.12)
 \pgfarrowwidth=\dimen182
 \pgfarrowlinewidth=\dimen183
 )))
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.log
 (/usr/local/texlive/2015/texmf-dist/tex/latex/caption/subcaption.sty
 Package: subcaption 2013/02/03 v1.1-62 Sub-captions (AR)
-\c@subfigure=\count132
-\c@subtable=\count133
+\c@subfigure=\count138
+\c@subtable=\count139
 )
 (/usr/local/texlive/2015/texmf-dist/tex/latex/tools/array.sty
 Package: array 2014/10/28 v2.4c Tabular extension package (FMi)
-\col@sep=\dimen196
-\extrarowheight=\dimen197
-\NC@list=\toks41
-\extratabsurround=\skip53
-\backup@length=\skip54
+\col@sep=\dimen184
+\extrarowheight=\dimen185
+\NC@list=\toks38
+\extratabsurround=\skip56
+\backup@length=\skip57
 )
-\c@thm=\count134
-\c@cor=\count135
-
-(/usr/local/texlive/2015/texmf-dist/tex/latex/natbib/natbib.sty
-Package: natbib 2010/09/13 8.31b (PWD, AO)
-\bibhang=\skip55
-\bibsep=\skip56
-LaTeX Info: Redefining \cite on input line 694.
-\c@NAT@ctr=\count136
-)
-(/usr/local/texlive/2015/texmf-dist/tex/latex/tools/multicol.sty
-Package: multicol 2015/03/31 v1.8m multicolumn formatting (FMi)
-\c@tracingmulticols=\count137
-\mult@box=\box41
-\multicol@leftmargin=\dimen198
-\c@unbalance=\count138
-\c@collectmore=\count139
-\doublecol@number=\count140
-\multicoltolerance=\count141
-\multicolpretolerance=\count142
-\full@width=\dimen199
-\page@free=\dimen200
-\premulticols=\dimen201
-\postmulticols=\dimen202
-\multicolsep=\skip57
-\multicolbaselineskip=\skip58
-\partial@page=\box42
-\last@line=\box43
-\maxbalancingoverflow=\dimen203
-\mult@rightbox=\box44
-\mult@grightbox=\box45
-\mult@gfirstbox=\box46
-\mult@firstbox=\box47
-\@tempa=\box48
-\@tempa=\box49
-\@tempa=\box50
-\@tempa=\box51
-\@tempa=\box52
-\@tempa=\box53
-\@tempa=\box54
-\@tempa=\box55
-\@tempa=\box56
-\@tempa=\box57
-\@tempa=\box58
-\@tempa=\box59
-\@tempa=\box60
-\@tempa=\box61
-\@tempa=\box62
-\@tempa=\box63
-\@tempa=\box64
-\c@columnbadness=\count143
-\c@finalcolumnbadness=\count144
-\last@try=\dimen204
-\multicolovershoot=\dimen205
-\multicolundershoot=\dimen206
-\mult@nat@firstbox=\box65
-\colbreak@box=\box66
-\mc@col@check@num=\count145
-)
-=======
 (/usr/local/texlive/2015/texmf-dist/tex/latex/comment/comment.sty
 \CommentStream=\write4
 
 Excluding comment 'comment')
-\c@thm=\count138
-\c@cor=\count139
+\c@thm=\count140
+\c@cor=\count141
 
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.log
 (/usr/local/texlive/2015/texmf-dist/tex/latex/hyperref/hyperref.sty
 Package: hyperref 2012/11/06 v6.83m Hypertext links for LaTeX
 
@@ -776,24 +709,14 @@ Package: auxhook 2011/03/04 v1.3 Hooks for auxiliary files (HO)
 (/usr/local/texlive/2015/texmf-dist/tex/latex/oberdiek/kvoptions.sty
 Package: kvoptions 2011/06/30 v3.11 Key value format for package options (HO)
 )
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.log
-\@linkdim=\dimen207
-\Hy@linkcounter=\count146
-\Hy@pagecounter=\count147
-=======
-\@linkdim=\dimen184
-\Hy@linkcounter=\count140
-\Hy@pagecounter=\count141
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.log
+\@linkdim=\dimen186
+\Hy@linkcounter=\count142
+\Hy@pagecounter=\count143
 
 (/usr/local/texlive/2015/texmf-dist/tex/latex/hyperref/pd1enc.def
 File: pd1enc.def 2012/11/06 v6.83m Hyperref: PDFDocEncoding definition (HO)
 )
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.log
-\Hy@SavedSpaceFactor=\count148
-=======
-\Hy@SavedSpaceFactor=\count142
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.log
+\Hy@SavedSpaceFactor=\count144
 
 (/usr/local/texlive/2015/texmf-dist/tex/latex/latexconfig/hyperref.cfg
 File: hyperref.cfg 2002/06/06 v1.2 hyperref configuration of TeXLive
@@ -806,28 +729,17 @@ Package hyperref Info: Plain pages OFF on input line 4458.
 Package hyperref Info: Backreferencing OFF on input line 4463.
 Package hyperref Info: Implicit mode ON; LaTeX internals redefined.
 Package hyperref Info: Bookmarks ON on input line 4688.
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.log
-\c@Hy@tempcnt=\count149
-=======
-\c@Hy@tempcnt=\count143
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.log
+\c@Hy@tempcnt=\count145
 
 (/usr/local/texlive/2015/texmf-dist/tex/latex/url/url.sty
 \Urlmuskip=\muskip11
 Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
 )
 LaTeX Info: Redefining \url on input line 5041.
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.log
-\XeTeXLinkMargin=\dimen208
-\Fld@menulength=\count150
-\Field@Width=\dimen209
-\Fld@charsize=\dimen210
-=======
-\XeTeXLinkMargin=\dimen185
-\Fld@menulength=\count144
-\Field@Width=\dimen186
-\Fld@charsize=\dimen187
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.log
+\XeTeXLinkMargin=\dimen187
+\Fld@menulength=\count146
+\Field@Width=\dimen188
+\Fld@charsize=\dimen189
 Package hyperref Info: Hyper figures OFF on input line 6295.
 Package hyperref Info: Link nesting OFF on input line 6300.
 Package hyperref Info: Hyper index ON on input line 6303.
@@ -837,147 +749,99 @@ Package hyperref Info: Link coloring with OCG OFF on input line 6320.
 Package hyperref Info: PDF/A mode OFF on input line 6325.
 LaTeX Info: Redefining \ref on input line 6365.
 LaTeX Info: Redefining \pageref on input line 6369.
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.log
-\Hy@abspage=\count151
-\c@Item=\count152
-\c@Hfootnote=\count153
-=======
-\Hy@abspage=\count145
-\c@Item=\count146
-\c@Hfootnote=\count147
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.log
+\Hy@abspage=\count147
+\c@Item=\count148
+\c@Hfootnote=\count149
 )
 
 Package hyperref Message: Driver (autodetected): hpdftex.
 
 (/usr/local/texlive/2015/texmf-dist/tex/latex/hyperref/hpdftex.def
 File: hpdftex.def 2012/11/06 v6.83m Hyperref driver for pdfTeX
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.log
-\Fld@listcount=\count154
-\c@bookmark@seq@number=\count155
-=======
-\Fld@listcount=\count148
-\c@bookmark@seq@number=\count149
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.log
+\Fld@listcount=\count150
+\c@bookmark@seq@number=\count151
 
 (/usr/local/texlive/2015/texmf-dist/tex/latex/oberdiek/rerunfilecheck.sty
 Package: rerunfilecheck 2011/04/15 v1.7 Rerun checks for auxiliary files (HO)
 Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
 82.
 )
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.log
-\Hy@SectionHShift=\skip59
-=======
-\Hy@SectionHShift=\skip56
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.log
+\Hy@SectionHShift=\skip58
 )
 (./pedestrian_forecasting_iros_2017.aux)
 \openout1 = `pedestrian_forecasting_iros_2017.aux'.
 
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.log
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 38.
-LaTeX Font Info:    ... okay on input line 38.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 38.
-LaTeX Font Info:    ... okay on input line 38.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 38.
-LaTeX Font Info:    ... okay on input line 38.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 38.
-LaTeX Font Info:    ... okay on input line 38.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 38.
-LaTeX Font Info:    ... okay on input line 38.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 38.
-LaTeX Font Info:    ... okay on input line 38.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 38.
-LaTeX Font Info:    ... okay on input line 38.
-
--- Lines per column: 56 (exact).
-=======
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <5> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 40.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 44.
 LaTeX Font Info:    Font shape `T1/ptm/bx/it' in size <5> not available
-(Font)              Font shape `T1/ptm/b/it' tried instead on input line 40.
+(Font)              Font shape `T1/ptm/b/it' tried instead on input line 44.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <7> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 40.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 44.
 LaTeX Font Info:    Font shape `T1/ptm/bx/it' in size <7> not available
-(Font)              Font shape `T1/ptm/b/it' tried instead on input line 40.
+(Font)              Font shape `T1/ptm/b/it' tried instead on input line 44.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <8> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 40.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 44.
 LaTeX Font Info:    Font shape `T1/ptm/bx/it' in size <8> not available
-(Font)              Font shape `T1/ptm/b/it' tried instead on input line 40.
+(Font)              Font shape `T1/ptm/b/it' tried instead on input line 44.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <9> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 40.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 44.
 LaTeX Font Info:    Font shape `T1/ptm/bx/it' in size <9> not available
-(Font)              Font shape `T1/ptm/b/it' tried instead on input line 40.
+(Font)              Font shape `T1/ptm/b/it' tried instead on input line 44.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <10> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 40.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 44.
 LaTeX Font Info:    Font shape `T1/ptm/bx/it' in size <10> not available
-(Font)              Font shape `T1/ptm/b/it' tried instead on input line 40.
+(Font)              Font shape `T1/ptm/b/it' tried instead on input line 44.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <11> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 40.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 44.
 LaTeX Font Info:    Font shape `T1/ptm/bx/it' in size <11> not available
-(Font)              Font shape `T1/ptm/b/it' tried instead on input line 40.
+(Font)              Font shape `T1/ptm/b/it' tried instead on input line 44.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <12> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 40.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 44.
 LaTeX Font Info:    Font shape `T1/ptm/bx/it' in size <12> not available
-(Font)              Font shape `T1/ptm/b/it' tried instead on input line 40.
+(Font)              Font shape `T1/ptm/b/it' tried instead on input line 44.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <16> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 40.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 44.
 LaTeX Font Info:    Font shape `T1/ptm/bx/it' in size <16> not available
-(Font)              Font shape `T1/ptm/b/it' tried instead on input line 40.
+(Font)              Font shape `T1/ptm/b/it' tried instead on input line 44.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <20> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 40.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 44.
 LaTeX Font Info:    Font shape `T1/ptm/bx/it' in size <20> not available
-(Font)              Font shape `T1/ptm/b/it' tried instead on input line 40.
+(Font)              Font shape `T1/ptm/b/it' tried instead on input line 44.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <24> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 40.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 44.
 LaTeX Font Info:    Font shape `T1/ptm/bx/it' in size <24> not available
-(Font)              Font shape `T1/ptm/b/it' tried instead on input line 40.
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.log
+(Font)              Font shape `T1/ptm/b/it' tried instead on input line 44.
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: hyperref package is loaded.
 Package caption Info: End \AtBeginDocument code.
 
 (/usr/local/texlive/2015/texmf-dist/tex/context/base/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.log
-\scratchcounter=\count156
-\scratchdimen=\dimen211
-\scratchbox=\box67
-\nofMPsegments=\count157
-\nofMParguments=\count158
-\everyMPshowfont=\toks42
-\MPscratchCnt=\count159
-\MPscratchDim=\dimen212
-\MPnumerator=\count160
-\makeMPintoPDFobject=\count161
-\everyMPtoPDFconversion=\toks43
-=======
-\scratchcounter=\count150
-\scratchdimen=\dimen188
+\scratchcounter=\count152
+\scratchdimen=\dimen190
 \scratchbox=\box42
-\nofMPsegments=\count151
-\nofMParguments=\count152
-\everyMPshowfont=\toks38
-\MPscratchCnt=\count153
-\MPscratchDim=\dimen189
-\MPnumerator=\count154
-\makeMPintoPDFobject=\count155
-\everyMPtoPDFconversion=\toks39
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.log
+\nofMPsegments=\count153
+\nofMParguments=\count154
+\everyMPshowfont=\toks39
+\MPscratchCnt=\count155
+\MPscratchDim=\dimen191
+\MPnumerator=\count156
+\makeMPintoPDFobject=\count157
+\everyMPtoPDFconversion=\toks40
 ) ABD: EveryShipout initializing macros
 (/usr/local/texlive/2015/texmf-dist/tex/latex/oberdiek/epstopdf-base.sty
 Package: epstopdf-base 2010/02/09 v2.5 Base part for package epstopdf
@@ -994,13 +858,8 @@ G,.JBIG2,.JB2,.eps]
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.log
-\AtBeginShipoutBox=\box68
-Package hyperref Info: Link coloring OFF on input line 38.
-=======
 \AtBeginShipoutBox=\box43
-Package hyperref Info: Link coloring OFF on input line 40.
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.log
+Package hyperref Info: Link coloring OFF on input line 44.
 
 (/usr/local/texlive/2015/texmf-dist/tex/latex/hyperref/nameref.sty
 Package: nameref 2012/10/27 v2.43 Cross-referencing by name of section
@@ -1008,376 +867,229 @@ Package: nameref 2012/10/27 v2.43 Cross-referencing by name of section
 (/usr/local/texlive/2015/texmf-dist/tex/generic/oberdiek/gettitlestring.sty
 Package: gettitlestring 2010/12/03 v1.4 Cleanup title references (HO)
 )
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.log
-\c@section@level=\count162
+\c@section@level=\count158
 )
-LaTeX Info: Redefining \ref on input line 38.
-LaTeX Info: Redefining \pageref on input line 38.
-LaTeX Info: Redefining \nameref on input line 38.
-
-(./pedestrian_forecasting_iros_2017.out)
-(./pedestrian_forecasting_iros_2017.out)
-\@outlinefile=\write4
-\openout4 = `pedestrian_forecasting_iros_2017.out'.
-
-Package hyperref Info: bookmark level for unknown todo defaults to 0 on input l
-ine 98.
-
-<./figures/FirstPage/gates_1_2_t=55.png, id=75, 217.35202pt x 301.3659pt>
-File: ./figures/FirstPage/gates_1_2_t=55.png Graphic file (type png)
-
-<use ./figures/FirstPage/gates_1_2_t=55.png>
-Package pdftex.def Info: ./figures/FirstPage/gates_1_2_t=55.png used on input l
-ine 108.
-(pdftex.def)             Requested size: 113.39923pt x 157.23538pt.
-LaTeX Font Info:    Try loading font information for U+msa on input line 109.
-
-(/usr/local/texlive/2015/texmf-dist/tex/latex/amsfonts/umsa.fd
-File: umsa.fd 2013/01/14 v3.01 AMS symbols A
-)
-LaTeX Font Info:    Try loading font information for U+msb on input line 109.
-=======
-\c@section@level=\count156
-)
-LaTeX Info: Redefining \ref on input line 40.
-LaTeX Info: Redefining \pageref on input line 40.
-LaTeX Info: Redefining \nameref on input line 40.
+LaTeX Info: Redefining \ref on input line 44.
+LaTeX Info: Redefining \pageref on input line 44.
+LaTeX Info: Redefining \nameref on input line 44.
 
 (./pedestrian_forecasting_iros_2017.out)
 (./pedestrian_forecasting_iros_2017.out)
 \@outlinefile=\write5
 \openout5 = `pedestrian_forecasting_iros_2017.out'.
 
-LaTeX Font Info:    Try loading font information for U+msa on input line 70.
+LaTeX Font Info:    Try loading font information for U+msa on input line 74.
 
 (/usr/local/texlive/2015/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 70.
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.log
+LaTeX Font Info:    Try loading font information for U+msb on input line 74.
 
 (/usr/local/texlive/2015/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.log
-<./figures/FirstPage/gates_1_2_t=145.png, id=77, 217.17136pt x 301.90793pt>
-File: ./figures/FirstPage/gates_1_2_t=145.png Graphic file (type png)
-
-<use ./figures/FirstPage/gates_1_2_t=145.png>
-Package pdftex.def Info: ./figures/FirstPage/gates_1_2_t=145.png used on input 
-line 112.
-(pdftex.def)             Requested size: 113.39923pt x 157.64717pt.
-
-<./figures/FirstPage/gates_1_2_t=235.png, id=78, 217.71338pt x 302.26927pt>
-File: ./figures/FirstPage/gates_1_2_t=235.png Graphic file (type png)
-
-<use ./figures/FirstPage/gates_1_2_t=235.png>
-Package pdftex.def Info: ./figures/FirstPage/gates_1_2_t=235.png used on input 
-line 117.
-(pdftex.def)             Requested size: 113.39923pt x 157.43921pt.
-
-<./figures/FirstPage/gates_1_2_t=345.png, id=79, 217.17136pt x 301.54657pt>
-File: ./figures/FirstPage/gates_1_2_t=345.png Graphic file (type png)
-
-<use ./figures/FirstPage/gates_1_2_t=345.png>
-Package pdftex.def Info: ./figures/FirstPage/gates_1_2_t=345.png used on input 
-line 121.
-(pdftex.def)             Requested size: 113.39923pt x 157.4585pt.
-
-
-LaTeX Warning: Reference `fig:' on page 1 undefined on input line 138.
-
-
-Underfull \vbox (badness 4739) has occurred while \output is active []
-
- [1{/usr/local/texlive/2015/texmf-var/fonts/map/pdftex/updmap/pdftex.map}
-
-
- <./figures/FirstPage/gates_1_2_t=55.png> <./figures/FirstPage/gates_1_2_t=145.
-png> <./figures/FirstPage/gates_1_2_t=235.png> <./figures/FirstPage/gates_1_2_t
-=345.png>]
-LaTeX Font Info:    Try loading font information for OMS+ptm on input line 211.
-
-
-(/usr/local/texlive/2015/texmf-dist/tex/latex/psnfss/omsptm.fd
-File: omsptm.fd 
-)
-LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <10> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 211.
- [2]
-Underfull \hbox (badness 5490) in paragraph at lines 256--262
-\OT1/ptm/m/n/10 where $\OML/cmm/m/it/10 X[]$ \OT1/ptm/m/n/10 is a vector-field 
-from a fi-nite col-lec-tion
- []
-
-[3]
-Underfull \hbox (badness 3343) in paragraph at lines 324--327
-\OT1/ptm/m/n/10 pro-por-tional to a con-vo-lu-tion of the joint dis-tri-bu-tion
-=======
-LaTeX Font Info:    Try loading font information for T1+pcr on input line 70.
+LaTeX Font Info:    Try loading font information for T1+pcr on input line 74.
 
 (/usr/local/texlive/2015/texmf-dist/tex/latex/psnfss/t1pcr.fd
 File: t1pcr.fd 2001/06/04 font definitions for T1/pcr.
 )
-Package hyperref Info: bookmark level for unknown todo defaults to 0 on input l
+<./figures/FirstPage/gates_1_2_t=55.png, id=83, 217.35202pt x 301.3659pt>
+File: ./figures/FirstPage/gates_1_2_t=55.png Graphic file (type png)
+
+<use ./figures/FirstPage/gates_1_2_t=55.png>
+Package pdftex.def Info: ./figures/FirstPage/gates_1_2_t=55.png used on input l
 ine 91.
+(pdftex.def)             Requested size: 110.57239pt x 153.31749pt.
+
+<./figures/FirstPage/gates_1_2_t=145.png, id=85, 217.17136pt x 301.90793pt>
+File: ./figures/FirstPage/gates_1_2_t=145.png Graphic file (type png)
+
+<use ./figures/FirstPage/gates_1_2_t=145.png>
+Package pdftex.def Info: ./figures/FirstPage/gates_1_2_t=145.png used on input 
+line 95.
+(pdftex.def)             Requested size: 110.57239pt x 153.71762pt.
+
+<./figures/FirstPage/gates_1_2_t=235.png, id=86, 217.71338pt x 302.26927pt>
+File: ./figures/FirstPage/gates_1_2_t=235.png Graphic file (type png)
+
+<use ./figures/FirstPage/gates_1_2_t=235.png>
+Package pdftex.def Info: ./figures/FirstPage/gates_1_2_t=235.png used on input 
+line 100.
+(pdftex.def)             Requested size: 110.57239pt x 153.51418pt.
+
+<./figures/FirstPage/gates_1_2_t=345.png, id=87, 217.17136pt x 301.54657pt>
+File: ./figures/FirstPage/gates_1_2_t=345.png Graphic file (type png)
+
+<use ./figures/FirstPage/gates_1_2_t=345.png>
+Package pdftex.def Info: ./figures/FirstPage/gates_1_2_t=345.png used on input 
+line 104.
+(pdftex.def)             Requested size: 110.57239pt x 153.53365pt.
 
 
-LaTeX Warning: Reference `fig:' on page 1 undefined on input line 95.
+LaTeX Warning: Reference `fig:' on page 1 undefined on input line 120.
 
 [1{/usr/local/texlive/2015/texmf-var/fonts/map/pdftex/updmap/pdftex.map}
 
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.log
 
-]
-[2]
-Underfull \hbox (badness 1803) in paragraph at lines 288--291
+ <./figures/FirstPage/gates_1_2_t=55.png> <./figures/FirstPage/gates_1_2_t=145.
+png> <./figures/FirstPage/gates_1_2_t=235.png> <./figures/FirstPage/gates_1_2_t
+=345.png>] [2] [3]
+Underfull \hbox (badness 1803) in paragraph at lines 313--316
 \T1/ptm/m/n/10 pro-por-tional to a con-vo-lu-tion of the joint dis-tri-bu-tion
  []
 
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.log
-[4] [5]
-
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 507.
-=======
-[3]
+[4]
 Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
-put line 409.
+put line 434.
 
-Underfull \hbox (badness 10000) in paragraph at lines 417--418
+Underfull \hbox (badness 10000) in paragraph at lines 442--443
 [] \T1/ptm/m/n/10 Con-struct an $\OMS/cmsy/m/n/10 O\OT1/cmr/m/n/10 (\OMS/cmsy/m
 /n/10 j\OT1/cmr/m/n/10 ^^A\OML/cmm/m/it/10 x\OMS/cmsy/m/n/10 j\OT1/cmr/m/n/10 )
 $ \T1/ptm/m/n/10 ap-prox-i-ma-tion of
  []
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.log
 
-[4]
+[5]
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.log
-(hyperref)                removing `\mathop' on input line 507.
+(hyperref)                removing `math shift' on input line 498.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\mathgroup' on input line 507.
+(hyperref)                removing `\mathop' on input line 498.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\symoperators' on input line 507.
+(hyperref)                removing `\mathgroup' on input line 498.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\nmlimits@' on input line 507.
+(hyperref)                removing `\symoperators' on input line 498.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `subscript' on input line 507.
+(hyperref)                removing `\nmlimits@' on input line 498.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\mid' on input line 507.
+(hyperref)                removing `subscript' on input line 498.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 507.
+(hyperref)                removing `\mid' on input line 498.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 507.
+(hyperref)                removing `math shift' on input line 498.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\mathop' on input line 507.
+(hyperref)                removing `math shift' on input line 498.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\mathgroup' on input line 507.
+(hyperref)                removing `\mathop' on input line 498.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\symoperators' on input line 507.
+(hyperref)                removing `\mathgroup' on input line 498.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\nmlimits@' on input line 507.
+(hyperref)                removing `\symoperators' on input line 498.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 507.
-
-
-Underfull \hbox (badness 3407) in paragraph at lines 515--518
-[]\OT1/ptm/m/n/10 We will let $[]\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 k\OT1/cmr/m/
-n/10 ) = (\OML/cmm/m/it/10 n \OT1/cmr/m/n/10 + 1)[]$ \OT1/ptm/m/n/10 and $[]\OT
-1/cmr/m/n/10 (\OML/cmm/m/it/10 s\OT1/cmr/m/n/10 ) \OMS/cmsy/m/n/10 ^^X
- []
-=======
-(hyperref)                removing `math shift' on input line 473.
+(hyperref)                removing `\nmlimits@' on input line 498.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\mathop' on input line 473.
+(hyperref)                removing `math shift' on input line 498.
 
 
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\mathgroup' on input line 473.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\symoperators' on input line 473.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\nmlimits@' on input line 473.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `subscript' on input line 473.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\mid' on input line 473.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 473.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 473.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\mathop' on input line 473.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\mathgroup' on input line 473.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\symoperators' on input line 473.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\nmlimits@' on input line 473.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 473.
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.log
-
-
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.log
-Underfull \hbox (badness 2512) in paragraph at lines 559--569
-\OT1/ptm/m/n/10 against the model from [8] and a ran-dom walk. We
- []
-
-
-<./figures/comparison/ours_death_1_2_t=70.png, id=236, 216.81pt x 261.25604pt>
+<./figures/comparison/ours_death_1_2_t=70.png, id=208, 216.81pt x 261.25604pt>
 File: ./figures/comparison/ours_death_1_2_t=70.png Graphic file (type png)
 
 <use ./figures/comparison/ours_death_1_2_t=70.png>
 Package pdftex.def Info: ./figures/comparison/ours_death_1_2_t=70.png used on i
-nput line 575.
-(pdftex.def)             Requested size: 75.60077pt x 91.09814pt.
+nput line 561.
+(pdftex.def)             Requested size: 73.71617pt x 88.82986pt.
 
-<./figures/comparison/ours_death_1_2_t=250.png, id=237, 216.44865pt x 261.43672
+<./figures/comparison/ours_death_1_2_t=250.png, id=209, 216.44865pt x 261.43672
 pt>
 File: ./figures/comparison/ours_death_1_2_t=250.png Graphic file (type png)
  <use ./figures/comparison/ours_death_1_2_t=250.png>
 Package pdftex.def Info: ./figures/comparison/ours_death_1_2_t=250.png used on 
-input line 578.
-(pdftex.def)             Requested size: 75.60077pt x 91.31273pt.
+input line 564.
+(pdftex.def)             Requested size: 73.71617pt x 89.0389pt.
 
-<./figures/comparison/ours_death_1_2_t=370.png, id=238, 217.35202pt x 262.15942
+<./figures/comparison/ours_death_1_2_t=370.png, id=210, 217.35202pt x 262.15942
 pt>
 File: ./figures/comparison/ours_death_1_2_t=370.png Graphic file (type png)
  <use ./figures/comparison/ours_death_1_2_t=370.png>
 Package pdftex.def Info: ./figures/comparison/ours_death_1_2_t=370.png used on 
-input line 581.
-(pdftex.def)             Requested size: 75.60077pt x 91.18913pt.
+input line 567.
+(pdftex.def)             Requested size: 73.71617pt x 88.913pt.
 
-<./figures/comparison/kit_death_1_2_t=70.png, id=239, 216.99068pt x 261.6174pt>
+<./figures/comparison/kit_death_1_2_t=70.png, id=211, 216.99068pt x 261.6174pt>
 File: ./figures/comparison/kit_death_1_2_t=70.png Graphic file (type png)
 <use ./figures/comparison/kit_death_1_2_t=70.png>
 Package pdftex.def Info: ./figures/comparison/kit_death_1_2_t=70.png used on in
-put line 586.
-(pdftex.def)             Requested size: 75.60077pt x 91.1483pt.
+put line 575.
+(pdftex.def)             Requested size: 73.71617pt x 88.87688pt.
 
-<./figures/comparison/kit_death_1_2_t=250.png, id=240, 216.62932pt x 261.25604p
+<./figures/comparison/kit_death_1_2_t=250.png, id=212, 216.62932pt x 261.25604p
 t>
 File: ./figures/comparison/kit_death_1_2_t=250.png Graphic file (type png)
  <use ./figures/comparison/kit_death_1_2_t=250.png>
 Package pdftex.def Info: ./figures/comparison/kit_death_1_2_t=250.png used on i
-nput line 589.
-(pdftex.def)             Requested size: 75.60077pt x 91.17389pt.
+nput line 578.
+(pdftex.def)             Requested size: 73.71617pt x 88.90161pt.
 
-<./figures/comparison/kit_death_1_2_t=370.png, id=241, 217.5327pt x 261.79808pt
+<./figures/comparison/kit_death_1_2_t=370.png, id=213, 217.5327pt x 261.79808pt
 >
 File: ./figures/comparison/kit_death_1_2_t=370.png Graphic file (type png)
  <use ./figures/comparison/kit_death_1_2_t=370.png>
 Package pdftex.def Info: ./figures/comparison/kit_death_1_2_t=370.png used on i
-nput line 592.
-(pdftex.def)             Requested size: 75.60077pt x 90.98355pt.
+nput line 581.
+(pdftex.def)             Requested size: 73.71617pt x 88.71455pt.
 
-<./figures/comparison/rand_death_1_2_t=70.png, id=242, 217.71338pt x 261.43672p
+<./figures/comparison/rand_death_1_2_t=70.png, id=214, 217.71338pt x 261.43672p
 t>
 File: ./figures/comparison/rand_death_1_2_t=70.png Graphic file (type png)
  <use ./figures/comparison/rand_death_1_2_t=70.png>
 Package pdftex.def Info: ./figures/comparison/rand_death_1_2_t=70.png used on i
-nput line 597.
-(pdftex.def)             Requested size: 75.60077pt x 90.78217pt.
+nput line 589.
+(pdftex.def)             Requested size: 73.71617pt x 88.5203pt.
 
-<./figures/comparison/rand_death_1_2_t=250.png, id=243, 217.35202pt x 261.25604
+<./figures/comparison/rand_death_1_2_t=250.png, id=215, 217.35202pt x 261.25604
 pt>
 File: ./figures/comparison/rand_death_1_2_t=250.png Graphic file (type png)
  <use ./figures/comparison/rand_death_1_2_t=250.png>
 Package pdftex.def Info: ./figures/comparison/rand_death_1_2_t=250.png used on 
-input line 600.
-(pdftex.def)             Requested size: 75.60077pt x 90.87491pt.
+input line 592.
+(pdftex.def)             Requested size: 73.71617pt x 88.60661pt.
 
-<./figures/comparison/rand_death_1_2_t=370.png, id=244, 217.71338pt x 262.15942
+<./figures/comparison/rand_death_1_2_t=370.png, id=216, 217.71338pt x 262.15942
 pt>
 File: ./figures/comparison/rand_death_1_2_t=370.png Graphic file (type png)
  <use ./figures/comparison/rand_death_1_2_t=370.png>
 Package pdftex.def Info: ./figures/comparison/rand_death_1_2_t=370.png used on 
-input line 603.
-(pdftex.def)             Requested size: 75.60077pt x 91.03313pt.
-
-Overfull \hbox (48.00385pt too wide) in paragraph at lines 572--609
- [][] 
- []
-
-[6]
-
-LaTeX Warning: Reference `fig:ours_grid' on page 7 undefined on input line 652.
-
-
-[7 <./figures/comparison/ours_death_1_2_t=70.png> <./figures/comparison/ours_de
-ath_1_2_t=250.png> <./figures/comparison/ours_death_1_2_t=370.png> <./figures/c
-omparison/kit_death_1_2_t=70.png> <./figures/comparison/kit_death_1_2_t=250.png
-> <./figures/comparison/kit_death_1_2_t=370.png> <./figures/comparison/rand_dea
-th_1_2_t=70.png> <./figures/comparison/rand_death_1_2_t=250.png> <./figures/com
-parison/rand_death_1_2_t=370.png>] (./pedestrian_forecasting_iros_2017.bbl
-Underfull \hbox (badness 1874) in paragraph at lines 61--68
-\OT1/ptm/m/it/10 man Tra-jec-tory Un-der-stand-ing In Crowded Scenes\OT1/ptm/m/
-n/10 ,
- []
+input line 595.
+(pdftex.def)             Requested size: 73.71617pt x 88.765pt.
+ [6 <./figures/comparison/ours_death_1_2_t=70.png> <./figures/comparison/ours_d
+eath_1_2_t=250.png> <./figures/comparison/ours_death_1_2_t=370.png> <./figures/
+comparison/kit_death_1_2_t=70.png> <./figures/comparison/kit_death_1_2_t=250.pn
+g> <./figures/comparison/kit_death_1_2_t=370.png> <./figures/comparison/rand_de
+ath_1_2_t=70.png> <./figures/comparison/rand_death_1_2_t=250.png> <./figures/co
+mparison/rand_death_1_2_t=370.png>]
+Package hyperref Info: bookmark level for unknown todo defaults to 0 on input l
+ine 625.
 
 
-Underfull \hbox (badness 1742) in paragraph at lines 61--68
-\OT1/ptm/m/n/10 pages 549--565.  Springer In-ter-na-tional Pub-lish-ing,
- []
-
-)
-=======
-LaTeX Warning: Reference `fig:ours_grid' on page 6 undefined on input line 578.
+LaTeX Warning: Reference `fig:ours_grid' on page 7 undefined on input line 658.
 
 
-[6] (./pedestrian_forecasting_iros_2017.bbl)
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.log
+[7] (./pedestrian_forecasting_iros_2017.bbl)
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -1389,104 +1101,59 @@ Before submitting the final camera ready copy, remember to:
  uses only Type 1 fonts and that every step in the generation
  process uses the US letter (8.5in X 11in) paper size.
 
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.log
-[8]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 713.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 713.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 720.
+[8
+
+]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 720.
  (./pedestrian_forecasting_iros_2017.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 713.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 713.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 720.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 720.
 Package rerunfilecheck Info: File `pedestrian_forecasting_iros_2017.out' has no
 t changed.
-(rerunfilecheck)             Checksum: 7E3E21E136A323917EBC9A1C5C4DD604;1106.
-=======
-[7]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 640.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 640.
- (./pedestrian_forecasting_iros_2017.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 640.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 640.
-Package rerunfilecheck Info: File `pedestrian_forecasting_iros_2017.out' has no
-t changed.
-(rerunfilecheck)             Checksum: 4E583931A51B1B8BC8CC9508887533FF;1223.
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.log
+(rerunfilecheck)             Checksum: 85198A1DD6C8480555AFBBF8FFCEB3A4;1223.
 
 
 LaTeX Warning: There were undefined references.
 
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.log
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 713.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 720.
  ) 
 Here is how much of TeX's memory you used:
- 20447 strings out of 493089
- 399819 string characters out of 6134842
- 466191 words of memory out of 5000000
- 23474 multiletter control sequences out of 15000+600000
- 46055 words of font info for 99 fonts, out of 8000000 for 9000
+ 20627 strings out of 493089
+ 399483 string characters out of 6134842
+ 458443 words of memory out of 5000000
+ 23631 multiletter control sequences out of 15000+600000
+ 119373 words of font info for 141 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 62i,18n,82p,635b,804s stack positions out of 5000i,500n,10000p,200000b,80000s
-=======
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 640.
- ) 
-Here is how much of TeX's memory you used:
- 20448 strings out of 493089
- 395154 string characters out of 6134842
- 458438 words of memory out of 5000000
- 23478 multiletter control sequences out of 15000+600000
- 116750 words of font info for 134 fonts, out of 8000000 for 9000
- 1141 hyphenation exceptions out of 8191
- 62i,16n,82p,635b,783s stack positions out of 5000i,500n,10000p,200000b,80000s
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.log
+ 62i,16n,82p,635b,784s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/local/texlive/2015/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/local/t
 exlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/local/te
 xlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx7.pfb></usr/local/texl
 ive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/local/texli
 ve/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texliv
 e/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi5.pfb></usr/local/texlive/
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.log
-2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/20
-15/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi9.pfb></usr/local/texlive/2015
-=======
 2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr/local/texlive/20
 15/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2015
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.log
-/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2015/t
-exmf-dist/fonts/type1/public/amsfonts/cm/cmr5.pfb></usr/local/texlive/2015/texm
-f-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/local/texlive/2015/texmf-d
-ist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2015/texmf-dist
-<<<<<<< HEAD:rss2017/pedestrian_forecasting_iros_2017.log
-/fonts/type1/public/amsfonts/cm/cmr9.pfb></usr/local/texlive/2015/texmf-dist/fo
-nts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2015/texmf-dist/fon
-ts/type1/public/amsfonts/cm/cmsy5.pfb></usr/local/texlive/2015/texmf-dist/fonts
-/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2015/texmf-dist/fonts/t
-ype1/public/amsfonts/symbols/msbm10.pfb></usr/local/texlive/2015/texmf-dist/fon
-ts/type1/urw/times/utmb8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/u
-rw/times/utmbi8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw/times/
-utmr8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw/times/utmri8a.pf
-b>
-Output written on pedestrian_forecasting_iros_2017.pdf (8 pages, 24727897 bytes
+/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi9.pfb></usr/local/texlive/2015/t
+exmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2015/tex
+mf-dist/fonts/type1/public/amsfonts/cm/cmr5.pfb></usr/local/texlive/2015/texmf-
+dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/local/texlive/2015/texmf-dis
+t/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2015/texmf-dist/f
+onts/type1/public/amsfonts/cm/cmr9.pfb></usr/local/texlive/2015/texmf-dist/font
+s/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2015/texmf-dist/fonts
+/type1/public/amsfonts/cm/cmsy5.pfb></usr/local/texlive/2015/texmf-dist/fonts/t
+ype1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2015/texmf-dist/fonts/typ
+e1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1
+/public/amsfonts/symbols/msbm10.pfb></usr/local/texlive/2015/texmf-dist/fonts/t
+ype1/urw/courier/ucrr8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw
+/times/utmb8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw/times/utm
+bi8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw/times/utmr8a.pfb><
+/usr/local/texlive/2015/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
+Output written on pedestrian_forecasting_iros_2017.pdf (8 pages, 24748479 bytes
 ).
 PDF statistics:
- 382 PDF objects out of 1000 (max. 8388607)
- 321 compressed objects within 4 object streams
- 86 named destinations out of 1000 (max. 500000)
- 220 words of extra memory for PDF output out of 10000 (max. 10000000)
-=======
-/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2015/texmf-dist/
-fonts/type1/public/amsfonts/cm/cmsy5.pfb></usr/local/texlive/2015/texmf-dist/fo
-nts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2015/texmf-dist/font
-s/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2015/texmf-dist/fonts/
-type1/public/amsfonts/symbols/msbm10.pfb></usr/local/texlive/2015/texmf-dist/fo
-nts/type1/urw/courier/ucrr8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type
-1/urw/times/utmb8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw/time
-s/utmbi8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw/times/utmr8a.
-pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on pedestrian_forecasting_iros_2017.pdf (7 pages, 260692 bytes).
-
-PDF statistics:
- 332 PDF objects out of 1000 (max. 8388607)
- 298 compressed objects within 3 object streams
- 88 named destinations out of 1000 (max. 500000)
- 171 words of extra memory for PDF output out of 10000 (max. 10000000)
->>>>>>> 628cf4029f445ca7efc90db5410d020049c1d309:iros2017/pedestrian_forecasting_iros_2017.log
+ 373 PDF objects out of 1000 (max. 8388607)
+ 309 compressed objects within 4 object streams
+ 90 named destinations out of 1000 (max. 500000)
+ 236 words of extra memory for PDF output out of 10000 (max. 10000000)
 
