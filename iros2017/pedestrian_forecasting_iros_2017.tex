@@ -309,7 +309,7 @@ where the last equality follows from substituting \eqref{eq:x_check | ksx} and \
 \end{align}
 where $\Psi( \hat{v}_0 ;k,s,x_0) := \left. \Pr( \hat{v}_0 \mid v_0) \right|_{v_0 = s X_k(x_0)}$.
  Assuming the density $\Pr(\hat{x}_0, x_0, k, s) \Psi( \hat{v}_0 ; k, s, x_0)$ is of bounded variation in the variable $x_0$ (with all other variables held fixed),
- we may approximate it as a sum of weighted Dirac-delta distributions supported on a regular grid, $\Gamma := \cup_{\alpha} \{ x_0^\alpha\}$, with spacing given by $\Delta x$ \cite{Rudin1991}.
+ we may approximate it as a sum of weighted Dirac-delta distributions supported on a regular grid, $\Gamma := \cup_{\alpha} \{ x_0^\alpha\}$, \Ram{I think defining the indexing set of $\alpha$ would be useful especially in the algorithm} with spacing given by $\Delta x$ \cite{Rudin1991}.
 In other words:
 \begin{align}
 	\begin{split}
@@ -322,6 +322,7 @@ for constants:
 \begin{align}
 	c_{k,s,\alpha} =  \left. \left[ \Pr(\hat{x}_0, x_0, k, s) \Psi( \hat{v}_0 \mid k,s,x_0 )  | \Delta x | \right] \right|_{x_0 = x_0^\alpha} \label{eq:constants}
 \end{align}
+\Ram{this definition of constants is confusing to me, specifically the first term: $ \left[ \Pr(\hat{x}_0, x_0, k, s) \Psi( \hat{v}_0 \mid k,s,x_0 ) \right] |_{x_0 = x_0^\alpha}$ seems to be circularly defined }
 and error of magnitude $\| \varepsilon_0 \|_{L^1} \sim \mathcal{O}( | \Delta x | )$ with respect to the $L^1$-norm in $x_0$.
 The coefficients, $c_{k,s,\alpha}$, can be computed efficiently as product of the posteriors represented in our Bayesian network \eqref{eq:pgm}.
 Substitution of \eqref{eq:approximation 1} into the final line of \eqref{eq:push forward} yields:
@@ -409,9 +410,9 @@ We can reduce this burden further by exploiting the following symmetry:
 		  \label{alg:1}
 		  \begin{algorithmic}[1]
 		    \Require \Ram{what are the things that a user needs to specify? Like they need the vector fields and $\Gamma$?}
-		    \ForEach {$k \in \mathcal M $}
+		    \ForEach {$k \in \mathcal M $  \Ram{having the indexing set over $\alpha$ would be useful here...also how are you discretizing the $s$ space?}}
 		    \State Compute the constants $c_{k,s,\alpha}$ \eqref{eq:constants} \label{alg1:step1}. 
-		    \State Compute $\Phi_{k,1}^t(x_0^{\alpha})$ for each $k$ and each point $x_0^{\alpha}$ in \hspace*{4.5mm} the grid over a time-interval $[-T,T]$\label{alg1:step2}.
+		    \State Compute $\Phi_{k,1}^t(x_0^{\alpha})$ for each $k$ and each point $x_0^{\alpha}$ in \hspace*{4.5mm} the grid over a time-interval $[-T,T]$ \label{alg1:step2}.
 		    \State Construct $\Phi_{k,s}^t( x_0^\alpha)$ from $\Phi_{k,1}^t(x_0^{\alpha})$ (Theorem \ref{thm:symmetry}).
 		    \State Construct an $\mathcal{O}( | \Delta x | )$ approximation of  \hspace*{4.5mm} $\Pr(x_t ,k,s,\hat{x}_0 , \hat{v}_0)$ (Corollary \ref{cor:error}).
 		    \EndFor
@@ -424,12 +425,12 @@ We can reduce this burden further by exploiting the following symmetry:
 Using these results, Algorithm \ref{alg:1} describes how to compute an $\mathcal{O}( \Delta x)$ approximation of $\rho_t(x_t)$.
 Steps \ref{alg1:step1} and \ref{alg1:step2} are where the bulk of the work occurs.
 Fortunately, these two steps are embarrassingly parallel and yield tolerable computational complexity for real-time computation.
-For fixed $k$ and $\alpha$, the computation of $\Phi_{k,1}^t(x_0^{\alpha})$ on the interval $[-T,T]$ takes $\mathcal{O}(T)$ time using an explicit finite difference scheme, and computation for each $(k,\alpha)$ may be performed in parallel with another such pair.
-Similarly, computation $c_{k,s,\alpha}$ constitutes a series of parallel function evaluations over triples $(k,s,\alpha)$.
-If the posteriors represented by the arrows in \eqref{eq:pgm} are quick to compute then computation of all coefficients $c_{k,s,\alpha}$ is equally quick.
-We summarize this in the following theorem
+For fixed $k$ and $\alpha$, the computation of $\Phi_{k,1}^t(x_0^{\alpha})$ on the interval $[-T,T]$ takes $\mathcal{O}(T)$ time using an explicit finite difference scheme and can be done in parallel for each $k \in \mathcal{M}$ and $\alpha \in$ \Ram{define the indexing space here...}
+Similarly, computation $c_{k,s,\alpha}$ constitutes a series of parallel function evaluations over triples $(k,s,\alpha)$ \Ram{what is the indexing space of s}.
+If the posteriors represented by the arrows in \eqref{eq:pgm} are  efficiently computably then the computation of all coefficients $c_{k,s,\alpha}$ is equally efficient.
+We summarize this in the following theorem:
 \begin{thm}
-	Assuming we have an accurate scheme for integrating ODEs in a computation time proportional to the integration time-interval\footnote{For example, 4th order explicit Runge-Kutta}.  Algorithm 1 yields an $\mathcal{O}( \Delta x)$ accurate approximation of $\rho_t$ in $\mathcal{O}( T n | \Gamma | / N )$ time given $N$ processing units and $n$ vector fields.
+	Assuming we have an accurate scheme for integrating ODEs in a computation time proportional to the integration time-interval\footnote{For example, 4th order explicit Runge-Kutta}.  Algorithm \ref{alg:1} yields an $\mathcal{O}( \Delta x)$ accurate approximation of $\rho_t$ in $\mathcal{O}( T n | \Gamma | / N )$ time given $N$ processing units and $n$ vector fields.
 \end{thm}
   
 \section{Implementation and Experimental results} \label{sec:implementation}
