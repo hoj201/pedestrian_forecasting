@@ -10,6 +10,10 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows,positioning}
 \usepackage{tikz-cd}
+\usepackage{subcaption}
+\usepackage{graphicx}
+\usepackage{array}
+\newcolumntype{M}[1]{>{\centering\arraybackslash}m{#1}}
 
 %  For theorems, etc
 \newtheorem{thm}{Theorem}
@@ -98,6 +102,29 @@ Civilization is sterilization
 
 \section{Introduction}
 
+\begin{figure}
+	\centering
+	\begin{subfigure}[b]{.45\linewidth}
+		\includegraphics[width=\linewidth]{./figures/FirstPage/gates_1_2_t=55.png}
+		\caption{$t=1.83s$}
+	\end{subfigure}
+		\begin{subfigure}[b]{.45\linewidth}
+			\includegraphics[width=\linewidth]{./figures/FirstPage/gates_1_2_t=145.png}
+			\caption{$t=4.83$}
+		\end{subfigure}
+	
+	\begin{subfigure}[b]{.45\linewidth}
+		\includegraphics[width=\linewidth]{./figures/FirstPage/gates_1_2_t=235.png}
+		\caption{$t=7.83s$}
+	\end{subfigure}
+	\begin{subfigure}[b]{.45\linewidth}
+		\includegraphics[width=\linewidth]{./figures/FirstPage/gates_1_2_t=345.png}
+		\caption{$t=11.5s$}
+	\end{subfigure}
+	\caption{Our algorithm captures the most probable routes that a pedestrian can take and discerns which are the most probable in real time. In this example, our algorithm took 0.0158s per frame.  In this figure, the dot is the start point of the test trajectory, the diamond is the position at time $t$, and the X is the end of the trajectory.}
+	\label{fig:gates-1-2}
+\end{figure}
+
 Autonomous systems acting in human-centric environments should be able to anticipate the behavior of neighboring humans to ensure safe operation. 
 Anticipating the future locations of individuals within a scene, for instance, is critical to synthesizing safe controllers for autonomous vehicles.
 To aid during safe control design for such systems, a prediction algorithm must satisfy several important criteria.
@@ -105,7 +132,6 @@ First, since safety is paramount, the prediction algorithm should avoid misclass
 Second, the predictions must be generated at faster than real-time rates to ensure that they can be used within a control loop.
 Finally, long-time horizon forecasts are preferable since they can make planning over long-time horizons feasible, which can reduce the conservativeness and aggressiveness of controllers \cite{}.
 
-\todo[inline]{Should we include a figure here showing what our algorithm looks like?}
 
 This paper presents an algorithm for real-time, long-term prediction of pedestrian behavior which can subsequently be used by autonomous agents.
 
@@ -532,18 +558,61 @@ More precisely, the full computation of our approximation of $\rho_t(x_t)$ would
  \subsection{ Precision, accuracy, etc.}
 In this section we establish our methods for evaluating the quality of our predictions, and comparing them against the model from [8] and a random walk.
 We implemented our model as well as the evaluation code in Python 2.6. Our implementation is available online \footnote{https://github.com/hoj201/pedestrian\_forecasting}.
+\begin{tabular}{||c | c c  c ||} 
+	\hline
+	& Our Predictor & Random Walk & Kitani et. al. \\ [0.5ex] 
+	\hline 
+	$\frac{\mathrm{time}}{\mathrm{frame}}$ & 0.0169s & flop & 0.0614s \\
+	\hline
+	
+\end{tabular}
 
-%\begin{figure}
-%\includegraphics[width=0.5\textwidth]{figures/coupa_vis.eps}
-%\caption{Trajectory batches sampled for cross validation}
-%\label{fig:data_set}
-%\end{figure}
+\begin{figure}
+	\centering
+	\begin{tabular}{M{.1\linewidth}  M{.3\linewidth} M{.3\linewidth}  M{.3\linewidth}} 
+
+	\rotatebox{90}{Our Algorithm}  & \begin{subfigure}[b]{\linewidth}
+		\includegraphics[width=\linewidth]{./figures/comparison/ours_death_1_2_t=70.png}
+	\end{subfigure} &
+	\begin{subfigure}[b]{\linewidth}
+		\includegraphics[width=\linewidth]{./figures/comparison/ours_death_1_2_t=250.png}
+	\end{subfigure} &
+	\begin{subfigure}[b]{\linewidth}
+		\includegraphics[width=\linewidth]{./figures/comparison/ours_death_1_2_t=370.png}
+	\end{subfigure} \\
+	
+	\rotatebox{90}{Kitani et. al.} & 
+	\begin{subfigure}[b]{\linewidth}
+		\includegraphics[width=\linewidth]{./figures/comparison/kit_death_1_2_t=70.png}
+	\end{subfigure} &
+	\begin{subfigure}[b]{\linewidth}
+		\includegraphics[width=\linewidth]{./figures/comparison/kit_death_1_2_t=250.png}
+	\end{subfigure} &
+	\begin{subfigure}[b]{\linewidth}
+		\includegraphics[width=\linewidth]{./figures/comparison/kit_death_1_2_t=370.png}
+	\end{subfigure} \\
+	
+	\rotatebox{90}{Kitani et. al.} & 
+	\begin{subfigure}[b]{\linewidth}
+		\includegraphics[width=\linewidth]{./figures/comparison/rand_death_1_2_t=70.png}
+		\caption{$t=70$}
+	\end{subfigure}&
+	\begin{subfigure}[b]{\linewidth}  \includegraphics[width=\linewidth]{./figures/comparison/rand_death_1_2_t=250.png}
+		\caption{$t=250$}
+	\end{subfigure}&
+	\begin{subfigure}[b]{\linewidth} \includegraphics[width=\linewidth]{./figures/comparison/rand_death_1_2_t=370.png}
+		\caption{$t=370$}
+	\end{subfigure}
+	\label{fig:death-1-2}
+	
+	\end{tabular}
+\end{figure}
 
 
 
-Our data came from the Stanford Drone Dataset, in the form of hand annotated bounding boxes around agents (e.g. cars, pedestrians, bicycles). Our datasets used the bicycle data. We did a 10-fold cross validation on 4 different scenes of varying complexity. Our analysis used the same partitions of the trajectories for all three predictors. There .% shows the sample for the ``Coupa'' scene from the Stanford Dataset.
 
-\todo[inline]{include visualization of vector fields \& learned value function?}
+
+Our data came from the Stanford Drone Dataset, in the form of hand annotated bounding boxes around agents (e.g. cars, pedestrians, bicycles). Our datasets used the bicycle data. We did a 2-fold cross validation on 4 different scenes of varying complexity. Our analysis used the same partitions of the trajectories for all three predictors.
 
 The algorithm provided by Kitani et. al. was given additional information when making predictions that neither ours nor the random walk model were provided, namely the endpoint of the test trajectory. Without these data the implementation of the predictor provided by the authors devolves into a random walk.
 \todo[inline]{\\figure{ All three algorithms side by side}
@@ -554,11 +623,12 @@ In keeping with our measurement model, the ground truth compared against was a g
 \todo[inline]{figure{plot}}
 \label{fig:auc_vs_time}
 \label{fig:total_rocs}
-
+\begin{figure}
 %\figure{Ours vs kitani, show confidence }
 %\caption{Though Kitani et. al.'s algorithm has superior data, we see that our algorithm's uncertainty makes our algorithm safer to use than theirs.}
+\end{figure}
 
-Disregarding small time scales where any algorithm will be reasonably accurate, our predictor behaves much better than any of the others at moderately large $t$, where we capture the  behavior of the agent without suffering the misplaced confidence observed in Kitani et. al.'s predictions. At large $t$, their aptitude comes from knowing the end point of the trajectory.
+Disregarding small time scales where any algorithm will be reasonably accurate, our predictor behaves much better than any of the others at moderately large $t$, where we capture the  behavior of the agent without suffering the misplaced confidence observed in Kitani et. al.'s predictions. Their encoding of velocity results in the prediction lagging behind the actual observed motion. Even given significantly better information, Kitani et. al. generates lower quality predictions than our algorithm at all time scales. 
 \begin{table}
 \begin{center}
 	\caption{Runtimes}

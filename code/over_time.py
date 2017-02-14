@@ -60,15 +60,17 @@ from json_help import read_json
 order = read_json("scene_order.json")['order']
 params = read_json("params.json")
 
-rng = ['coupa', 'bookstore']
+rng = ['death']
 sm = lambda x, y: x + y
-paths_kit = reduce(sm, [["pickles/kitani/{}/{}/".format(x, j) for j in range(params['nfold'])] for x in rng])
-paths_ours = reduce(sm, [["pickles/ours/{}/{}/".format(x, j) for j in range(params['nfold'])] for x in rng])
-paths_lin = reduce(sm, [["pickles/linear/{}/{}/".format(x, j) for j in range(params['nfold'])] for x in rng])
-paths_rand = reduce(sm, [["pickles/rand/{}/{}/".format(x, j) for j in range(params['nfold'])] for x in rng])
+indexes = [0]
+paths_kit = reduce(sm, [["pickles/kitani/{}/{}/".format(x, j) for j in indexes] for x in rng])
+paths_ours = reduce(sm, [["pickles/ours/{}/{}/".format(x, j) for j in indexes] for x in rng])
+paths_lin = reduce(sm, [["pickles/linear/{}/{}/".format(x, j) for j in indexes] for x in rng])
+paths_rand = reduce(sm, [["pickles/rand/{}/{}/".format(x, j) for j in indexes] for x in rng])
 
 our_auc, our_times = fn(paths_ours)
 rand_auc, rand_times = fn(paths_rand)
+kit_auc, kit_times = fn(paths_kit)
 plt.clf()
 ax = plt.gca()
 ax.set_ylim([-.1, 1.1])
@@ -76,6 +78,7 @@ ax.set_xlabel("Frames")
 ax.set_ylabel("AUC")
 plt.plot(our_times, our_auc, ls="solid", c="black", label="Our Algorithm")
 plt.plot(rand_times, rand_auc, ls="dashdot", c="black", label="Random Walk")
+plt.plot(kit_times, kit_auc, ls="dashed", c="black", label="Kitani's")
 plt.legend(loc="lower right")
 plt.savefig('images/The Results.eps', format='eps')
 plt.show()

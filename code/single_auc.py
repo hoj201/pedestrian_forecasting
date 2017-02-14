@@ -54,7 +54,7 @@ def fn(parad, name, split, agents):
         #plt.savefig("images/AUC_{}_{}_split_{}_{}.png".format(parad, name, split, agent))
         #plt.show()
     return aucs_ret, times_ret
- 
+
 from json_help import read_json
 order = read_json("scene_order.json")['order']
 

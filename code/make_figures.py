@@ -7,6 +7,11 @@ from data import sets, scenes, all_data
 from process_data import BB_ts_to_curve as bbts
 from helper_routines import ct
 import json
+def mkdir(fname):
+    try:
+        os.mkdir(fname)
+    except:
+        pass
 file = argv[1]
 with open(file) as f:
     st = f.read()
@@ -61,7 +66,9 @@ for parad in range(nummth):
         tmp.scatter(begin[0], begin[1], marker="o", c="white", edgecolors="none", s=dic['markersize'])
         tmp.scatter(end[0], end[1], marker="x", c="white", edgecolors="none", s=dic['markersize'])
         tmp.scatter(curve[0, times[time]], curve[1, times[time]], marker="D", c="white",  edgecolors="none", s=dic['markersize'])
-        plt.savefig("images/{}_{}_split_{}_agent_{}_time_{}.eps".format(scene_name, labels[parad], split_index, agent, times[time]), format="eps", bbox_inches="tight")
+        mkdir("images/{}/".format(scene_name))
+        mkdir("images/{}/{}".format(scene_name, labels[parad]))
+        plt.savefig("images/{}/{}/{}_{}_split_{}_agent_{}_time_{}.eps".format(scene_name, labels[parad], scene_name, labels[parad], split_index, agent, times[time]), format="eps", bbox_inches="tight")
 #plt.suptitle(dic['title'], size=dic['titlesize'])
 #plt.subplots_adjust( wspace=dic['imgspacing'], hspace=dic['imgspacing'])
 #plt.savefig("{}x{} grid.eps".format(nummth, numt), format="eps")
