@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2015.5.24)  14 FEB 2017 17:57
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2015.5.24)  14 FEB 2017 22:13
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -768,11 +768,7 @@ Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
 )
 \Hy@SectionHShift=\skip58
 )
-(./pedestrian_forecasting_iros_2017.aux
-
-LaTeX Warning: Label `fig:death-1-2' multiply defined.
-
-)
+(./pedestrian_forecasting_iros_2017.aux)
 \openout1 = `pedestrian_forecasting_iros_2017.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 44.
@@ -832,7 +828,8 @@ LaTeX Font Info:    Font shape `T1/ptm/bx/it' in size <24> not available
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: hyperref package is loaded.
 Package caption Info: End \AtBeginDocument code.
- (/usr/local/texlive/2015/texmf-dist/tex/context/base/supp-pdf.mkii
+
+(/usr/local/texlive/2015/texmf-dist/tex/context/base/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count152
 \scratchdimen=\dimen190
@@ -1091,7 +1088,7 @@ File: ./figures/coupa/ours_1_4_t=50.png Graphic file (type png)
 
 <use ./figures/coupa/ours_1_4_t=50.png>
 Package pdftex.def Info: ./figures/coupa/ours_1_4_t=50.png used on input line 6
-36.
+38.
 (pdftex.def)             Requested size: 73.71617pt x 40.70285pt.
 
 <./figures/coupa/ours_1_4_t=170.png, id=218, 374.3586pt x 207.23422pt>
@@ -1099,7 +1096,7 @@ File: ./figures/coupa/ours_1_4_t=170.png Graphic file (type png)
 
 <use ./figures/coupa/ours_1_4_t=170.png>
 Package pdftex.def Info: ./figures/coupa/ours_1_4_t=170.png used on input line 
-639.
+641.
 (pdftex.def)             Requested size: 73.71617pt x 40.80734pt.
 
 <./figures/coupa/ours_1_4_t=355.png, id=219, 374.71996pt x 206.6922pt>
@@ -1107,7 +1104,7 @@ File: ./figures/coupa/ours_1_4_t=355.png Graphic file (type png)
 
 <use ./figures/coupa/ours_1_4_t=355.png>
 Package pdftex.def Info: ./figures/coupa/ours_1_4_t=355.png used on input line 
-642.
+644.
 (pdftex.def)             Requested size: 73.71617pt x 40.65962pt.
 
 <./figures/coupa/kit_1_4_t=50.png, id=220, 374.53928pt x 207.05354pt>
@@ -1115,7 +1112,7 @@ File: ./figures/coupa/kit_1_4_t=50.png Graphic file (type png)
 
 <use ./figures/coupa/kit_1_4_t=50.png>
 Package pdftex.def Info: ./figures/coupa/kit_1_4_t=50.png used on input line 65
-0.
+2.
 (pdftex.def)             Requested size: 73.71617pt x 40.74965pt.
 
 <./figures/coupa/kit_1_4_t=170.png, id=221, 374.90062pt x 207.23422pt>
@@ -1123,7 +1120,7 @@ File: ./figures/coupa/kit_1_4_t=170.png Graphic file (type png)
 
 <use ./figures/coupa/kit_1_4_t=170.png>
 Package pdftex.def Info: ./figures/coupa/kit_1_4_t=170.png used on input line 6
-53.
+55.
 (pdftex.def)             Requested size: 73.71617pt x 40.74727pt.
 
 <./figures/coupa/kit_1_4_t=355.png, id=222, 375.26198pt x 206.87288pt>
@@ -1131,7 +1128,7 @@ File: ./figures/coupa/kit_1_4_t=355.png Graphic file (type png)
 
 <use ./figures/coupa/kit_1_4_t=355.png>
 Package pdftex.def Info: ./figures/coupa/kit_1_4_t=355.png used on input line 6
-56.
+58.
 (pdftex.def)             Requested size: 73.71617pt x 40.6352pt.
 
 <./figures/coupa/rand_1_4_t=50.png, id=223, 375.0813pt x 206.87288pt>
@@ -1139,7 +1136,7 @@ File: ./figures/coupa/rand_1_4_t=50.png Graphic file (type png)
 
 <use ./figures/coupa/rand_1_4_t=50.png>
 Package pdftex.def Info: ./figures/coupa/rand_1_4_t=50.png used on input line 6
-64.
+66.
 (pdftex.def)             Requested size: 73.71617pt x 40.65729pt.
 
 <./figures/coupa/rand_1_4_t=170.png, id=224, 374.53928pt x 207.05354pt>
@@ -1147,7 +1144,7 @@ File: ./figures/coupa/rand_1_4_t=170.png Graphic file (type png)
 
 <use ./figures/coupa/rand_1_4_t=170.png>
 Package pdftex.def Info: ./figures/coupa/rand_1_4_t=170.png used on input line 
-667.
+669.
 (pdftex.def)             Requested size: 73.71617pt x 40.74965pt.
 
 <./figures/coupa/rand_1_4_t=355.png, id=225, 374.53928pt x 206.51152pt>
@@ -1155,27 +1152,117 @@ File: ./figures/coupa/rand_1_4_t=355.png Graphic file (type png)
 
 <use ./figures/coupa/rand_1_4_t=355.png>
 Package pdftex.def Info: ./figures/coupa/rand_1_4_t=355.png used on input line 
-670.
+672.
 (pdftex.def)             Requested size: 73.71617pt x 40.64297pt.
+
+<./figures/bookstore/ours_1_2_t=50.png, id=226, 346.896pt x 266.85698pt>
+File: ./figures/bookstore/ours_1_2_t=50.png Graphic file (type png)
+
+<use ./figures/bookstore/ours_1_2_t=50.png>
+Package pdftex.def Info: ./figures/bookstore/ours_1_2_t=50.png used on input li
+ne 698.
+(pdftex.def)             Requested size: 73.71617pt x 56.70534pt.
+
+<./figures/bookstore/ours_1_2_t=130.png, id=227, 346.35397pt x 266.31496pt>
+File: ./figures/bookstore/ours_1_2_t=130.png Graphic file (type png)
+
+<use ./figures/bookstore/ours_1_2_t=130.png>
+Package pdftex.def Info: ./figures/bookstore/ours_1_2_t=130.png used on input l
+ine 701.
+(pdftex.def)             Requested size: 73.71617pt x 56.67955pt.
+
+<./figures/bookstore/ours_1_2_t=370.png, id=228, 346.896pt x 266.31496pt>
+File: ./figures/bookstore/ours_1_2_t=370.png Graphic file (type png)
+
+<use ./figures/bookstore/ours_1_2_t=370.png>
+Package pdftex.def Info: ./figures/bookstore/ours_1_2_t=370.png used on input l
+ine 704.
+(pdftex.def)             Requested size: 73.71617pt x 56.59015pt.
+
+<./figures/bookstore/kit_1_2_t=50.png, id=229, 346.896pt x 266.49562pt>
+File: ./figures/bookstore/kit_1_2_t=50.png Graphic file (type png)
+
+<use ./figures/bookstore/kit_1_2_t=50.png>
+Package pdftex.def Info: ./figures/bookstore/kit_1_2_t=50.png used on input lin
+e 712.
+(pdftex.def)             Requested size: 73.71617pt x 56.62854pt.
+
+<./figures/bookstore/kit_1_2_t=130.png, id=230, 347.25735pt x 266.49562pt>
+File: ./figures/bookstore/kit_1_2_t=130.png Graphic file (type png)
+
+<use ./figures/bookstore/kit_1_2_t=130.png>
+Package pdftex.def Info: ./figures/bookstore/kit_1_2_t=130.png used on input li
+ne 715.
+(pdftex.def)             Requested size: 73.71617pt x 56.57161pt.
+
+<./figures/bookstore/kit_1_2_t=370.png, id=231, 347.25735pt x 266.85698pt>
+File: ./figures/bookstore/kit_1_2_t=370.png Graphic file (type png)
+
+<use ./figures/bookstore/kit_1_2_t=370.png>
+Package pdftex.def Info: ./figures/bookstore/kit_1_2_t=370.png used on input li
+ne 718.
+(pdftex.def)             Requested size: 73.71617pt x 56.64833pt.
+
+<./figures/bookstore/rand_1_2_t=50.png, id=232, 346.896pt x 266.85698pt>
+File: ./figures/bookstore/rand_1_2_t=50.png Graphic file (type png)
+
+<use ./figures/bookstore/rand_1_2_t=50.png>
+Package pdftex.def Info: ./figures/bookstore/rand_1_2_t=50.png used on input li
+ne 726.
+(pdftex.def)             Requested size: 73.71617pt x 56.70534pt.
+
+<./figures/bookstore/rand_1_2_t=130.png, id=233, 346.1733pt x 265.77292pt>
+File: ./figures/bookstore/rand_1_2_t=130.png Graphic file (type png)
+
+<use ./figures/bookstore/rand_1_2_t=130.png>
+Package pdftex.def Info: ./figures/bookstore/rand_1_2_t=130.png used on input l
+ine 729.
+(pdftex.def)             Requested size: 73.71617pt x 56.59258pt.
+
+<./figures/bookstore/rand_1_2_t=370.png, id=234, 346.35397pt x 265.2309pt>
+File: ./figures/bookstore/rand_1_2_t=370.png Graphic file (type png)
+
+<use ./figures/bookstore/rand_1_2_t=370.png>
+Package pdftex.def Info: ./figures/bookstore/rand_1_2_t=370.png used on input l
+ine 732.
+(pdftex.def)             Requested size: 73.71617pt x 56.44884pt.
  [6]
-Package hyperref Info: bookmark level for unknown todo defaults to 0 on input l
-ine 698.
+Package epstopdf Info: Source file: <./figures/the_results.eps>
+(epstopdf)                    date: 2017-02-14 02:14:08
+(epstopdf)                    size: 36236 bytes
+(epstopdf)             Output file: <./figures/the_results-eps-converted-to.pdf
+>
+(epstopdf)                    date: 2017-02-14 19:07:45
+(epstopdf)                    size: 21996 bytes
+(epstopdf)             Command: <repstopdf --outfile=./figures/the_results-eps-
+converted-to.pdf ./figures/the_results.eps>
+(epstopdf)             \includegraphics on input line 767.
+Package epstopdf Info: Output file is already uptodate.
 
+<./figures/the_results-eps-converted-to.pdf, id=246, 578.16pt x 433.62pt>
+File: ./figures/the_results-eps-converted-to.pdf Graphic file (type pdf)
 
-LaTeX Warning: Reference `fig:ours_grid' on page 7 undefined on input line 731.
-
-
-[7 <./figures/comparison/ours_death_1_2_t=70.png> <./figures/comparison/ours_de
-ath_1_2_t=250.png> <./figures/comparison/ours_death_1_2_t=370.png> <./figures/c
-omparison/kit_death_1_2_t=70.png> <./figures/comparison/kit_death_1_2_t=250.png
-> <./figures/comparison/kit_death_1_2_t=370.png> <./figures/comparison/rand_dea
-th_1_2_t=70.png> <./figures/comparison/rand_death_1_2_t=250.png> <./figures/com
-parison/rand_death_1_2_t=370.png> <./figures/coupa/ours_1_4_t=50.png> <./figure
-s/coupa/ours_1_4_t=170.png> <./figures/coupa/ours_1_4_t=355.png> <./figures/cou
-pa/kit_1_4_t=50.png> <./figures/coupa/kit_1_4_t=170.png> <./figures/coupa/kit_1
-_4_t=355.png> <./figures/coupa/rand_1_4_t=50.png> <./figures/coupa/rand_1_4_t=1
-70.png> <./figures/coupa/rand_1_4_t=355.png>]
-(./pedestrian_forecasting_iros_2017.bbl)
+<use ./figures/the_results-eps-converted-to.pdf>
+Package pdftex.def Info: ./figures/the_results-eps-converted-to.pdf used on inp
+ut line 767.
+(pdftex.def)             Requested size: 245.71811pt x 184.28275pt.
+ [7 <./figures/comparison/ours_death_1_2_t=70.png> <./figures/comparison/ours_d
+eath_1_2_t=250.png> <./figures/comparison/ours_death_1_2_t=370.png> <./figures/
+comparison/kit_death_1_2_t=70.png> <./figures/comparison/kit_death_1_2_t=250.pn
+g> <./figures/comparison/kit_death_1_2_t=370.png> <./figures/comparison/rand_de
+ath_1_2_t=70.png> <./figures/comparison/rand_death_1_2_t=250.png> <./figures/co
+mparison/rand_death_1_2_t=370.png> <./figures/coupa/ours_1_4_t=50.png> <./figur
+es/coupa/ours_1_4_t=170.png> <./figures/coupa/ours_1_4_t=355.png> <./figures/co
+upa/kit_1_4_t=50.png> <./figures/coupa/kit_1_4_t=170.png> <./figures/coupa/kit_
+1_4_t=355.png> <./figures/coupa/rand_1_4_t=50.png> <./figures/coupa/rand_1_4_t=
+170.png> <./figures/coupa/rand_1_4_t=355.png> <./figures/bookstore/ours_1_2_t=5
+0.png> <./figures/bookstore/ours_1_2_t=130.png> <./figures/bookstore/ours_1_2_t
+=370.png> <./figures/bookstore/kit_1_2_t=50.png> <./figures/bookstore/kit_1_2_t
+=130.png> <./figures/bookstore/kit_1_2_t=370.png> <./figures/bookstore/rand_1_2
+_t=50.png> <./figures/bookstore/rand_1_2_t=130.png> <./figures/bookstore/rand_1
+_2_t=370.png>]
+(./pedestrian_forecasting_iros_2017.bbl [8 <./figures/the_results-eps-converted
+-to.pdf>])
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -1187,32 +1274,31 @@ Before submitting the final camera ready copy, remember to:
  uses only Type 1 fonts and that every step in the generation
  process uses the US letter (8.5in X 11in) paper size.
 
-[8]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 793.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 793.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 855.
+[9
+
+]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 855.
  (./pedestrian_forecasting_iros_2017.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 793.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 793.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 855.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 855.
 Package rerunfilecheck Info: File `pedestrian_forecasting_iros_2017.out' has no
 t changed.
-(rerunfilecheck)             Checksum: 887D91B4353E4863B0AD12E5C558E916;1224.
+(rerunfilecheck)             Checksum: 85198A1DD6C8480555AFBBF8FFCEB3A4;1223.
 
 
 LaTeX Warning: There were undefined references.
 
-
-LaTeX Warning: There were multiply-defined labels.
-
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 793.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 855.
  ) 
 Here is how much of TeX's memory you used:
- 20674 strings out of 493089
- 401044 string characters out of 6134842
- 459139 words of memory out of 5000000
- 23667 multiletter control sequences out of 15000+600000
+ 20708 strings out of 493089
+ 402528 string characters out of 6134842
+ 459792 words of memory out of 5000000
+ 23688 multiletter control sequences out of 15000+600000
  119373 words of font info for 141 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 62i,16n,82p,635b,784s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 62i,16n,82p,634b,784s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/local/texlive/2015/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/local/t
 exlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/local/te
 xlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx7.pfb></usr/local/texl
@@ -1236,11 +1322,11 @@ ype1/urw/courier/ucrr8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw
 /times/utmb8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw/times/utm
 bi8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/urw/times/utmr8a.pfb><
 /usr/local/texlive/2015/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on pedestrian_forecasting_iros_2017.pdf (8 pages, 40240856 bytes
+Output written on pedestrian_forecasting_iros_2017.pdf (9 pages, 52884777 bytes
 ).
 PDF statistics:
- 393 PDF objects out of 1000 (max. 8388607)
- 311 compressed objects within 4 object streams
+ 461 PDF objects out of 1000 (max. 8388607)
+ 326 compressed objects within 4 object streams
  91 named destinations out of 1000 (max. 500000)
- 281 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 331 words of extra memory for PDF output out of 10000 (max. 10000000)
 

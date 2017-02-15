@@ -584,7 +584,7 @@ We implemented our model as well as the evaluation code in Python 2.6. Our imple
 
 \vspace{0.5cm}	
 \begin{minipage}[t]{0.5cm}
-	\rotatebox{90}{Kitani et. al.} 
+	\rotatebox{90}{Kitani et al.} 
 \end{minipage}
 \begin{minipage}[t]{0.3\linewidth}
 	\includegraphics[width=\linewidth]{./figures/comparison/kit_death_1_2_t=70.png}
@@ -623,14 +623,16 @@ $t = 2.33s$
 	\centering
 	$t = 12.33s$
 \end{minipage}
-
+	
+	\caption{We behave qualitatively and quantitatively better than kitani in this example. Our algorithm starts out with a dense distribution, which spreads with time, whereas Kitani et al.'s algorithm is very confident in its mistake.}
+	
 	\label{fig:death-1-2}
 \end{figure}
 
 \begin{figure}
 	\centering
 	\begin{minipage}[t]{0.5cm}
-		\rotatebox{90}{Our Algorithm}   
+		\rotatebox{90}{Our algorithm}
 	\end{minipage}
 	\begin{minipage}[t]{0.3\linewidth}
 		\includegraphics[width=\linewidth]{./figures/coupa/ours_1_4_t=50.png}
@@ -642,9 +644,9 @@ $t = 2.33s$
 		\includegraphics[width=\linewidth]{./figures/coupa/ours_1_4_t=355.png}
 	\end{minipage}
 	
-	\vspace{0.5cm}	
+	\vspace{0.2cm}	
 	\begin{minipage}[t]{0.5cm}
-		\rotatebox{90}{Kitani et. al.} 
+		\rotatebox{90}{Kitani et al.} 
 	\end{minipage}
 	\begin{minipage}[t]{0.3\linewidth}
 		\includegraphics[width=\linewidth]{./figures/coupa/kit_1_4_t=50.png}
@@ -656,9 +658,9 @@ $t = 2.33s$
 		\includegraphics[width=\linewidth]{./figures/coupa/kit_1_4_t=355.png}
 	\end{minipage}
 	
-	\vspace{0.5cm}
+	\vspace{0.2cm}
 	\begin{minipage}[t]{0.5cm}
-		\rotatebox{90}{Random Walk} 
+		\rotatebox{90}{Random \\ Walk} 
 	\end{minipage}
 	\begin{minipage}[t]{0.3\linewidth}
 		\includegraphics[width=\linewidth]{./figures/coupa/rand_1_4_t=50.png}
@@ -683,31 +685,91 @@ $t = 2.33s$
 		\centering
 		$t = 11.83s$
 	\end{minipage}
-	
-	\label{fig:death-1-2}
+	\caption{Here we see how Kitani et al.'s algorithm finds a local minimum and so never reaches the terminal point we give it. Our algorithm doesn't solve an optimization problem online, and so our algorithm avoids that pitfall.}
+	\label{fig:coupa-1-4}
 \end{figure}
+
+\begin{figure}
+	\centering
+	\begin{minipage}[t]{0.5cm}
+		\rotatebox{90}{Our Algorithm}   
+	\end{minipage}
+	\begin{minipage}[t]{0.3\linewidth}
+		\includegraphics[width=\linewidth]{./figures/bookstore/ours_1_2_t=50.png}
+	\end{minipage}
+	\begin{minipage}[t]{0.3\linewidth}
+		\includegraphics[width=\linewidth]{./figures/bookstore/ours_1_2_t=130.png}
+	\end{minipage}
+	\begin{minipage}[t]{0.3\linewidth}
+		\includegraphics[width=\linewidth]{./figures/bookstore/ours_1_2_t=370.png}
+	\end{minipage}
+	
+	\vspace{0.2cm}
+	\begin{minipage}[t]{0.5cm}
+		\rotatebox{90}{Kitani et al.}   
+	\end{minipage}
+	\begin{minipage}[t]{0.3\linewidth}
+		\includegraphics[width=\linewidth]{./figures/bookstore/kit_1_2_t=50.png}
+	\end{minipage}
+	\begin{minipage}[t]{0.3\linewidth}
+		\includegraphics[width=\linewidth]{./figures/bookstore/kit_1_2_t=130.png}
+	\end{minipage}
+	\begin{minipage}[t]{0.3\linewidth}
+		\includegraphics[width=\linewidth]{./figures/bookstore/kit_1_2_t=370.png}
+	\end{minipage}
+
+	\vspace{0.2cm}
+	\begin{minipage}[t]{0.5cm}
+		\rotatebox{90}{Random Walk}   
+	\end{minipage}
+	\begin{minipage}[t]{0.3\linewidth}
+		\includegraphics[width=\linewidth]{./figures/bookstore/rand_1_2_t=50.png}
+	\end{minipage}
+	\begin{minipage}[t]{0.3\linewidth}
+		\includegraphics[width=\linewidth]{./figures/bookstore/rand_1_2_t=130.png}
+	\end{minipage}
+	\begin{minipage}[t]{0.3\linewidth}
+		\includegraphics[width=\linewidth]{./figures/bookstore/rand_1_2_t=370.png}
+	\end{minipage}
+	
+	\hspace{.02\linewidth}
+	\begin{minipage}{0.3\linewidth}
+		\centering
+		$t = 1.66s$
+	\end{minipage}
+	\begin{minipage}{0.3\linewidth}
+		\centering
+		$t = 4.33s$
+	\end{minipage}
+	\begin{minipage}{0.3\linewidth}
+		\centering
+		$t = 12.33s$
+	\end{minipage}
+	
+	\caption{We predict this trajectory very well, and while Kitani et al. captures the same behaviour, however their motion model doesn't adequately keep up with the ground truth of the pedestrian.}
+	
+	\label{fig:bookstore-1-2}
+\end{figure}
+
 Our data came from the Stanford Drone Dataset, in the form of hand annotated bounding boxes around agents (e.g. cars, pedestrians, bicycles). 
 Our datasets used the bicycle data. 
-We did a 10-fold cross validation on 4 different scenes of varying complexity. 
-Our analysis used the same partitions of the trajectories for all three predictors. There .% shows the sample for the ``Coupa'' scene from the Stanford Dataset.
+We did a 2-fold cross validation on 4 different scenes of varying complexity. 
+Our analysis used the same partitions of the trajectories for all three predictors.
 
 Our data came from the Stanford Drone Dataset, in the form of hand annotated bounding boxes around agents (e.g. cars, pedestrians, bicycles). Our datasets used the bicycle data. We did a 2-fold cross validation on 4 different scenes of varying complexity. Our analysis used the same partitions of the trajectories for all three predictors.
 
-The algorithm provided by Kitani et. al. was given additional information when making predictions that neither ours nor the random walk model were provided, namely the endpoint of the test trajectory. Without these data the implementation of the predictor provided by the authors devolves into a random walk.
-\todo[inline]{\\figure{ All three algorithms side by side}
-\\caption{The grid used to evaluate the predicted distributions. The circle denotes the start of a trajectory and the X denotes the end. } }
+The algorithm provided by Kitani et al. was given additional information when making predictions that neither ours nor the random walk model were provided, namely the endpoint of the test trajectory. Without these data the implementation of the predictor provided by the authors devolves into a random walk.
 
-The output distributions of the three algorithms were compared using their integrals over the cells of a suitably fine regular grid over our domain. These integrals can be seen in {figure n}. 
-In keeping with our measurement model, the ground truth compared against was a grid that was identically zero except on a bounding box around the measurement at time $t$. The dimensions of the bounding box were the average bounding box dimensions in the training data set. 
-\todo[inline]{figure{plot}}
-\label{fig:auc_vs_time}
-\label{fig:total_rocs}
+The output distributions of the three algorithms were compared using their integrals over the cells of a suitably fine regular grid over our domain. These integrals are used to visualize the distributions in Figures \ref{fig:death-1-2}, \ref{fig:coupa-1-4}, and \ref{fig:bookstore-1-2}.
+In keeping with our measurement model, the ground truth compared against was a grid that was identically zero except on a bounding box around the measurement at time $t$. The dimensions of the bounding box were the average bounding box dimensions in the training data set. Because our predictions all share the same scale, we were able to amalgamate all of the prediction and truth values for all of the simulated agents at a given time step and generate ROC curves. Figure \ref{fig:auc_vs_time} shows the Area Under the Curve of these ROC curves versus time.
 \begin{figure}
-%\figure{Ours vs kitani, show confidence }
-%\caption{Though Kitani et. al.'s algorithm has superior data, we see that our algorithm's uncertainty makes our algorithm safer to use than theirs.}
+\centering
+\includegraphics[width=\linewidth]{./figures/the_results.eps}
+\caption{We see that at all times we outperform Random Walk and Kitani et al.'s algorithm. The initial dip in Kitani et al.'s algorithm is due to their initial distribution being very sharp.}
+\label{fig:auc_vs_time}
 \end{figure}
 
-Disregarding small time scales where any algorithm will be reasonably accurate, our predictor behaves much better than any of the others at moderately large $t$, where we capture the  behavior of the agent without suffering the misplaced confidence observed in Kitani et. al.'s predictions. Their encoding of velocity results in the prediction lagging behind the actual observed motion. Even given significantly better information, Kitani et. al. generates lower quality predictions than our algorithm at all time scales. 
+Disregarding small time scales where any algorithm will be reasonably accurate, our predictor behaves much better than any of the others at moderately large $t$, where we capture the  behavior of the agent without suffering the misplaced confidence observed in Kitani et al.'s predictions. Their encoding of velocity results in the prediction lagging behind the actual observed motion. Even given significantly better information, Kitani et al. generates lower quality predictions than our algorithm at all time scales. 
 \begin{table}
 \begin{center}
 	\caption{Runtimes}
@@ -715,7 +777,7 @@ Disregarding small time scales where any algorithm will be reasonably accurate, 
 	\renewcommand{\arraystretch}{1.5}% Spread rows out...
 	\begin{tabular}{||c | c c  c ||} 
 		\hline
-		& Our Predictor & Random Walk & Kitani et. al. \\ [0.5ex] 
+		& Our Predictor & Random Walk & Kitani et al. \\ [0.5ex] 
 		\hline 
 		$\frac{\mathrm{time}}{\mathrm{frame}}$ & 0.0169s & flop & 0.0614s \\
 		\hline
@@ -726,9 +788,9 @@ Disregarding small time scales where any algorithm will be reasonably accurate, 
 \end{center}
 \end{table}
 
-The running time per frame for each algorithm was generated using run times for 400 frames, averaged across several agents and scenes, shown in Table~\ref{tab:time}. Our algorithm implementation leveraged its embarassing parallelism using a relatively naive parallelization scheme, which split the computation of frames among 18 cores. It's highly probable that our run times would significantly decrease using an implementation of our algorithm in C that uses a more clever scheme. Kitani et. al. was timed with minimal modification to the source code provided by the authors. 
+The running time per frame for each algorithm was generated using run times for 400 frames, averaged across several agents and scenes, shown in Table~\ref{tab:time}. Our algorithm implementation leveraged its embarassing parallelism using a relatively naive parallelization scheme, which split the computation of frames among 18 cores. It's highly probable that our run times would significantly decrease using an implementation of our algorithm in C that uses a more clever scheme. Kitani et al. was timed with minimal modification to the source code provided by the authors. 
 
-We see that under our current implementation, we are beating Kitani et. al.'s algorithm at the relevant time scales, and are running more than 3 times faster that their algorithm. More significantly, our algorithm runs at almost 60FPS. Figure \ref{fig:auc_vs_time} shows that at all time scales, our algorithm has very good predictive capability, and Figure \ref{fig:ours_grid} shows the qualitative merit of our predictions on several scenes.
+We see that under our current implementation, we are beating Kitani et al.'s algorithm at the relevant time scales, and are running more than 3 times faster that their algorithm. More significantly, our algorithm runs at almost 60FPS. Figure \ref{fig:auc_vs_time} shows that at all time scales, our algorithm has very good predictive capability, and Figures \ref{fig:death-1-2}, \ref{fig:coupa-1-4}, and \ref{fig:bookstore-1-2} show the qualitative merit of our predictions on several scenes.
 
 
 
