@@ -1,5 +1,23 @@
 import numpy as np
-
+def _smart_LCSS(a, b, epsilon, delta):
+    """
+    takes
+    F1: np.array([N, 2])
+    F2: np.array([N, 2])
+    epsilon: float
+    delta: int
+    """
+    norm = lambda x: np.sqrt(np.dot(x,x))
+    lengths = [[0 for j in range(len(b)+1)] for i in range(len(a)+1)]
+    # row 0 and column 0 are initialized to 0 already
+    for i, x in enumerate(a):
+        for j, y in enumerate(b):
+            if norm(x - y) < epsilon and np.abs(i-j) < delta:
+                lengths[i+1][j+1] = lengths[i][j] + 1
+            else:
+                lengths[i+1][j+1] = max(lengths[i+1][j], lengths[i][j+1])
+    sm = lambda x, y : x + y
+    return max(reduce(sm, lengths))
 
 def _naive_LCSS(F1, F2, epsilon, delta):
     """
@@ -13,24 +31,42 @@ def _naive_LCSS(F1, F2, epsilon, delta):
     T1 = len(F1)
     T2 = len(F2)
 
-    norm = lambda x: np.sqrt(np.dot(x,x))
+    
     if T1 == 0 and T2 == 0:
         return 0
-    elif norm(F1[-1] - F2[-1]) < epsilion and np.abs(T1-T2) < delta:
-        return 1 + naive_LCSS(F1[:-1], F2[:-1])
+    elif norm(F1[-1] - F2[-1]) < epsilon and np.abs(T1-T2) < delta:
+        return 1 + _naive_LCSS(F1[:-1], F2[:-1], epsilon, delta)
     else:
-        return max(naive_LCSS(F1[:-1], F2), naive_LCSS(F1, F1[:-1]))
+        return max(_naive_LCSS(F1[:-1], F2, epsilon, delta), _naive_LCSS(F1, F1[:-1], epsilon, delta))
 
 def LCSS(F1, F2, epsilon, delta):
     F1 = F1.transpose()
     F2 = F2.transpose()
-    return 1 - float(naive_LCSS(F1, F2, epsilon, delta))/min(len(F1), len(F2))
+    return 1 - float(_smart_LCSS(F1, F2, epsilon, delta))/min(len(F1), len(F2))
 
-def cluster(curves):
+def cluster_trajectories_2(curves, epsilon, delta = 5):
     """
-    takes
-    curves: list(np.array(2, N))
+    takes:
+    list(np.array([2, N]))
     """
+    n_curves = len(curves)
+    from sklearn.cluster import AffinityPropagation
+    clusterer = AffinityPropagation(affinity='precomputed', convergence_iter=100)
+    aff = np.zeros((n_curves, n_curves), dtype=float)
+    for i in range(n_curves):
+        print "{}% Done".format(i/float(n_curves) * 100)
+        for j in range(i+1,n_curves):
+            aff[i,j] = LCSS(curves[i],curves[j], epsilon, delta)
+            aff[j,i] = aff[i,j]
+
+    #clusterer.Affinity = aff
+    cluster_labels = clusterer.fit_predict(aff)
+    out = []
+    for label in set(cluster_labels):
+        cluster = map(lambda k: curves[k], filter(lambda k: cluster_labels[k]==label, range(n_curves)))
+        out.append(cluster)
+    return map( align_cluster, out)
+
 
 
 
@@ -61,7 +97,7 @@ def cluster_trajectories(curves):
         
     for col in range( 4 ):
         X_2B_clstrd[:,col] /=  X_2B_clstrd[:,col].std()
-        
+
     def distance_metric(a,b):
         #A distance metric on R^4 modulo the involution
         #(x0,x2,x3,x4) -> (x3,x4,x1,x2)
@@ -208,7 +244,7 @@ def get_classes(curves, width, height, k_max=4):
 
     NOTE: alpha[k] and clusters_pruned[k] have probabilitiy P_of_c[k].  k=-1 corresponds to a linear predictor
     """
-    clusters = cluster_trajectories(curves)
+    clusters = cluster_trajectories_2(curves, width/10)
     
     #Prune the clusters and keep track of how many agents you discard
     n_discarded = 0
