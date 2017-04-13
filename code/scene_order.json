@@ -1,3 +1,0 @@
-{'order': ['death', 'coupa', 'bookstore', 'gates'],
- 'dims': [[200, 239], [200, 110], [200, 153], [200, 277]],
- 'folders': ["../annotations/deathCircle/video0/", "../annotations/coupa/video1/", "../annotations/bookstore/video0/","../annotations/gates/video1/"]}

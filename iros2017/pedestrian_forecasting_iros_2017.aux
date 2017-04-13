@@ -21,9 +21,9 @@
 \citation{Schneider2013}
 \citation{Kooji2014}
 \@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{section.1}}
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Our algorithm captures the most probable routes that a pedestrian can take and discerns which are the most probable in real time. In this example, our algorithm took 0.0158s per frame. In this figure, the dot is the start point of the test trajectory, the diamond is the position at time $t$, and the X is the end of the trajectory.\relax }}{1}{figure.caption.1}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces The performance of the presented algorithm captures the most probable routes that a pedestrian chooses. In this figure, the dot is the start point of the test trajectory, the diamond is the position at time $t$, and the X is the end of the trajectory. The likelihood of detection is depicted using the \textit  {virdis} color palette. In this example which was captured at thirty frames per second, the presented algorithm took 0.0158s per frame in a Python implementation. \relax }}{1}{figure.caption.1}}
 \providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
-\newlabel{fig:gates-1-2}{{1}{1}{Our algorithm captures the most probable routes that a pedestrian can take and discerns which are the most probable in real time. In this example, our algorithm took 0.0158s per frame. In this figure, the dot is the start point of the test trajectory, the diamond is the position at time $t$, and the X is the end of the trajectory.\relax }{figure.caption.1}{}}
+\newlabel{fig:gates-1-2}{{1}{1}{The performance of the presented algorithm captures the most probable routes that a pedestrian chooses. In this figure, the dot is the start point of the test trajectory, the diamond is the position at time $t$, and the X is the end of the trajectory. The likelihood of detection is depicted using the \textit {virdis} color palette. In this example which was captured at thirty frames per second, the presented algorithm took 0.0158s per frame in a Python implementation. \relax }{figure.caption.1}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {I-A}Background}{1}{subsection.1.1}}
 \citation{Ziebart2008}
 \citation{Ziebart2009}
@@ -61,56 +61,57 @@
 \newlabel{eq:v | ksx}{{4}{3}{The Agent Model}{equation.2.4}{}}
 \newlabel{eq:models}{{5}{3}{The Agent Model}{equation.2.5}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {II-D}The Full Model}{3}{subsection.2.4}}
-\citation{Rudin1991}
-\newlabel{eq:pgm}{{6}{4}{The Full Model}{equation.2.6}{}}
-\newlabel{eq:decomposition}{{9}{4}{The Full Model}{equation.2.9}{}}
+\newlabel{eq:pgm}{{6}{3}{The Full Model}{equation.2.6}{}}
+\citation{Leveque1992}
+\citation{Gottlieb2001}
+\newlabel{eq:decomposition}{{8}{4}{The Full Model}{equation.2.8}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {III}Efficient Probability Propagation}{4}{section.3}}
 \newlabel{sec:efficient}{{III}{4}{Efficient Probability Propagation}{section.3}{}}
+\newlabel{eq:approximation 0}{{9}{4}{Efficient Probability Propagation}{equation.3.9}{}}
 \newlabel{eq:convolve}{{12}{4}{Efficient Probability Propagation}{equation.3.12}{}}
 \newlabel{eq:push forward}{{17}{4}{Efficient Probability Propagation}{equation.3.17}{}}
 \newlabel{eq:approximation 1}{{18}{4}{Efficient Probability Propagation}{equation.3.18}{}}
-\newlabel{eq:constants}{{19}{4}{Efficient Probability Propagation}{equation.3.19}{}}
-\newlabel{thm:error}{{1}{4}{Efficient Probability Propagation}{thm.3.1}{}}
-\citation{Robicquet2016}
+\newlabel{eq:makesense}{{19}{4}{Efficient Probability Propagation}{equation.3.19}{}}
+\newlabel{thm:error}{{1}{5}{Efficient Probability Propagation}{thm.3.1}{}}
 \newlabel{cor:error}{{1}{5}{Efficient Probability Propagation}{cor.1}{}}
-\newlabel{eq:approximation 2}{{21}{5}{Efficient Probability Propagation}{equation.3.21}{}}
+\newlabel{eq:approximation 2}{{20}{5}{Efficient Probability Propagation}{equation.3.20}{}}
 \newlabel{thm:symmetry}{{2}{5}{Efficient Probability Propagation}{thm.3.2}{}}
-\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces Algorithm to Compute $\rho _t$.\relax }}{5}{algorithm.1}}
-\newlabel{alg:1}{{1}{5}{Algorithm to Compute $\rho _t$.\relax }{algorithm.1}{}}
-\newlabel{alg1:step1}{{2}{5}{Algorithm to Compute $\rho _t$.\relax }{algorithm.1}{}}
-\newlabel{alg1:step2}{{3}{5}{Algorithm to Compute $\rho _t$.\relax }{algorithm.1}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {IV}Implementation and Experimental results}{5}{section.4}}
-\newlabel{sec:implementation}{{IV}{5}{Implementation and Experimental results}{section.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {IV-A}Learning the Vector Fields}{5}{subsection.4.1}}
+\newlabel{thm:main}{{3}{5}{Efficient Probability Propagation}{thm.3.3}{}}
+\newlabel{eq:approximation 3}{{25}{5}{Efficient Probability Propagation}{equation.3.25}{}}
+\newlabel{eq:partition}{{26}{5}{Efficient Probability Propagation}{equation.3.26}{}}
+\citation{Robicquet2016}
+\citation{FreyDueck2007}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces Algorithm to compute $\rho _t$ for each $t \in \{\Delta t, 2 \Delta t, \dots  , N_t \Delta t$\}.\relax }}{6}{algorithm.1}}
+\newlabel{alg:1}{{1}{6}{Algorithm to compute $\rho _t$ for each $t \in \{\Delta t, 2 \Delta t, \dots , N_t \Delta t$\}.\relax }{algorithm.1}{}}
+\newlabel{alg1:step2}{{6}{6}{Algorithm to compute $\rho _t$ for each $t \in \{\Delta t, 2 \Delta t, \dots , N_t \Delta t$\}.\relax }{algorithm.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {IV}Implementation and Experimental results}{6}{section.4}}
+\newlabel{sec:implementation}{{IV}{6}{Implementation and Experimental results}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {IV-A}Learning the Vector Fields}{6}{subsection.4.1}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {IV-B}Learning $\qopname  \relax m{Pr}( x_0 \mid M)$ and $\qopname  \relax m{Pr}(M)$}{6}{subsection.4.2}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {IV-C}Learning the Measurement Model}{6}{subsection.4.3}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {IV-D}Learning the Noise Model}{6}{subsection.4.4}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {IV-E}Evaluating Performance}{6}{subsection.4.5}}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces We behave qualitatively and quantitatively better than kitani in this example. Our algorithm starts out with a dense distribution, which spreads with time, whereas Kitani et al.'s algorithm is very confident in its mistake.\relax }}{7}{figure.caption.2}}
-\newlabel{fig:death-1-2}{{2}{7}{We behave qualitatively and quantitatively better than kitani in this example. Our algorithm starts out with a dense distribution, which spreads with time, whereas Kitani et al.'s algorithm is very confident in its mistake.\relax }{figure.caption.2}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Here we see how Kitani et al.'s algorithm finds a local minimum and so never reaches the terminal point we give it. Our algorithm doesn't solve an optimization problem online, and so our algorithm avoids that pitfall.\relax }}{7}{figure.caption.3}}
-\newlabel{fig:coupa-1-4}{{3}{7}{Here we see how Kitani et al.'s algorithm finds a local minimum and so never reaches the terminal point we give it. Our algorithm doesn't solve an optimization problem online, and so our algorithm avoids that pitfall.\relax }{figure.caption.3}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces We predict this trajectory very well, and while Kitani et al. captures the same behaviour, however their motion model doesn't adequately keep up with the ground truth of the pedestrian.\relax }}{7}{figure.caption.4}}
-\newlabel{fig:bookstore-1-2}{{4}{7}{We predict this trajectory very well, and while Kitani et al. captures the same behaviour, however their motion model doesn't adequately keep up with the ground truth of the pedestrian.\relax }{figure.caption.4}{}}
 \citation{Kitani2012}
-\citation{MTA}
+\citation{Kitani2012}
+\citation{Kitani2012}
+\citation{Kitani2012}
+\citation{Kitani2012}
+\citation{Robicquet2016}
+\citation{Kitani2012}
+\citation{Kitani2012}
+\citation{Kitani2012}
+\citation{Kitani2012}
+\citation{Kitani2012}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces An illustration of the predictions generated by the various algorithms. In this figure, the dot is the start point of the test trajectory, the diamond is the position at time $t$, and the X is the end of the trajectory. The likelihood of detection is depicted using the \textit  {virdis} color palette. Notice that the Random Walk is imprecise, while the predictions generated by the algorithm in \cite  {Kitani2012} suffer from the inability of their motion model to adequately match the speed of the agent.\relax }}{7}{figure.caption.2}}
+\newlabel{fig:bookstore-1-2}{{2}{7}{An illustration of the predictions generated by the various algorithms. In this figure, the dot is the start point of the test trajectory, the diamond is the position at time $t$, and the X is the end of the trajectory. The likelihood of detection is depicted using the \textit {virdis} color palette. Notice that the Random Walk is imprecise, while the predictions generated by the algorithm in \cite {Kitani2012} suffer from the inability of their motion model to adequately match the speed of the agent.\relax }{figure.caption.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {IV-C}Learning the Measurement Model}{7}{subsection.4.3}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {IV-D}Learning the Noise Model}{7}{subsection.4.4}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces An illustration of the predictions generated by the various algorithms. In this figure, the dot is the start point of the test trajectory, the diamond is the position at time $t$, and the X is the end of the trajectory. The likelihood of detection is depicted using the \textit  {virdis} color palette. Notice that the Random Walk is imprecise, while the predictions generated by the algorithm in \cite  {Kitani2012} are unable to match the speed of the agent and choose the wrong direction to follow the agent around the circle.\relax }}{7}{figure.caption.3}}
+\newlabel{fig:death-1-2}{{3}{7}{An illustration of the predictions generated by the various algorithms. In this figure, the dot is the start point of the test trajectory, the diamond is the position at time $t$, and the X is the end of the trajectory. The likelihood of detection is depicted using the \textit {virdis} color palette. Notice that the Random Walk is imprecise, while the predictions generated by the algorithm in \cite {Kitani2012} are unable to match the speed of the agent and choose the wrong direction to follow the agent around the circle.\relax }{figure.caption.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {IV-E}Evaluating Performance}{7}{subsection.4.5}}
 \bibstyle{IEEEtran}
 \bibdata{references}
 \bibcite{Helbing1992}{1}
 \bibcite{kalman1960new}{2}
 \bibcite{Schneider2013}{3}
 \bibcite{Kooji2014}{4}
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces We see that at all times we outperform Random Walk and Kitani et al.'s algorithm. The initial dip in Kitani et al.'s algorithm is due to their initial distribution being very sharp.\relax }}{8}{figure.caption.5}}
-\newlabel{fig:auc_vs_time}{{5}{8}{We see that at all times we outperform Random Walk and Kitani et al.'s algorithm. The initial dip in Kitani et al.'s algorithm is due to their initial distribution being very sharp.\relax }{figure.caption.5}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Runtimes\relax }}{8}{table.caption.6}}
-\newlabel{tab:time}{{I}{8}{Runtimes\relax }{table.caption.6}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {V}Conclusion}{8}{section.5}}
-\newlabel{sec:conclusion}{{V}{8}{Conclusion}{section.5}{}}
-\@writefile{toc}{\contentsline {section}{Appendix}{8}{section*.8}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {A}Inverse Optimal Control}{8}{subsection.Appendix.A.1}}
-\newlabel{app:ioc}{{A}{8}{Inverse Optimal Control}{subsection.Appendix.A.1}{}}
-\newlabel{eq:IOC}{{27}{8}{Inverse Optimal Control}{equation.Appendix.A.27}{}}
-\@writefile{toc}{\contentsline {section}{References}{8}{section*.9}}
 \bibcite{Ziebart2008}{5}
 \bibcite{Ziebart2009}{6}
 \bibcite{Kitani2012}{7}
@@ -121,4 +122,13 @@
 \bibcite{Walker2014}{12}
 \bibcite{Robicquet2016}{13}
 \bibcite{MTA}{14}
-\bibcite{Rudin1991}{15}
+\bibcite{Leveque1992}{15}
+\bibcite{Gottlieb2001}{16}
+\bibcite{FreyDueck2007}{17}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces A comparison of the AUC of the various algorithms. Note that the initial dip in the performance of \cite  {Kitani2012} is due to their confidence in their initial estimate.\relax }}{8}{figure.caption.4}}
+\newlabel{fig:auc_vs_time}{{4}{8}{A comparison of the AUC of the various algorithms. Note that the initial dip in the performance of \cite {Kitani2012} is due to their confidence in their initial estimate.\relax }{figure.caption.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Comparison of runtimes of the various algorithms.\relax }}{8}{table.caption.5}}
+\newlabel{tab:time}{{I}{8}{Comparison of runtimes of the various algorithms.\relax }{table.caption.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {V}Conclusion}{8}{section.5}}
+\newlabel{sec:conclusion}{{V}{8}{Conclusion}{section.5}{}}
+\@writefile{toc}{\contentsline {section}{References}{8}{section*.7}}

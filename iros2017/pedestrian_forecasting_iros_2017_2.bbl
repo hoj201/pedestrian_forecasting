@@ -94,25 +94,4 @@ R.~Abraham, J.~E. Marsden, and T.~S. Ratiu, \emph{Manifolds, Tensor Analysis,
   and Applications}, 3rd~ed., ser. Applied Mathematical Sciences.\hskip 1em
   plus 0.5em minus 0.4em\relax Spinger, 2009, vol.~75.
 
-\bibitem{Leveque1992}
-\BIBentryALTinterwordspacing
-R.~J. LeVeque, \emph{Numerical methods for conservation laws}, 2nd~ed., ser.
-  Lectures in Mathematics ETH Z\"urich.\hskip 1em plus 0.5em minus 0.4em\relax
-  Birkh\"auser Verlag, Basel, 1992. [Online]. Available:
-  \url{http://dx.doi.org/10.1007/978-3-0348-8629-1}
-\BIBentrySTDinterwordspacing
-
-\bibitem{Gottlieb2001}
-\BIBentryALTinterwordspacing
-D.~Gottlieb and J.~Hesthaven, ``Spectral methods for hyperbolic problems,''
-  \emph{Journal of Computational and Applied Mathematics}, vol. 128, no. 1--2,
-  pp. 83 -- 131, 2001, numerical Analysis 2000. Vol. VII: Partial Differential
-  Equations. [Online]. Available:
-  \url{http://www.sciencedirect.com/science/article/pii/S0377042700005100}
-\BIBentrySTDinterwordspacing
-
-\bibitem{FreyDueck2007}
-B.~J. Frey and D.~Dueck, ``Clustering by passing messages between data
-  points,'' \emph{Science}, vol. 315, no. 5814, pp. 972--976, 2007.
-
 \end{thebibliography}
